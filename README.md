@@ -42,7 +42,7 @@ things it deliberately does **not** ignore:
   libman restore step, so those files have to be committed or the styling breaks
   for whoever clones next.
 - **`appsettings.json`** — the connection string and config shape belong in the
-  repo, which unavoidably means the seeded admin password is committed with
+  repo, which unavoidably means the seeded officer password is committed with
   them. Move it to [user secrets][secrets] or environment variables before this
   runs anywhere real.
 
@@ -84,23 +84,26 @@ empty, read the console — that warning is almost always why.
 
 ### Signing in
 
-With `Apilan:SeedDemoData` set to `true` (it is, in `appsettings.json`), the
-first run creates three accounts, all with the password `Apilan!2026`:
+There are **two kinds of user**: an officer runs the organization, a member
+attends its events. With `Apilan:SeedDemoData` set to `true` (it is, in
+`appsettings.json`), the first run creates one of each, both with the password
+`Apilan!2026`:
 
 | Email | Role | Sees |
 |---|---|---|
-| `admin@apilan.local` | Admin | Everything, including the activity log and role management |
-| `officer@apilan.local` | Officer | The console: events, check-in, members, reports |
+| `officer@apilan.local` | Officer | The whole console: events, check-in, members, reports, roles, activity log |
 | `member@apilan.local` | Member | The calendar, their own stubs, their own feedback |
 
-The login field takes either the email or the student number. Change those
-credentials in `appsettings.json` before this goes anywhere real — they are
-committed in plain text, which is fine for a demo and not fine otherwise.
+On a database with no officer yet, the seeder also creates a bootstrap officer
+from `Apilan:DefaultOfficerEmail` so there is always a way in. The login field
+takes either the email or the student number. Change those credentials in
+`appsettings.json` before this goes anywhere real — they are committed in plain
+text, which is fine for a demo and not fine otherwise.
 
 Demo data is 4 organizations, 12 members, a handful of events including one
 already finished with attendance and feedback on it, so the reports and
 certificate screens have something true to show on a fresh machine. Set
-`Apilan:SeedDemoData` to `false` for a clean install; the admin account is
+`Apilan:SeedDemoData` to `false` for a clean install; the bootstrap officer is
 created either way. Every seeding step is idempotent and skips itself if the
 records already exist.
 
@@ -116,7 +119,7 @@ Apilan/
     Enums.cs        Roles and every status enum.
   Data/
     ApilanDbContext.cs   Relationships and delete behaviour, commented.
-    DbSeeder.cs          Roles, first admin, demo records.
+    DbSeeder.cs          Roles, first officer, demo records.
     Migrations/
   Services/         The rules two screens must not disagree about.
   ViewModels/       What each screen needs; entities are not bound to directly.
@@ -154,9 +157,18 @@ self-registered account sits at `Pending` until someone approves it in
 **Administration → Account requests** and links it. Until then My Events says so
 and the register button does nothing.
 
-**The role is called `Member`, not Student.** Three roles: `Admin`, `Officer`,
-`Member`. Most of the console is behind the `StaffOnly` policy (Admin or
-Officer); the activity log and role management are `AdminOnly`.
+**There are two roles, and the staff one is called `Officer`.** `Officer` and
+`Member` — not Student, and there is no separate administrator. An officer can
+do everything the console offers, including promoting other accounts and reading
+the activity log. One policy guards it, `StaffOnly`, which is simply
+`RequireRole(Officer)`.
+
+The cost of collapsing the roles is that any officer can demote another, so the
+screens that change roles refuse to leave the system with nobody able to open
+the console: you cannot change your own role, you cannot disable your own
+account, and the last officer cannot be demoted or disabled at all. If you need
+those guards gone, `OfficersController` is where they live — but read them
+first, because getting locked out means editing `AspNetUserRoles` by hand.
 
 **Absence is a record, not a missing row.** An `AttendanceRecord` exists for
 present, late *and* absent. Late is decided by comparing time-in against the
@@ -204,17 +216,17 @@ never gets it.
 | Register for an event | `/Calendar/Register` | Member |
 | My stubs, my attendance, my certificates | `/MyEvents` | Member |
 | Leave feedback on an event attended | `/Feedback/Form/{id}` | Member |
-| Dashboard | `/Dashboard` | Staff |
-| Events, sessions, roster, waitlist | `/Events` | Staff |
-| Door check-in | `/Attendance/Door/{id}` | Staff |
-| Certificates | `/Certificates` | Staff |
-| Organizations and their events | `/Organizations` | Staff (admin to edit) |
-| Members, event types, venues | `/Members`, `/EventTypes`, `/Venues` | Staff |
-| Participation and per-event reports, Excel | `/Reports` | Staff |
-| Feedback read-out | `/Feedback` | Staff |
-| Account requests | `/AccountRequests` | Staff |
-| Officers and roles | `/Officers` | Admin |
-| Activity log | `/AuditLog` | Admin |
+| Dashboard | `/Dashboard` | Officer |
+| Events, sessions, roster, waitlist | `/Events` | Officer |
+| Door check-in | `/Attendance/Door/{id}` | Officer |
+| Certificates | `/Certificates` | Officer |
+| Organizations and their events | `/Organizations` | Officer |
+| Members, event types, venues | `/Members`, `/EventTypes`, `/Venues` | Officer |
+| Participation and per-event reports, Excel | `/Reports` | Officer |
+| Feedback read-out | `/Feedback` | Officer |
+| Account requests | `/AccountRequests` | Officer |
+| Officers and roles | `/Officers` | Officer |
+| Activity log | `/AuditLog` | Officer |
 
 An event moves **Draft → Published → Ongoing → Completed**, or is cancelled.
 Only a published event takes registrations; only closing one out settles its
@@ -269,10 +281,22 @@ Everything lives under `Apilan` in `appsettings.json`:
 |---|---|---|
 | `ConnectionStrings:DefaultConnection` | LocalDB | Where the database is |
 | `Apilan:SeedDemoData` | `true` | Create demo orgs, members, events, feedback |
-| `Apilan:DefaultAdminEmail` | `admin@apilan.local` | First admin's login |
-| `Apilan:DefaultAdminPassword` | `Apilan!2026` | First admin's password |
+| `Apilan:DefaultOfficerEmail` | `officer@apilan.local` | Bootstrap officer's login |
+| `Apilan:DefaultOfficerPassword` | `Apilan!2026` | Bootstrap officer's password |
 | `Apilan:OrganizationName` | `CCS Student Council` | Legacy; orgs now live in the database |
 
 `Apilan:OrganizationName` is no longer read by anything — the organization a
 screen shows comes from `OrgContext` and the `Organizations` table. It is left in
 place only so an older config file does not look broken.
+
+The older `Apilan:DefaultAdminEmail` and `Apilan:DefaultAdminPassword` keys are
+still honoured as a fallback, from when there was a third administrator role, so
+an existing `appsettings.json` does not quietly stop being read.
+
+### Upgrading a database that still has the Admin role
+
+Nothing to do. On startup the seeder moves anyone holding the retired `Admin`
+role to `Officer` and deletes the role, logging both as it goes. It has to: with
+`Admin` no longer granting anything, an account whose only role was `Admin`
+would otherwise be locked out of the console it used to own. The step is
+idempotent and does nothing once the role is gone.

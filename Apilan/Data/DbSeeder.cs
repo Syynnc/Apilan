@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Apilan.Data;
 
 /// <summary>
-/// Creates the three roles and the first admin account on startup, and — when
+/// Creates the two roles and the first officer account on startup, and — when
 /// Apilan:SeedDemoData is true — a set of demo records so the app is not an
 /// empty shell on a fresh machine. Everything here is idempotent.
 /// </summary>
@@ -43,7 +43,8 @@ public static class DbSeeder
             }
         }
 
-        await SeedAdminAsync(users, config, log);
+        await RetireAdminRoleAsync(users, roles, log);
+        await SeedFirstOfficerAsync(users, config, log);
 
         if (config.GetValue("Apilan:SeedDemoData", false))
         {
@@ -55,36 +56,94 @@ public static class DbSeeder
         }
     }
 
-    private static async Task SeedAdminAsync(
+    /// <summary>
+    /// The system used to have a third, administrator role. Anyone still
+    /// holding it is moved to Officer and the role itself is deleted, so an
+    /// existing database does not end up with accounts whose only role no
+    /// longer grants anything — which would lock them out of the console.
+    ///
+    /// Idempotent: once the role is gone this does nothing.
+    /// </summary>
+    private static async Task RetireAdminRoleAsync(
+        UserManager<ApplicationUser> users, RoleManager<IdentityRole> roles, ILogger log)
+    {
+        const string legacyAdmin = "Admin";
+
+        if (!await roles.RoleExistsAsync(legacyAdmin))
+        {
+            return;
+        }
+
+        foreach (var user in await users.GetUsersInRoleAsync(legacyAdmin))
+        {
+            await users.RemoveFromRoleAsync(user, legacyAdmin);
+
+            if (!await users.IsInRoleAsync(user, Roles.Officer))
+            {
+                await users.AddToRoleAsync(user, Roles.Officer);
+            }
+
+            log.LogInformation("Moved {Email} from the retired Admin role to Officer.", user.Email);
+        }
+
+        var role = await roles.FindByNameAsync(legacyAdmin);
+        if (role is not null)
+        {
+            await roles.DeleteAsync(role);
+            log.LogInformation("Deleted the retired Admin role.");
+        }
+    }
+
+    /// <summary>
+    /// The account that gets you in on a fresh install. Officers are the only
+    /// staff role, so this is an officer; everyone else is created through the
+    /// account-request queue or promoted from Officers &amp; roles.
+    /// </summary>
+    private static async Task SeedFirstOfficerAsync(
         UserManager<ApplicationUser> users, IConfiguration config, ILogger log)
     {
-        var email = config["Apilan:DefaultAdminEmail"] ?? "admin@apilan.local";
-        var password = config["Apilan:DefaultAdminPassword"] ?? "Apilan!2026";
+        // The older key names are still honoured so an existing appsettings.json
+        // does not silently stop being read.
+        var email = config["Apilan:DefaultOfficerEmail"]
+                    ?? config["Apilan:DefaultAdminEmail"]
+                    ?? "officer@apilan.local";
+
+        var password = config["Apilan:DefaultOfficerPassword"]
+                       ?? config["Apilan:DefaultAdminPassword"]
+                       ?? "Apilan!2026";
 
         if (await users.FindByEmailAsync(email) is not null)
         {
             return;
         }
 
-        var admin = new ApplicationUser
+        // A first officer only makes sense on an empty system. If officers
+        // already exist, someone has been through here and this would just be
+        // an extra account with a published password.
+        if ((await users.GetUsersInRoleAsync(Roles.Officer)).Any())
+        {
+            return;
+        }
+
+        var officer = new ApplicationUser
         {
             UserName = email,
             Email = email,
             EmailConfirmed = true,
-            FullName = "System Administrator",
+            FullName = "Organization Officer",
             Status = AccountStatus.Active,
             ReviewedOn = DateTime.Now
         };
 
-        var result = await users.CreateAsync(admin, password);
+        var result = await users.CreateAsync(officer, password);
         if (result.Succeeded)
         {
-            await users.AddToRoleAsync(admin, Roles.Admin);
-            log.LogInformation("Seeded default admin {Email}.", email);
+            await users.AddToRoleAsync(officer, Roles.Officer);
+            log.LogInformation("Seeded the first officer {Email}.", email);
         }
         else
         {
-            log.LogError("Could not seed admin: {Errors}",
+            log.LogError("Could not seed the first officer: {Errors}",
                 string.Join("; ", result.Errors.Select(e => e.Description)));
         }
     }
@@ -484,18 +543,81 @@ public static class DbSeeder
         await db.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Gives the seeded officer a member record and an organization, so the
+    /// console shows a real org rather than the campus-wide fallback. Only
+    /// touches an account that has neither, so an officer who has been linked
+    /// by hand is left alone.
+    /// </summary>
+    private static async Task LinkDemoOfficerAsync(
+        UserManager<ApplicationUser> users, ApilanDbContext db)
+    {
+        var officers = await users.GetUsersInRoleAsync(Roles.Officer);
+        var officer = officers.FirstOrDefault(o => o.MemberId is null && o.OrganizationId is null);
+
+        if (officer is null)
+        {
+            return;
+        }
+
+        var org = await db.Organizations.FirstOrDefaultAsync(o => o.Acronym == "CCSSC");
+
+        // A member record and a student number can each belong to one account
+        // only, and on a database that has been seeded before, another officer
+        // may already hold this one. Convenience for a demo is not worth
+        // failing startup over, so take the roster link only if it is free.
+        var member = await db.Members.FirstOrDefaultAsync(m => m.StudentNumber == "2022-04417");
+
+        if (member is not null)
+        {
+            var taken = await db.Users.AnyAsync(u =>
+                u.Id != officer.Id &&
+                (u.MemberId == member.Id || u.StudentNumber == member.StudentNumber));
+
+            if (taken)
+            {
+                member = null;
+            }
+        }
+
+        if (member is null && org is null)
+        {
+            return;
+        }
+
+        officer.OrganizationId = org?.Id;
+
+        if (member is not null)
+        {
+            officer.MemberId = member.Id;
+            officer.StudentNumber ??= member.StudentNumber;
+        }
+
+        await users.UpdateAsync(officer);
+    }
+
     private static async Task SeedStaffAsync(
         UserManager<ApplicationUser> users, ApilanDbContext db, IConfiguration config)
     {
-        var password = config["Apilan:DefaultAdminPassword"] ?? "Apilan!2026";
+        // The same key chain the bootstrap officer uses, so changing the
+        // configured password changes it for every seeded account rather than
+        // leaving the demo member on the built-in default.
+        var password = config["Apilan:DefaultOfficerPassword"]
+                       ?? config["Apilan:DefaultAdminPassword"]
+                       ?? "Apilan!2026";
 
-        // One officer and one member account, each linked to a member record,
-        // so every role can be demonstrated without creating accounts by hand.
+        // A member account linked to a roster record, so the member side can be
+        // demonstrated without creating one by hand. The officer side is the
+        // bootstrap account, linked just below.
         var accounts = new (string Email, string Role, string StudentNumber, string? Org)[]
         {
-            ("officer@apilan.local", Roles.Officer, "2022-04417", "CCSSC"),
-            ("member@apilan.local",  Roles.Member,  "2023-01188", null)
+            ("member@apilan.local", Roles.Member, "2023-01188", null)
         };
+
+        // The bootstrap officer starts with no roster record and no org, which
+        // makes the console masthead read "All organizations". With demo data
+        // present there is something real to attach it to.
+        await LinkDemoOfficerAsync(users, db);
 
         foreach (var (email, role, studentNumber, acronym) in accounts)
         {

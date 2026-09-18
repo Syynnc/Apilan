@@ -1,4 +1,4 @@
-using Apilan.Data;
+﻿using Apilan.Data;
 using Apilan.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -48,8 +48,9 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("StaffOnly", p => p.RequireRole(Roles.Admin, Roles.Officer));
-    options.AddPolicy("AdminOnly", p => p.RequireRole(Roles.Admin));
+    // One staff policy, because there is one staff role. Everything an officer
+    // cannot do is something no signed-in account can do.
+    options.AddPolicy("StaffOnly", p => p.RequireRole(Roles.Officer));
 });
 
 var app = builder.Build();

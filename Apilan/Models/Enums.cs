@@ -1,21 +1,28 @@
-namespace Apilan.Models;
+﻿namespace Apilan.Models;
 
-/// <summary>Role names. Kept as constants so controllers and seeding agree.</summary>
+/// <summary>
+/// Role names. Kept as constants so controllers and seeding agree.
+///
+/// Two roles: an officer runs the organization, a member attends its events.
+/// There is deliberately no separate administrator — an officer can do
+/// everything, including managing other accounts and reading the activity log.
+/// The trade is that any officer can demote another, so the screens that change
+/// roles refuse to leave the system with no officer at all.
+/// </summary>
 public static class Roles
 {
-    public const string Admin = "Admin";
     public const string Officer = "Officer";
     public const string Member = "Member";
 
-    public static readonly string[] All = { Admin, Officer, Member };
+    public static readonly string[] All = { Officer, Member };
 
     /// <summary>Anyone who can run events. Used all over the officer console.</summary>
-    public const string Staff = Admin + "," + Officer;
+    public const string Staff = Officer;
 }
 
 /// <summary>
 /// Where an account request stands. Students self-register and sit at
-/// <see cref="Pending"/> until an officer or admin approves them.
+/// <see cref="Pending"/> until an officer approves them.
 /// </summary>
 public enum AccountStatus
 {

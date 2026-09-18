@@ -305,11 +305,8 @@
         <div class="panel">
             <div class="panel-head">
                 <h3>Who touched this</h3>
-                @if (User.IsInRole(Roles.Admin))
-                {
-                    <a class="btn-a quiet sm" asp-controller="AuditLog" asp-action="Index"
-                       asp-route-entityName="Event" asp-route-entityId="@e.Id">Full log</a>
-                }
+                <a class="btn-a quiet sm" asp-controller="AuditLog" asp-action="Index"
+                   asp-route-entityName="Event" asp-route-entityId="@e.Id">Full log</a>
             </div>
             <div class="panel-body">
                 @if (!Model.History.Any())

@@ -11,8 +11,7 @@
 *@
 @{
     var currentUser = await UserManager.GetUserAsync(User);
-    var isAdmin = User.IsInRole(Roles.Admin);
-    var roleLabel = isAdmin ? "Administrator" : "Officer";
+    var roleLabel = "Officer";
     var pendingAccounts = await Db.Users.CountAsync(u => u.Status == AccountStatus.Pending);
 
     // An admin is campus-wide and may belong to no single org; a one-org
@@ -164,17 +163,14 @@
                     <span class="count">@pendingAccounts</span>
                 }
             </a>
-            @if (isAdmin)
-            {
-                <a class="@nav("Officers")" title="Officers & roles" asp-controller="Officers" asp-action="Index">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.2-2.9 7.7-7 9-4.1-1.3-7-4.8-7-9V6z"/><path d="M9.5 12l1.8 1.8 3.5-3.6"/></svg>
-                    <span class="lbl">Officers &amp; roles</span>
-                </a>
-                <a class="@nav("AuditLog")" title="Activity log" asp-controller="AuditLog" asp-action="Index">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-                    <span class="lbl">Activity log</span>
-                </a>
-            }
+            <a class="@nav("Officers")" title="Officers & roles" asp-controller="Officers" asp-action="Index">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.2-2.9 7.7-7 9-4.1-1.3-7-4.8-7-9V6z"/><path d="M9.5 12l1.8 1.8 3.5-3.6"/></svg>
+                <span class="lbl">Officers &amp; roles</span>
+            </a>
+            <a class="@nav("AuditLog")" title="Activity log" asp-controller="AuditLog" asp-action="Index">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+                <span class="lbl">Activity log</span>
+            </a>
         </nav>
 
         <div class="side-foot">

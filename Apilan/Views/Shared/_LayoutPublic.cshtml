@@ -83,7 +83,7 @@
 
                 @if (User.Identity?.IsAuthenticated == true)
                 {
-                    @if (User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Officer))
+                    @if (User.IsInRole(Roles.Officer))
                     {
                         <a class="btn-a ghost" asp-controller="Dashboard" asp-action="Index">Console</a>
                     }

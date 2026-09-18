@@ -199,10 +199,7 @@
         <div class="panel">
             <div class="panel-head">
                 <h3>Lately</h3>
-                @if (User.IsInRole(Roles.Admin))
-                {
-                    <a class="btn-a ghost sm" asp-controller="AuditLog" asp-action="Index">Full log</a>
-                }
+                <a class="btn-a ghost sm" asp-controller="AuditLog" asp-action="Index">Full log</a>
             </div>
             <div class="panel-body">
                 @if (!Model.Recent.Any())

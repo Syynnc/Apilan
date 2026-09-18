@@ -4,14 +4,10 @@
     ViewData["Module"] = "Master data";
     Layout = "_LayoutAdmin";
 
-    var isAdmin = User.IsInRole(Roles.Admin);
 }
 
 @section Actions {
-    @if (isAdmin)
-    {
-        <a class="btn-a sm" asp-action="Create">Add organization</a>
-    }
+    <a class="btn-a sm" asp-action="Create">Add organization</a>
 }
 
 <form method="get" asp-action="Index" class="toolbar">
@@ -46,14 +42,7 @@
             Every event is filed against an organization, so there has to be at least one
             before an event can be created.
         </p>
-        @if (isAdmin)
-        {
-            <a class="btn-a" style="margin-top:var(--s-4)" asp-action="Create">Add the first organization</a>
-        }
-        else
-        {
-            <p class="dim">An administrator sets these up.</p>
-        }
+        <a class="btn-a" style="margin-top:var(--s-4)" asp-action="Create">Add the first organization</a>
     </div>
 }
 else
@@ -96,16 +85,13 @@ else
                     <td>
                         <div class="row-actions">
                             <a class="btn-a ghost sm" asp-action="Details" asp-route-id="@o.Id">Events</a>
-                            @if (isAdmin)
-                            {
-                                <a class="btn-a ghost sm" asp-action="Edit" asp-route-id="@o.Id">Edit</a>
-                                <form asp-action="Toggle" asp-route-id="@o.Id" method="post">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn-a quiet sm">
-                                        @(o.IsActive ? "Archive" : "Restore")
-                                    </button>
-                                </form>
-                            }
+                            <a class="btn-a ghost sm" asp-action="Edit" asp-route-id="@o.Id">Edit</a>
+                            <form asp-action="Toggle" asp-route-id="@o.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn-a quiet sm">
+                                    @(o.IsActive ? "Archive" : "Restore")
+                                </button>
+                            </form>
                         </div>
                     </td>
                 </tr>

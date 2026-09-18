@@ -10,7 +10,6 @@
 <div class="toolbar">
     <div class="segmented">
         <a class="@Tab(null)" asp-action="Index">Everyone</a>
-        <a class="@Tab(Roles.Admin)" asp-action="Index" asp-route-role="@Roles.Admin">Admins (@Model.Admins)</a>
         <a class="@Tab(Roles.Officer)" asp-action="Index" asp-route-role="@Roles.Officer">Officers (@Model.Officers)</a>
         <a class="@Tab(Roles.Member)" asp-action="Index" asp-route-role="@Roles.Member">Members (@Model.Members)</a>
     </div>

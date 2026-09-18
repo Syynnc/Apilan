@@ -14,8 +14,9 @@ namespace Apilan.Controllers;
 /// lets the system answer "what has this org run, and how did it go" — the
 /// question a council asks at the end of a term.
 ///
-/// Officers can read the directory; only an admin creates or edits an org,
-/// because an org is a campus-level fact rather than an officer's own record.
+/// Any officer can add or edit an organization. There is no separate
+/// administrator to reserve it for, and an officer setting up their own org is
+/// the ordinary case rather than the exception.
 /// </summary>
 [Authorize(Policy = "StaffOnly")]
 public class OrganizationsController : Controller
@@ -174,11 +175,9 @@ public class OrganizationsController : Controller
     // ---- Create / edit ----------------------------------------------------
 
     [HttpGet]
-    [Authorize(Policy = "AdminOnly")]
     public IActionResult Create() => View("Form", new OrganizationFormViewModel());
 
     [HttpPost]
-    [Authorize(Policy = "AdminOnly")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(OrganizationFormViewModel model)
     {
@@ -204,7 +203,6 @@ public class OrganizationsController : Controller
     }
 
     [HttpGet]
-    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Edit(int id)
     {
         var org = await _db.Organizations.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);
@@ -215,7 +213,6 @@ public class OrganizationsController : Controller
     }
 
     [HttpPost]
-    [Authorize(Policy = "AdminOnly")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, OrganizationFormViewModel model)
     {
@@ -249,7 +246,6 @@ public class OrganizationsController : Controller
     /// reports do not stop being true because the org wound down.
     /// </summary>
     [HttpPost]
-    [Authorize(Policy = "AdminOnly")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Toggle(int id)
     {

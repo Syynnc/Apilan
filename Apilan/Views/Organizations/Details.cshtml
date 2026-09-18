@@ -11,10 +11,7 @@
 
 @section Actions {
     <a class="btn-a ghost sm" asp-action="Index">All organizations</a>
-    @if (User.IsInRole(Roles.Admin))
-    {
-        <a class="btn-a ghost sm" asp-action="Edit" asp-route-id="@o.Id">Edit</a>
-    }
+    <a class="btn-a ghost sm" asp-action="Edit" asp-route-id="@o.Id">Edit</a>
     <a class="btn-a sm" asp-controller="Reports" asp-action="Index" asp-route-organizationId="@o.Id">
         Participation report
     </a>

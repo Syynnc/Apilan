@@ -10,7 +10,6 @@ public class OfficerListViewModel
     public string? Role { get; set; }
     public string? Search { get; set; }
 
-    public int Admins { get; set; }
     public int Officers { get; set; }
     public int Members { get; set; }
 
@@ -44,7 +43,6 @@ public class AccountRowViewModel
 
     public string RoleChip => Role switch
     {
-        Roles.Admin => "risk",
         Roles.Officer => "info",
         _ => "idle"
     };

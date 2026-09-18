@@ -1,4 +1,4 @@
-using Apilan.Data;
+﻿using Apilan.Data;
 using Apilan.Models;
 using Apilan.Services;
 using Apilan.ViewModels;
@@ -14,7 +14,7 @@ namespace Apilan.Controllers;
 /// that decides who can run events. Two rules hold throughout: an admin cannot
 /// strip or disable their own access, and the system never runs out of admins.
 /// </summary>
-[Authorize(Policy = "AdminOnly")]
+[Authorize(Policy = "StaffOnly")]
 public class OfficersController : Controller
 {
     private readonly ApilanDbContext _db;
@@ -55,7 +55,7 @@ public class OfficersController : Controller
         foreach (var user in users)
         {
             var roles = await _users.GetRolesAsync(user);
-            var held = roles.Contains(Roles.Admin) ? Roles.Admin
+            var held = roles.Contains(Roles.Officer) ? Roles.Officer
                 : roles.Contains(Roles.Officer) ? Roles.Officer
                 : Roles.Member;
 
@@ -87,7 +87,6 @@ public class OfficersController : Controller
             Accounts = rows,
             Role = role,
             Search = search,
-            Admins = await CountInRoleAsync(Roles.Admin),
             Officers = await CountInRoleAsync(Roles.Officer),
             Members = await CountInRoleAsync(Roles.Member),
             UnlinkedMembers = await _db.Members
@@ -99,7 +98,7 @@ public class OfficersController : Controller
     }
 
     /// <summary>
-    /// Promotes or demotes an account. A user holds exactly one of the three
+    /// Promotes or demotes an account. A user holds exactly one of the two
     /// roles, so the old one comes off as the new one goes on.
     /// </summary>
     [HttpPost]
@@ -120,15 +119,18 @@ public class OfficersController : Controller
 
         if (user.Id == _users.GetUserId(User))
         {
-            TempData["Error"] = "You cannot change your own role. Ask another admin.";
+            TempData["Error"] = "You cannot change your own role. Ask another officer.";
             return RedirectToAction(nameof(Index));
         }
 
         var current = await _users.GetRolesAsync(user);
 
-        if (current.Contains(Roles.Admin) && role != Roles.Admin && await CountInRoleAsync(Roles.Admin) <= 1)
+        // With officers as the only staff role, demoting the last one would
+        // leave the console with nobody able to open it — and nobody able to
+        // promote a replacement. Refuse rather than lock everyone out.
+        if (current.Contains(Roles.Officer) && role != Roles.Officer && await CountInRoleAsync(Roles.Officer) <= 1)
         {
-            TempData["Error"] = "That is the last admin account. Promote someone else first.";
+            TempData["Error"] = "That is the last officer account. Promote someone else first.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -171,10 +173,10 @@ public class OfficersController : Controller
         }
 
         if (user.Status == AccountStatus.Active
-            && await _users.IsInRoleAsync(user, Roles.Admin)
-            && await CountInRoleAsync(Roles.Admin) <= 1)
+            && await _users.IsInRoleAsync(user, Roles.Officer)
+            && await CountInRoleAsync(Roles.Officer) <= 1)
         {
-            TempData["Error"] = "That is the last admin account, so it cannot be disabled.";
+            TempData["Error"] = "That is the last officer account, so it cannot be disabled.";
             return RedirectToAction(nameof(Index));
         }
 

@@ -1,4 +1,4 @@
-using Apilan.Data;
+﻿using Apilan.Data;
 using Apilan.Models;
 using Apilan.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -257,8 +257,7 @@ public class AccountController : Controller
 
     private async Task<IActionResult> RedirectToRoleHomeAsync(ApplicationUser user)
     {
-        if (await _users.IsInRoleAsync(user, Roles.Admin) ||
-            await _users.IsInRoleAsync(user, Roles.Officer))
+        if (await _users.IsInRoleAsync(user, Roles.Officer))
         {
             return RedirectToAction("Index", "Dashboard");
         }

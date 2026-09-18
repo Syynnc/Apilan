@@ -10,8 +10,11 @@ namespace Apilan.Controllers;
 /// Administration · Activity log. Read-only by design: a trail that can be
 /// edited is not a trail. Every write in the system lands here through
 /// <see cref="Services.AuditTrail"/>.
+///
+/// Open to any officer. The log is how an org answers "who changed this", and
+/// putting it behind a role nobody holds would have made it unreadable.
 /// </summary>
-[Authorize(Policy = "AdminOnly")]
+[Authorize(Policy = "StaffOnly")]
 public class AuditLogController : Controller
 {
     private const int PageSize = 50;
