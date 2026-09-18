@@ -1,0 +1,40 @@
+@{
+    ViewData["Title"] = "Request submitted";
+    Layout = "_LayoutAuth";
+    var email = ViewData["Email"] as string;
+}
+
+<div class="auth-card">
+    <div class="auth-state">
+
+        <svg class="seal" viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="17" />
+            <path d="M13 20.5 L18 25.5 L27.5 15" />
+        </svg>
+
+        <h1>Request submitted</h1>
+        <p>
+            @if (!string.IsNullOrEmpty(email))
+            {
+                <text>We recorded your request for <strong>@email</strong>.</text>
+            }
+            else
+            {
+                <text>We recorded your request.</text>
+            }
+            You cannot sign in yet.
+        </p>
+
+        <ol class="auth-steps">
+            <li><span class="k">1</span><span>An officer checks your student number against the member roster.</span></li>
+            <li><span class="k">2</span><span>Once approved, your account is activated with member access.</span></li>
+            <li><span class="k">3</span><span>Sign in with your email or student number and the password you chose.</span></li>
+        </ol>
+
+        <div class="hero-cta">
+            <a class="btn-a" asp-action="Login">Back to sign in</a>
+            <a class="btn-a ghost" asp-controller="Home" asp-action="Index">Browse events</a>
+        </div>
+
+    </div>
+</div>

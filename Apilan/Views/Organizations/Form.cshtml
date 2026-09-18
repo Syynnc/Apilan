@@ -1,0 +1,88 @@
+@model Apilan.ViewModels.OrganizationFormViewModel
+@{
+    ViewData["Title"] = Model.IsNew ? "Add organization" : "Edit organization";
+    ViewData["Module"] = "Master data";
+    Layout = "_LayoutAdmin";
+}
+
+<form method="post"
+      asp-action="@(Model.IsNew ? "Create" : "Edit")"
+      asp-route-id="@(Model.IsNew ? null : (int?)Model.Id)">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h2>The organization</h2>
+        </div>
+        <div class="panel-body form-a">
+            <div class="field span-3">
+                <label asp-for="Name"></label>
+                <input class="input-a" asp-for="Name" placeholder="Society of Information Technology Students" />
+                <span class="field-error" asp-validation-for="Name"></span>
+            </div>
+
+            <div class="field">
+                <label asp-for="Acronym"></label>
+                <input class="input-a mono" asp-for="Acronym" placeholder="SITS" />
+                <span class="hint">Shown on event lists and reports.</span>
+                <span class="field-error" asp-validation-for="Acronym"></span>
+            </div>
+
+            <div class="field span-4">
+                <label asp-for="Description"></label>
+                <textarea class="input-a" asp-for="Description" rows="2"
+                          placeholder="Technical talks, workshops, and the annual hackathon."></textarea>
+                <span class="field-error" asp-validation-for="Description"></span>
+            </div>
+
+            <div class="field span-2">
+                <label asp-for="ColorKey"></label>
+                <select class="input-a" asp-for="ColorKey">
+                    @foreach (var (key, label) in Apilan.ViewModels.EventTypeFormViewModel.Colors)
+                    {
+                        <option value="@key" selected="@(Model.ColorKey == key)">@label</option>
+                    }
+                </select>
+                <span class="hint">Marks this org's events on the lists and the calendar.</span>
+            </div>
+
+            <div class="field span-2">
+                <label asp-for="IsActive"></label>
+                <select class="input-a" asp-for="IsActive">
+                    <option value="true">Active — can run new events</option>
+                    <option value="false">Archived — hidden from new events</option>
+                </select>
+                <span class="hint">Archiving never touches events already on file.</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h2>Who to ask</h2>
+        </div>
+        <div class="panel-body form-a">
+            <div class="field span-2">
+                <label asp-for="Adviser"></label>
+                <input class="input-a" asp-for="Adviser" placeholder="Prof. R. Bautista" />
+                <span class="field-error" asp-validation-for="Adviser"></span>
+            </div>
+
+            <div class="field span-2">
+                <label asp-for="ContactEmail"></label>
+                <input class="input-a" asp-for="ContactEmail" placeholder="sits@student.edu.ph" />
+                <span class="field-error" asp-validation-for="ContactEmail"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-foot">
+        <a class="btn-a ghost" asp-action="Index">Cancel</a>
+        <button type="submit" class="btn-a">@(Model.IsNew ? "Add organization" : "Save changes")</button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

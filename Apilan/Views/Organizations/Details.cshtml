@@ -1,0 +1,187 @@
+@model Apilan.ViewModels.OrganizationDetailsViewModel
+@{
+    var o = Model.Organization;
+
+    ViewData["Title"] = o.Acronym;
+    ViewData["Module"] = "Master data · Organizations";
+    Layout = "_LayoutAdmin";
+
+    string Tab(EventStatus? s) => Model.Status == s ? "is-active" : "";
+}
+
+@section Actions {
+    <a class="btn-a ghost sm" asp-action="Index">All organizations</a>
+    @if (User.IsInRole(Roles.Admin))
+    {
+        <a class="btn-a ghost sm" asp-action="Edit" asp-route-id="@o.Id">Edit</a>
+    }
+    <a class="btn-a sm" asp-controller="Reports" asp-action="Index" asp-route-organizationId="@o.Id">
+        Participation report
+    </a>
+}
+
+<div class="panel">
+    <div class="panel-body">
+        <div class="toolbar" style="margin:0">
+            <div>
+                <h2 style="margin:0">
+                    <span class="swatch" data-type="@o.ColorKey" aria-hidden="true"></span>
+                    @o.Name
+                </h2>
+                <p class="dim" style="margin:var(--s-2) 0 0">
+                    @o.Acronym
+                    @if (!string.IsNullOrWhiteSpace(o.Adviser))
+                    {
+                        <text> · adviser @o.Adviser</text>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(o.ContactEmail))
+                    {
+                        <text> · </text><span class="mono">@o.ContactEmail</span>
+                    }
+                </p>
+            </div>
+            <span class="grow"></span>
+            <span class="chip @(o.IsActive ? "ok" : "idle")">@(o.IsActive ? "Active" : "Archived")</span>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(o.Description))
+        {
+            <p style="margin-top:var(--s-4)">@o.Description</p>
+        }
+    </div>
+</div>
+
+<div class="tiles">
+    <div class="tile">
+        <span class="l">Events run</span>
+        <span class="n">@Model.TotalEvents</span>
+    </div>
+    <div class="tile">
+        <span class="l">Registrations</span>
+        <span class="n">@Model.Registrations</span>
+    </div>
+    <div class="tile">
+        <span class="l">Turnout</span>
+        <span class="n">@Model.TurnoutPercent<small>%</small></span>
+        <span class="s">@Model.Attended attended</span>
+    </div>
+    <div class="tile">
+        <span class="l">Certificates</span>
+        <span class="n">@Model.Certificates</span>
+    </div>
+    <div class="tile">
+        <span class="l">Feedback</span>
+        @if (Model.AverageRating.HasValue)
+        {
+            <span class="n">@Model.AverageRating.Value.ToString("0.0")<small>/5</small></span>
+            <span class="s">@Model.Responses response@(Model.Responses == 1 ? "" : "s")</span>
+        }
+        else
+        {
+            <span class="n dim">—</span>
+            <span class="s">Nothing yet</span>
+        }
+    </div>
+</div>
+
+@if (Model.Officers.Any())
+{
+    <div class="panel">
+        <div class="panel-head">
+            <h3>Accounts acting for @o.Acronym</h3>
+        </div>
+        <div class="panel-body">
+            <table class="table-a">
+                <tbody>
+                @foreach (var officer in Model.Officers)
+                {
+                    <tr>
+                        <td><strong>@officer.FullName</strong></td>
+                        <td><span class="chip idle">@officer.Role</span></td>
+                        <td class="mono dim">@(officer.Email ?? "—")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<div class="toolbar">
+    <div class="segmented">
+        <a class="@Tab(null)" asp-action="Details" asp-route-id="@o.Id">All</a>
+        <a class="@Tab(EventStatus.Draft)" asp-action="Details" asp-route-id="@o.Id" asp-route-status="@EventStatus.Draft">Drafts</a>
+        <a class="@Tab(EventStatus.Published)" asp-action="Details" asp-route-id="@o.Id" asp-route-status="@EventStatus.Published">Published</a>
+        <a class="@Tab(EventStatus.Completed)" asp-action="Details" asp-route-id="@o.Id" asp-route-status="@EventStatus.Completed">Completed</a>
+        <a class="@Tab(EventStatus.Cancelled)" asp-action="Details" asp-route-id="@o.Id" asp-route-status="@EventStatus.Cancelled">Cancelled</a>
+    </div>
+    <span class="grow"></span>
+    <span class="count">@Model.Events.Count shown</span>
+</div>
+
+@if (!Model.Events.Any())
+{
+    <div class="empty-a">
+        <h4>Nothing here</h4>
+        <p>
+            @if (Model.Status.HasValue)
+            {
+                <text>@o.Acronym has no @Model.Status.ToString()!.ToLowerInvariant() events.</text>
+            }
+            else
+            {
+                <text>@o.Acronym has not run an event yet.</text>
+            }
+        </p>
+    </div>
+}
+else
+{
+    <div class="panel">
+        <table class="table-a">
+            <thead>
+                <tr>
+                    <th>Event</th>
+                    <th>When</th>
+                    <th>Where</th>
+                    <th class="num">Sessions</th>
+                    <th style="width:200px">Slots</th>
+                    <th>Status</th>
+                    <th style="width:1%"></th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var e in Model.Events)
+            {
+                <tr>
+                    <td>
+                        <strong>
+                            <span class="swatch" data-type="@e.ColorKey" aria-hidden="true"></span>
+                            @e.Title
+                        </strong>
+                        <div class="dim" style="font-size:var(--fs-2xs)">@e.TypeLabel</div>
+                    </td>
+                    <td class="mono nowrap">
+                        @e.StartsAt.ToString("ddd d MMM yyyy")
+                        <div class="dim" style="font-size:var(--fs-2xs)">@e.StartsAt.ToString("h:mm tt")</div>
+                    </td>
+                    <td>@e.VenueName</td>
+                    <td class="num mono">@e.Sessions</td>
+                    <td>
+                        <div class="bar-cell">
+                            <div class="meter @(e.IsFull ? "full" : "")"><i style="width:@(e.FillPercent)%"></i></div>
+                            <span class="pct">@e.Taken/@e.Capacity</span>
+                        </div>
+                    </td>
+                    <td><span class="chip @e.StatusChip">@e.Status</span></td>
+                    <td>
+                        <div class="row-actions">
+                            <a class="btn-a ghost sm" asp-controller="Events" asp-action="Details" asp-route-id="@e.Id">Open</a>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

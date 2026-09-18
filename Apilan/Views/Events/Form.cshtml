@@ -1,0 +1,318 @@
+@model Apilan.ViewModels.EventFormViewModel
+@{
+    ViewData["Title"] = Model.IsNew ? "New event" : "Edit event";
+    ViewData["Module"] = "Transactions · Events";
+    Layout = "_LayoutAdmin";
+
+    // The template the "Add session" button clones. Rendered once, hidden.
+    var nextIndex = Model.Sessions.Count;
+}
+
+<form method="post" id="event-form"
+      asp-action="@(Model.IsNew ? "Create" : "Edit")"
+      asp-route-id="@(Model.IsNew ? null : (int?)Model.Id)">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All" class="validation-summary-errors"></div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h2>What and when</h2>
+            @if (!Model.IsNew)
+            {
+                <span class="chip @(Model.Status == EventStatus.Published ? "ok" : "warn")">@Model.Status</span>
+            }
+        </div>
+        <div class="panel-body form-a">
+            <div class="field span-4">
+                <label asp-for="Title"></label>
+                <input class="input-a" asp-for="Title" placeholder="Tech Night 2026" />
+                <span class="field-error" asp-validation-for="Title"></span>
+            </div>
+
+            <div class="field span-4">
+                <label asp-for="Description"></label>
+                <textarea class="input-a" asp-for="Description" rows="3"
+                          placeholder="An evening of lightning talks from alumni working in the industry."></textarea>
+                <span class="field-error" asp-validation-for="Description"></span>
+            </div>
+
+            <div class="field span-2">
+                <label asp-for="OrganizationId"></label>
+                <select class="input-a" asp-for="OrganizationId">
+                    <option value="">Pick the organization</option>
+                    @foreach (var org in Model.Organizations)
+                    {
+                        <option value="@org.Id">@org.Acronym — @org.Name</option>
+                    }
+                </select>
+                <span class="hint">Whose event this is. Reports group by it.</span>
+                <span class="field-error" asp-validation-for="OrganizationId"></span>
+            </div>
+
+            <div class="field span-2">
+                <label asp-for="EventTypeId"></label>
+                <select class="input-a" asp-for="EventTypeId">
+                    <option value="">Pick a type</option>
+                    @foreach (var t in Model.EventTypes)
+                    {
+                        <option value="@t.Id">@t.Name</option>
+                    }
+                </select>
+                <span class="field-error" asp-validation-for="EventTypeId"></span>
+            </div>
+
+            <div class="field span-2">
+                <label asp-for="VenueId"></label>
+                <select class="input-a" asp-for="VenueId" id="venue-select">
+                    <option value="">Pick a venue</option>
+                    @foreach (var v in Model.Venues)
+                    {
+                        <option value="@v.Id" data-capacity="@v.Capacity">@v.Name — holds @v.Capacity</option>
+                    }
+                </select>
+                <span class="field-error" asp-validation-for="VenueId"></span>
+            </div>
+
+            <div class="field span-2">
+                <label asp-for="StartsAt"></label>
+                <input class="input-a mono" asp-for="StartsAt" type="datetime-local" data-event-start />
+                <span class="field-error" asp-validation-for="StartsAt"></span>
+            </div>
+
+            <div class="field span-2">
+                <label asp-for="EndsAt"></label>
+                <input class="input-a mono" asp-for="EndsAt" type="datetime-local" data-event-end />
+                <span class="field-error" asp-validation-for="EndsAt"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h2>Sessions</h2>
+            <button type="button" class="btn-a ghost sm" data-add-session>Add session</button>
+        </div>
+        <div class="panel-body">
+            <p class="muted" style="margin-bottom:var(--s-4); font-size:var(--fs-sm)">
+                Attendance is taken per session, and the certificate rule counts sessions
+                attended. A single-day activity needs one; a two-day seminar might need four.
+                Anyone checked in past a session's grace period is recorded as late rather
+                than on time — set it to 0 if the bell is the bell.
+            </p>
+
+            <div id="session-rows">
+                @for (var i = 0; i < Model.Sessions.Count; i++)
+                {
+                    var s = Model.Sessions[i];
+                    <div class="session-edit" data-session-row>
+                        <input type="hidden" asp-for="Sessions[i].Id" />
+                        <input type="hidden" asp-for="Sessions[i].IsDeleted" data-deleted-flag />
+
+                        <div class="field">
+                            <label asp-for="Sessions[i].Name"></label>
+                            <input class="input-a" asp-for="Sessions[i].Name" placeholder="Day 1 · Afternoon" />
+                        </div>
+
+                        <div class="field">
+                            <label asp-for="Sessions[i].StartsAt"></label>
+                            <input class="input-a mono" asp-for="Sessions[i].StartsAt" type="datetime-local" />
+                        </div>
+
+                        <div class="field">
+                            <label asp-for="Sessions[i].EndsAt"></label>
+                            <input class="input-a mono" asp-for="Sessions[i].EndsAt" type="datetime-local" />
+                        </div>
+
+                        <div class="field">
+                            <label asp-for="Sessions[i].LateAfterMinutes"></label>
+                            <input class="input-a mono" asp-for="Sessions[i].LateAfterMinutes"
+                                   type="number" min="0" max="240" />
+                        </div>
+
+                        <div class="field">
+                            @if (s.AttendanceCount > 0)
+                            {
+                                <span class="chip idle" title="Attendance already recorded">@s.AttendanceCount present</span>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn-a quiet sm" data-remove-session>Remove</button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <template id="session-template">
+                <div class="session-edit" data-session-row>
+                    <input type="hidden" name="Sessions[__i__].Id" value="0" />
+                    <input type="hidden" name="Sessions[__i__].IsDeleted" value="false" data-deleted-flag />
+
+                    <div class="field">
+                        <label>Session name</label>
+                        <input class="input-a" name="Sessions[__i__].Name" placeholder="Day 2 · Afternoon" />
+                    </div>
+
+                    <div class="field">
+                        <label>Starts</label>
+                        <input class="input-a mono" name="Sessions[__i__].StartsAt" type="datetime-local" data-session-start />
+                    </div>
+
+                    <div class="field">
+                        <label>Ends</label>
+                        <input class="input-a mono" name="Sessions[__i__].EndsAt" type="datetime-local" data-session-end />
+                    </div>
+
+                    <div class="field">
+                        <label>Late after (min)</label>
+                        <input class="input-a mono" name="Sessions[__i__].LateAfterMinutes"
+                               type="number" min="0" max="240" value="15" />
+                    </div>
+
+                    <div class="field">
+                        <button type="button" class="btn-a quiet sm" data-remove-session>Remove</button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h2>Slots and rules</h2>
+        </div>
+        <div class="panel-body form-a">
+            <div class="field span-2">
+                <label asp-for="Capacity"></label>
+                <input class="input-a mono" asp-for="Capacity" type="number" min="1" id="capacity-input" />
+                <span class="hint" id="capacity-hint">
+                    @(Model.SelectedVenueCapacity > 0
+                        ? $"The chosen venue holds {Model.SelectedVenueCapacity}."
+                        : "Cannot exceed the venue's capacity.")
+                </span>
+                <span class="field-error" asp-validation-for="Capacity"></span>
+            </div>
+
+            <div class="field span-2">
+                <label asp-for="RegistrationDeadline"></label>
+                <input class="input-a mono" asp-for="RegistrationDeadline" type="datetime-local" />
+                <span class="field-error" asp-validation-for="RegistrationDeadline"></span>
+            </div>
+
+            <div class="field span-2">
+                <label class="check-row">
+                    <input type="checkbox" asp-for="AllowWaitlist" />
+                    <span>
+                        <span class="cl">Keep a waitlist once full</span>
+                        <span class="cd">A freed slot goes to whoever has waited longest.</span>
+                    </span>
+                </label>
+            </div>
+
+            <div class="field span-2">
+                <label class="check-row">
+                    <input type="checkbox" asp-for="RequiresApproval" />
+                    <span>
+                        <span class="cl">Registrations need officer approval</span>
+                        <span class="cd">Slots are held as pending until someone approves them.</span>
+                    </span>
+                </label>
+            </div>
+
+            <div class="field span-2">
+                <label class="check-row">
+                    <input type="checkbox" asp-for="IssuesCertificate" />
+                    <span>
+                        <span class="cl">Issue certificates for this event</span>
+                        <span class="cd">Eligibility is computed from attendance.</span>
+                    </span>
+                </label>
+            </div>
+
+            <div class="field span-2">
+                <label class="check-row">
+                    <input type="checkbox" asp-for="CollectsFeedback" />
+                    <span>
+                        <span class="cl">Ask participants for feedback afterwards</span>
+                        <span class="cd">Opens to attendees once the event is over.</span>
+                    </span>
+                </label>
+            </div>
+
+            <div class="field span-2">
+                <label asp-for="CertificateThresholdPercent"></label>
+                <input class="input-a mono" asp-for="CertificateThresholdPercent" type="number" min="0" max="100" />
+                <span class="hint">80% of a four-session event means three sessions attended.</span>
+                <span class="field-error" asp-validation-for="CertificateThresholdPercent"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-foot">
+        <a class="btn-a ghost" asp-action="@(Model.IsNew ? "Index" : "Details")" asp-route-id="@(Model.IsNew ? null : (int?)Model.Id)">Cancel</a>
+        <button type="submit" class="btn-a">@(Model.IsNew ? "Save as draft" : "Save changes")</button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var rows = document.getElementById("session-rows");
+            var template = document.getElementById("session-template");
+            var nextIndex = @nextIndex;
+
+            document.querySelector("[data-add-session]").addEventListener("click", function () {
+                var markup = template.innerHTML.replace(/__i__/g, nextIndex++);
+                var holder = document.createElement("div");
+                holder.innerHTML = markup.trim();
+                var row = holder.firstChild;
+
+                // Seed the new session with the event's own window, which is
+                // right for a single-session event and a sane start otherwise.
+                var start = document.querySelector("[data-event-start]");
+                var end = document.querySelector("[data-event-end]");
+                if (start) { row.querySelector("[data-session-start]").value = start.value; }
+                if (end) { row.querySelector("[data-session-end]").value = end.value; }
+
+                rows.appendChild(row);
+            });
+
+            // Removing a saved session only flags it — the row keeps posting so
+            // the model binder's indexes stay contiguous.
+            rows.addEventListener("click", function (e) {
+                var button = e.target.closest("[data-remove-session]");
+                if (!button) { return; }
+
+                var row = button.closest("[data-session-row]");
+                var flag = row.querySelector("[data-deleted-flag]");
+                var id = row.querySelector('input[name$=".Id"]');
+
+                if (id && id.value !== "0") {
+                    flag.value = "true";
+                    row.style.display = "none";
+                } else {
+                    row.remove();
+                }
+            });
+
+            // Keep the capacity hint honest as the venue changes.
+            var venue = document.getElementById("venue-select");
+            var hint = document.getElementById("capacity-hint");
+            var capacity = document.getElementById("capacity-input");
+
+            if (venue) {
+                venue.addEventListener("change", function () {
+                    var option = venue.options[venue.selectedIndex];
+                    var holds = option && option.dataset ? option.dataset.capacity : null;
+                    if (!holds) { return; }
+
+                    hint.textContent = "The chosen venue holds " + holds + ".";
+                    if (parseInt(capacity.value, 10) > parseInt(holds, 10)) {
+                        capacity.value = holds;
+                    }
+                });
+            }
+        })();
+    </script>
+}

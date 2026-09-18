@@ -1,0 +1,125 @@
+@model Apilan.ViewModels.OfficerListViewModel
+@{
+    ViewData["Title"] = "Officers & roles";
+    ViewData["Module"] = "Administration";
+    Layout = "_LayoutAdmin";
+
+    string Tab(string? r) => Model.Role == r ? "is-active" : "";
+}
+
+<div class="toolbar">
+    <div class="segmented">
+        <a class="@Tab(null)" asp-action="Index">Everyone</a>
+        <a class="@Tab(Roles.Admin)" asp-action="Index" asp-route-role="@Roles.Admin">Admins (@Model.Admins)</a>
+        <a class="@Tab(Roles.Officer)" asp-action="Index" asp-route-role="@Roles.Officer">Officers (@Model.Officers)</a>
+        <a class="@Tab(Roles.Member)" asp-action="Index" asp-route-role="@Roles.Member">Members (@Model.Members)</a>
+    </div>
+
+    <span class="grow"></span>
+
+    <form method="get" asp-action="Index" style="display:flex; gap:var(--s-2)">
+        <input type="hidden" name="role" value="@Model.Role" />
+        <input class="input-a" type="search" name="search" value="@Model.Search" placeholder="Name, email, or number" />
+        <button type="submit" class="btn-a ghost sm">Find</button>
+    </form>
+</div>
+
+@if (!Model.Accounts.Any())
+{
+    <div class="empty-a">
+        <h4>No accounts match</h4>
+        <p>Clear the filter, or approve a pending request to create the first account in this role.</p>
+        <a class="btn-a" style="margin-top:var(--s-4)" asp-controller="AccountRequests" asp-action="Index">Account requests</a>
+    </div>
+}
+else
+{
+    <div class="panel">
+        <table class="table-a">
+            <thead>
+                <tr>
+                    <th>Account</th>
+                    <th>Member record</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th style="width:300px">Change</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var a in Model.Accounts)
+            {
+                <tr>
+                    <td>
+                        <strong>@a.FullName @if (a.IsSelf) { <span class="chip idle">you</span> }</strong>
+                        <div class="dim" style="font-size:var(--fs-2xs)">@a.Email@(string.IsNullOrWhiteSpace(a.StudentNumber) ? "" : $" · {a.StudentNumber}")</div>
+                    </td>
+                    <td>
+                        @if (a.MemberId is not null)
+                        {
+                            <a asp-controller="Members" asp-action="Details" asp-route-id="@a.MemberId">@a.MemberName</a>
+                        }
+                        else
+                        {
+                            <form asp-action="LinkMember" asp-route-id="@a.UserId" method="post"
+                                  style="display:flex; gap:var(--s-2); align-items:center">
+                                @Html.AntiForgeryToken()
+                                <select class="input-a" name="memberId" required style="font-size:var(--fs-2xs)">
+                                    <option value="">Link to a member…</option>
+                                    @foreach (var m in Model.UnlinkedMembers)
+                                    {
+                                        <option value="@m.Id">@m.ListName — @m.StudentNumber</option>
+                                    }
+                                </select>
+                                <button type="submit" class="btn-a ghost sm">Link</button>
+                            </form>
+                        }
+                    </td>
+                    <td><span class="chip @a.RoleChip">@a.Role</span></td>
+                    <td>
+                        <span class="chip @a.StatusChip">@a.Status</span>
+                        @if (a.ReviewedOn.HasValue)
+                        {
+                            <div class="dim" style="font-size:var(--fs-2xs)">since @a.ReviewedOn.Value.ToString("d MMM yyyy")</div>
+                        }
+                    </td>
+                    <td>
+                        @if (a.IsSelf)
+                        {
+                            <span class="dim" style="font-size:var(--fs-2xs)">
+                                Your own access is changed by another admin.
+                            </span>
+                        }
+                        else
+                        {
+                            <div class="row-actions">
+                                <form asp-action="ChangeRole" asp-route-id="@a.UserId" method="post"
+                                      style="display:flex; gap:var(--s-2)">
+                                    @Html.AntiForgeryToken()
+                                    <select class="input-a" name="role" style="font-size:var(--fs-2xs)">
+                                        @foreach (var r in Roles.All)
+                                        {
+                                            <option value="@r" selected="@(a.Role == r)">@r</option>
+                                        }
+                                    </select>
+                                    <button type="submit" class="btn-a sm">Set</button>
+                                </form>
+
+                                <form asp-action="ToggleAccess" asp-route-id="@a.UserId" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn-a @(a.Status == AccountStatus.Active ? "danger" : "ghost") sm">
+                                        @(a.Status == AccountStatus.Active ? "Disable" : "Enable")
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        <div class="report-note">
+            An account is never deleted — disabling it keeps the history it is attached to
+            while closing the door. The system also refuses to leave itself without an admin.
+        </div>
+    </div>
+}

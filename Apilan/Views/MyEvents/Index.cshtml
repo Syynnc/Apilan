@@ -1,0 +1,149 @@
+@model Apilan.ViewModels.MyEventsViewModel
+@using Apilan.Services
+@{
+    ViewData["Title"] = "My events";
+    Layout = "_LayoutPublic";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/landing.css" asp-append-version="true" />
+}
+
+<section class="section">
+    <div class="shell">
+
+        <div class="section-head">
+            <span class="eyebrow">Signed in</span>
+            <h2>Hello, @Model.FullName.</h2>
+            <p>Every event you have registered for, with the code you present at the door.</p>
+        </div>
+
+        @if (TempData["Success"] is string ok)
+        {
+            <div class="flash ok"><strong>Done.</strong> @ok</div>
+        }
+        @if (TempData["Error"] is string bad)
+        {
+            <div class="flash bad"><strong>Not done.</strong> @bad</div>
+        }
+
+        @if (Model.FeedbackPending > 0)
+        {
+            <div class="flash ok">
+                <strong>@Model.FeedbackPending event@(Model.FeedbackPending == 1 ? "" : "s")</strong>
+                @(Model.FeedbackPending == 1 ? "is" : "are") waiting on your feedback.
+                It goes to the officers who ran @(Model.FeedbackPending == 1 ? "it" : "them").
+            </div>
+        }
+
+        @if (!Model.HasMemberRecord)
+        {
+            <div class="empty-a">
+                <h4>Your account is not linked to a member record yet</h4>
+                <p>An officer links your account to the roster when they approve it. Until then you cannot take a slot.</p>
+                <a class="btn-a" style="margin-top:var(--s-4)" asp-controller="Calendar" asp-action="Index">See what is on</a>
+            </div>
+        }
+        else if (!Model.Upcoming.Any() && !Model.Past.Any())
+        {
+            <div class="empty-a">
+                <h4>You have not registered for anything yet</h4>
+                <p>Open events are on the calendar. Registering gives you a stub with a check-in code.</p>
+                <a class="btn-a" style="margin-top:var(--s-4)" asp-controller="Calendar" asp-action="Index">Browse the calendar</a>
+            </div>
+        }
+        else
+        {
+            @if (Model.Upcoming.Any())
+            {
+                <h3 class="stub-heading">Coming up</h3>
+                <div class="stub-grid">
+                    @foreach (var row in Model.Upcoming)
+                    {
+                        <div class="stub-holder">
+                            @await Html.PartialAsync("_Ticket", row.Ticket)
+
+                            <div class="stub-actions">
+                                <a class="btn-a ghost sm" asp-controller="Calendar" asp-action="Details" asp-route-id="@row.EventId">Event details</a>
+
+                                @* For a phone that will be locked at the door. *@
+                                <a class="btn-a quiet sm" asp-action="Qr" asp-route-id="@row.RegistrationId"
+                                   download>Save the QR</a>
+
+                                @if (row.CanCancel)
+                                {
+                                    <form asp-action="Cancel" asp-route-id="@row.RegistrationId" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn-a quiet sm">Drop out</button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (Model.Past.Any())
+            {
+                <h3 class="stub-heading">Already happened</h3>
+                <div class="panel">
+                    <table class="table-a">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When</th>
+                                <th>Code</th>
+                                <th class="num">Attendance</th>
+                                <th>Certificate</th>
+                                <th style="width:1%"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var row in Model.Past)
+                        {
+                            <tr>
+                                <td><strong>@row.Ticket.Title</strong>
+                                    <div class="dim" style="font-size:var(--fs-2xs)">@row.Ticket.TypeLabel · @row.Ticket.Venue</div>
+                                </td>
+                                <td class="mono nowrap">@row.StartsAt.ToString("d MMM yyyy")</td>
+                                <td><span class="code-tag">@row.Ticket.Code</span></td>
+                                <td class="num mono">
+                                    @row.Attended / @row.Sessions
+                                    @if (row.Late > 0)
+                                    {
+                                        <div class="dim" style="font-size:var(--fs-2xs)">
+                                            @row.Late late
+                                        </div>
+                                    }
+                                </td>
+                                <td><span class="chip @AttendanceRules.Chip(row.Eligibility)">@AttendanceRules.Label(row.Eligibility)</span></td>
+                                <td>
+                                    <div class="row-actions">
+                                        @if (row.CanLeaveFeedback)
+                                        {
+                                            <a class="btn-a @(row.HasFeedback ? "quiet" : "") sm"
+                                               asp-controller="Feedback" asp-action="Form"
+                                               asp-route-id="@row.RegistrationId">
+                                                @(row.HasFeedback ? "Edit feedback" : "Leave feedback")
+                                            </a>
+                                        }
+                                        else if (row.HasFeedback)
+                                        {
+                                            <span class="chip ok">Feedback sent</span>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                    <div class="report-note">
+                        Certificates follow the attendance on record. If something here looks wrong,
+                        an officer can correct the record and the decision follows. Feedback opens
+                        once an event is over, for the sessions you actually attended.
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</section>

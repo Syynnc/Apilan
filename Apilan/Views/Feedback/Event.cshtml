@@ -1,0 +1,177 @@
+@model Apilan.ViewModels.EventFeedbackViewModel
+@{
+    var e = Model.Event;
+
+    ViewData["Title"] = "Feedback · " + e.Title;
+    ViewData["Module"] = "Reports";
+    Layout = "_LayoutAdmin";
+
+    var scales = new (string Label, double? Value)[]
+    {
+        ("Overall", Model.Overall),
+        ("Content and speakers", Model.Content),
+        ("Venue and facilities", Model.Venue),
+        ("How well it was run", Model.Organization)
+    };
+}
+
+@section Actions {
+    <a class="btn-a ghost sm" asp-action="Index">All feedback</a>
+    <a class="btn-a ghost sm" asp-controller="Events" asp-action="Details" asp-route-id="@e.Id">Event</a>
+    <a class="btn-a sm" asp-controller="Reports" asp-action="Event" asp-route-id="@e.Id">Report</a>
+}
+
+<div class="panel">
+    <div class="panel-body">
+        <h2 style="margin:0">
+            <span class="swatch" data-type="@e.EventType?.ColorKey" aria-hidden="true"></span>
+            @e.Title
+        </h2>
+        <p class="dim" style="margin:var(--s-2) 0 0">
+            @e.Organization?.Name · @e.StartsAt.ToString("dddd, d MMMM yyyy") · @e.Venue?.Name
+        </p>
+    </div>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="empty-a">
+        <h4>Nobody has responded yet</h4>
+        <p>
+            @if (!e.CollectsFeedback)
+            {
+                <text>This event is not collecting feedback. Turn it on in the event form.</text>
+            }
+            else if (e.EndsAt > DateTime.Now)
+            {
+                <text>Feedback opens to participants once the event is over.</text>
+            }
+            else
+            {
+                <text>The form is open to everyone with attendance on record. Nothing has come in.</text>
+            }
+        </p>
+    </div>
+}
+else
+{
+    <div class="tiles">
+        <div class="tile accent">
+            <span class="l">Average</span>
+            <span class="n">@Model.Average!.Value.ToString("0.00")<small>/5</small></span>
+            <span class="s">Across four scales</span>
+        </div>
+        <div class="tile">
+            <span class="l">Responses</span>
+            <span class="n">@Model.Count</span>
+            <span class="s">@Model.ResponseRatePercent% of @Model.Attended who attended</span>
+        </div>
+        <div class="tile">
+            <span class="l">Would recommend</span>
+            <span class="n">@Model.RecommendPercent<small>%</small></span>
+            <span class="s">@Model.RecommendCount of @Model.Count</span>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h3>By scale</h3>
+        </div>
+        <div class="panel-body">
+            <table class="table-a">
+                <tbody>
+                @foreach (var (label, value) in scales)
+                {
+                    <tr>
+                        <td style="width:220px">@label</td>
+                        <td>
+                            <div class="bar-cell">
+                                @* Out of five, so a 4.0 fills four fifths of the bar. *@
+                                <div class="meter"><i style="width:@((value ?? 0) / 5.0 * 100)%"></i></div>
+                                <span class="pct">@(value?.ToString("0.00") ?? "—")</span>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h3>Spread of overall scores</h3>
+        </div>
+        <div class="panel-body">
+            <table class="table-a">
+                <tbody>
+                @for (var score = 5; score >= 1; score--)
+                {
+                    var count = Model.Distribution.TryGetValue(score, out var c) ? c : 0;
+                    var share = Model.PeakCount == 0 ? 0 : (int)Math.Round(count * 100.0 / Model.PeakCount);
+                    <tr>
+                        <td class="mono" style="width:80px">@score ★</td>
+                        <td>
+                            <div class="bar-cell">
+                                <div class="meter"><i style="width:@share%"></i></div>
+                                <span class="pct">@count</span>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h3>What people said</h3>
+            <span class="count">@Model.Responses.Count(r => r.HasWords) with comments</span>
+        </div>
+        <div class="panel-body">
+            @if (!Model.Responses.Any(r => r.HasWords))
+            {
+                <p class="dim">Everybody scored the event but nobody wrote anything.</p>
+            }
+
+            @foreach (var r in Model.Responses.OrderByDescending(r => r.HasWords).ThenByDescending(r => r.SubmittedOn))
+            {
+                <article class="response">
+                    <div class="toolbar" style="margin:0">
+                        <div>
+                            <strong>@r.Who</strong>
+                            @if (!string.IsNullOrWhiteSpace(r.CourseYear))
+                            {
+                                <span class="dim" style="font-size:var(--fs-2xs)"> · @r.CourseYear</span>
+                            }
+                        </div>
+                        <span class="grow"></span>
+                        <span class="chip @(r.AverageRating >= 4 ? "ok" : r.AverageRating >= 3 ? "warn" : "risk")">
+                            @r.AverageRating.ToString("0.0") / 5
+                        </span>
+                        @if (r.WouldRecommend)
+                        {
+                            <span class="chip info">Recommends</span>
+                        }
+                    </div>
+
+                    <div class="dim mono" style="font-size:var(--fs-3xs); margin-top:var(--s-2)">
+                        Overall @r.OverallRating · Content @r.ContentRating ·
+                        Venue @r.VenueRating · Run @r.OrganizationRating ·
+                        @r.SubmittedOn.ToString("d MMM yyyy, h:mm tt")
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(r.Comment))
+                    {
+                        <p style="margin:var(--s-3) 0 0"><strong>Worked:</strong> @r.Comment</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(r.Improvement))
+                    {
+                        <p style="margin:var(--s-2) 0 0"><strong>To improve:</strong> @r.Improvement</p>
+                    }
+                </article>
+            }
+        </div>
+    </div>
+}

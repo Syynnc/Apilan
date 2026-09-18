@@ -1,0 +1,126 @@
+@model Apilan.Models.Event
+@{
+    var card = (Apilan.ViewModels.CalendarCard)ViewData["Card"]!;
+    var mine = ViewData["MyStatus"] as RegistrationStatus?;
+
+    ViewData["Title"] = Model.Title;
+    Layout = "_LayoutPublic";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/landing.css" asp-append-version="true" />
+}
+
+<section class="section">
+    <div class="shell">
+
+        @if (TempData["Error"] is string bad)
+        {
+            <div class="flash bad"><strong>Not done.</strong> @bad</div>
+        }
+
+        <div class="section-head">
+            <span class="eyebrow">
+                <span class="swatch" data-type="@Model.EventType?.ColorKey"></span>
+                @Model.EventType?.Name
+            </span>
+            <h2>@Model.Title</h2>
+            @if (!string.IsNullOrWhiteSpace(Model.Description))
+            {
+                <p>@Model.Description</p>
+            }
+        </div>
+
+        <div class="split">
+            <div style="display:grid; gap:var(--s-5)">
+                <div class="panel">
+                    <div class="panel-head"><h2>The details</h2></div>
+                    <div class="panel-body">
+                        <dl class="detail-list">
+                            <div><dt>When</dt><dd>@Model.StartsAt.ToString("dddd, d MMMM yyyy")<br />@card.TimeRange</dd></div>
+                            <div><dt>Where</dt><dd>@Model.Venue?.Name<br /><span class="dim">@Model.Venue?.Location</span></dd></div>
+                            <div><dt>Registration closes</dt><dd>@Model.RegistrationDeadline.ToString("ddd d MMM, h:mm tt")</dd></div>
+                            <div><dt>Slots</dt><dd>@card.Remaining of @Model.Capacity left</dd></div>
+                            <div><dt>Certificate</dt><dd>@(Model.IssuesCertificate ? $"Yes, at {Model.CertificateThresholdPercent}% attendance" : "Not issued")</dd></div>
+                            <div><dt>Approval</dt><dd>@(Model.RequiresApproval ? "An officer reviews each registration" : "Registration is immediate")</dd></div>
+                        </dl>
+                    </div>
+                </div>
+
+                @if (Model.Sessions.Any())
+                {
+                    <div class="panel">
+                        <div class="panel-head">
+                            <h2>Sessions</h2>
+                            <span class="dim">Attendance is taken at each one</span>
+                        </div>
+                        @foreach (var s in Model.Sessions.OrderBy(s => s.Sequence))
+                        {
+                            <div class="session-row">
+                                <span class="seq">@s.Sequence</span>
+                                <span>
+                                    <span class="nm">@s.Name</span>
+                                    <span class="tm">@s.StartsAt.ToString("ddd d MMM · h:mm tt") – @s.EndsAt.ToString("h:mm tt")</span>
+                                </span>
+                                <span></span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="rail">
+                <div class="panel">
+                    <div class="panel-head"><h3>Take a slot</h3></div>
+                    <div class="panel-body" style="display:grid; gap:var(--s-3)">
+                        <div class="bar-cell">
+                            <div class="meter @(card.IsFull ? "full" : "")"><i style="width:@(card.FillPercent)%"></i></div>
+                            <span class="pct">@card.Taken/@Model.Capacity</span>
+                        </div>
+
+                        @if (mine is not null && mine != RegistrationStatus.Cancelled)
+                        {
+                            <span class="chip ok">You are @mine.ToString()!.ToLowerInvariant()</span>
+                            <a class="btn-a" asp-controller="MyEvents" asp-action="Index">See your stub</a>
+                        }
+                        else if (!card.IsOpen)
+                        {
+                            <span class="chip idle">Registration is closed</span>
+                            <p class="muted" style="font-size:var(--fs-sm); margin:0">
+                                The deadline has passed, or the event is over. Officers can still
+                                add walk-ins at the door.
+                            </p>
+                        }
+                        else if (card.IsFull && !Model.AllowWaitlist)
+                        {
+                            <span class="chip warn">Full</span>
+                            <p class="muted" style="font-size:var(--fs-sm); margin:0">
+                                This event does not keep a waitlist.
+                            </p>
+                        }
+                        else if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <form asp-action="Register" asp-route-id="@Model.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn-a" style="width:100%">@card.CallToAction</button>
+                            </form>
+                            @if (card.IsFull)
+                            {
+                                <span class="hint">The event is full, so you would join the queue. A freed slot goes to whoever has waited longest.</span>
+                            }
+                        }
+                        else
+                        {
+                            <a class="btn-a" style="width:100%"
+                               asp-controller="Account" asp-action="Login"
+                               asp-route-returnUrl="@Url.Action("Details", "Calendar", new { id = Model.Id })">Sign in to register</a>
+                            <span class="hint">No account yet? Request one — an officer approves it, usually the same day.</span>
+                        }
+
+                        <a class="btn-a quiet" style="width:100%" asp-action="Index">Back to the calendar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,257 @@
+@model Apilan.ViewModels.CalendarMonthViewModel
+@{
+    ViewData["Title"] = Model.MonthName + " " + Model.Year;
+    Layout = "_LayoutPublic";
+
+    var dow = new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/landing.css" asp-append-version="true" />
+}
+
+<section class="section">
+    <div class="shell">
+
+        <div class="section-head">
+            <span class="eyebrow">Calendar</span>
+            <h2>@Model.MonthName @Model.Year</h2>
+            <p>
+                @if (Model.MonthEventCount == 0)
+                {
+                    <text>Nothing on the calendar this month.</text>
+                }
+                else
+                {
+                    <text>
+                        @Model.MonthEventCount event@(Model.MonthEventCount == 1 ? "" : "s") this month.
+                        Pick a date to see what is running and how registration is filling up.
+                    </text>
+                }
+            </p>
+        </div>
+
+        @if (TempData["Success"] is string ok)
+        {
+            <div class="flash ok"><strong>Done.</strong> @ok</div>
+        }
+        @if (TempData["Error"] is string bad)
+        {
+            <div class="flash bad"><strong>Not done.</strong> @bad</div>
+        }
+
+        <form method="get" asp-action="Month" class="filter-bar" style="margin-bottom:var(--s-5)">
+            <input type="hidden" name="year" value="@Model.Year" />
+            <input type="hidden" name="month" value="@Model.Month" />
+
+            <div class="field">
+                <label for="typeId">Type</label>
+                <select id="typeId" class="input-a" name="typeId">
+                    <option value="">Any type</option>
+                    @foreach (var t in Model.Types)
+                    {
+                        <option value="@t.Id" selected="@(Model.TypeId == t.Id)">@t.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="organizationId">Organization</label>
+                <select id="organizationId" class="input-a" name="organizationId">
+                    <option value="">Any organization</option>
+                    @foreach (var o in Model.Organizations)
+                    {
+                        <option value="@o.Id" selected="@(Model.OrganizationId == o.Id)">@o.Acronym — @o.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="field">
+                <label>&nbsp;</label>
+                <div class="row-actions">
+                    <button type="submit" class="btn-a sm">Filter</button>
+                    <a class="btn-a ghost sm" asp-action="Month"
+                       asp-route-year="@Model.Year" asp-route-month="@Model.Month">Clear</a>
+                    <a class="btn-a quiet sm" asp-action="Index">List view</a>
+                </div>
+            </div>
+        </form>
+
+        <div class="cal-layout">
+
+            <div class="cal">
+                <div class="cal-bar">
+                    <h3 class="cal-month">@Model.MonthName<span>@Model.Year</span></h3>
+
+                    <a class="cal-step" aria-label="Previous month"
+                       asp-action="Month"
+                       asp-route-year="@Model.PreviousMonth.Year"
+                       asp-route-month="@Model.PreviousMonth.Month"
+                       asp-route-typeId="@Model.TypeId"
+                       asp-route-organizationId="@Model.OrganizationId">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M15 5 L8 12 L15 19" />
+                        </svg>
+                    </a>
+
+                    <a class="cal-step" aria-label="Next month"
+                       asp-action="Month"
+                       asp-route-year="@Model.NextMonth.Year"
+                       asp-route-month="@Model.NextMonth.Month"
+                       asp-route-typeId="@Model.TypeId"
+                       asp-route-organizationId="@Model.OrganizationId">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M9 5 L16 12 L9 19" />
+                        </svg>
+                    </a>
+                </div>
+
+                <div class="cal-dow" aria-hidden="true">
+                    @foreach (var d in dow)
+                    {
+                        <span>@d</span>
+                    }
+                </div>
+
+                <div class="cal-grid" role="grid" aria-label="Event calendar for @Model.MonthName @Model.Year">
+                    @* Padding cells so the 1st lands under the right weekday. *@
+                    @for (var i = 0; i < Model.LeadingBlanks; i++)
+                    {
+                        <div class="cal-day pad" aria-hidden="true"></div>
+                    }
+
+                    @foreach (var day in Model.Days)
+                    {
+                        var classes = "cal-day";
+                        if (day.IsToday) { classes += " today"; }
+                        if (day.HasEvents) { classes += " has"; }
+                        if (day.Date == Model.Selected.Date) { classes += " is-sel"; }
+
+                        if (day.HasEvents)
+                        {
+                            <a class="@classes"
+                               aria-label="@day.Date.ToString("d MMMM"), @day.Events.Count event@(day.Events.Count == 1 ? "" : "s")"
+                               asp-action="Month"
+                               asp-route-year="@Model.Year"
+                               asp-route-month="@Model.Month"
+                               asp-route-day="@day.Date.ToString("yyyy-MM-dd")"
+                               asp-route-typeId="@Model.TypeId"
+                               asp-route-organizationId="@Model.OrganizationId">
+                                <span>@day.Day</span>
+                                <span class="cal-marks">
+                                    @foreach (var pip in day.Pips)
+                                    {
+                                        <i class="@pip"></i>
+                                    }
+                                </span>
+                            </a>
+                        }
+                        else
+                        {
+                            <div class="@classes">
+                                <span>@day.Day</span>
+                                <span class="cal-marks"></span>
+                            </div>
+                        }
+                    }
+
+                    @for (var i = 0; i < Model.TrailingBlanks; i++)
+                    {
+                        <div class="cal-day pad" aria-hidden="true"></div>
+                    }
+                </div>
+
+                <div class="cal-legend">
+                    <span><i style="background:var(--accent)"></i> Talk / session</span>
+                    <span><i style="background:var(--mango)"></i> Workshop</span>
+                    <span><i style="background:var(--gold)"></i> Assembly</span>
+                    <span><i style="background:var(--rose)"></i> Outreach</span>
+                    <span><i style="background:var(--teal)"></i> Training</span>
+                </div>
+            </div>
+
+            <aside class="cal-detail">
+                <div class="d-head">
+                    <div class="d-dow">
+                        @Model.Selected.ToString("dddd") ·
+                        @{
+                            var count = Model.SelectedEvents.Count;
+                        }
+                        @(count == 1 ? "1 event" : count + " events")
+                    </div>
+                    <h3 class="d-date">@Model.Selected.ToString("d MMMM yyyy")</h3>
+                </div>
+
+                <div class="cal-body">
+                    @if (!Model.SelectedEvents.Any())
+                    {
+                        <div class="empty-a">
+                            <h4>Nothing scheduled</h4>
+                            <p>Pick another date, or step to the next month.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <ul class="cal-events">
+                            @foreach (var ev in Model.SelectedEvents)
+                            {
+                                var chip = ev.IsFull
+                                    ? "<span class=\"chip risk\">Full</span>"
+                                    : ev.FillPercent >= 85
+                                        ? "<span class=\"chip warn\">Few slots</span>"
+                                        : "<span class=\"chip ok\">Open</span>";
+
+                                <li>
+                                    <div class="ev-top">
+                                        <div>
+                                            <div class="ev-name">
+                                                <a asp-action="Details" asp-route-id="@ev.Id">@ev.Title</a>
+                                            </div>
+                                            <span class="ev-when">
+                                                @ev.TimeRange · @ev.VenueName · @ev.OrgAcronym
+                                            </span>
+                                        </div>
+                                        @if (ev.IsOpen)
+                                        {
+                                            @Html.Raw(chip)
+                                        }
+                                        else
+                                        {
+                                            <span class="chip idle">Closed</span>
+                                        }
+                                    </div>
+
+                                    <div class="ev-track">
+                                        <i class="@(ev.IsFull ? "full" : ev.FillPercent >= 85 ? "tight" : "")"
+                                           style="width:@(Math.Min(100, ev.FillPercent))%"></i>
+                                    </div>
+
+                                    <div class="ev-slots">
+                                        <span>Registered</span>
+                                        <span class="mono">@ev.Taken / @ev.Capacity</span>
+                                    </div>
+
+                                    @if (Model.MyRegistrations.TryGetValue(ev.Id, out var mine))
+                                    {
+                                        <span class="chip info">You are @mine.ToString().ToLowerInvariant()</span>
+                                    }
+                                    else if (Model.IsSignedInMember && ev.IsOpen)
+                                    {
+                                        <form asp-action="Register" asp-route-id="@ev.Id" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                            <button type="submit" class="btn-a sm">@ev.CallToAction</button>
+                                        </form>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </aside>
+
+        </div>
+    </div>
+</section>

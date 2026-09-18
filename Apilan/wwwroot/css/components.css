@@ -1,0 +1,264 @@
+/* ==========================================================================
+   Apilan — Components
+   Buttons, chips, cards, tables, forms, empty states. Theme-agnostic:
+   everything reads from tokens.css, so both themes come free.
+   ========================================================================== */
+
+/* ---- Buttons ------------------------------------------------------------- */
+.btn-a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-2);
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1;
+    padding: var(--s-3) var(--s-5);
+    border-radius: var(--r-sm);
+    border: 1px solid transparent;
+    background: var(--accent);
+    color: var(--accent-ink);
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform var(--t-fast) var(--ease-spring),
+                background-color var(--t-fast) var(--ease-out),
+                box-shadow var(--t-fast) var(--ease-out);
+}
+.btn-a:hover { background: var(--accent-hover); color: var(--accent-ink); transform: translateY(-1px); }
+.btn-a:active { transform: translateY(0) scale(0.985); }
+
+.btn-a.ghost {
+    background: var(--surface);
+    color: var(--ink);
+    border-color: var(--line-strong);
+}
+.btn-a.ghost:hover { background: var(--surface-raised); border-color: var(--ink-3); color: var(--ink); }
+
+.btn-a.quiet {
+    background: transparent;
+    color: var(--ink-2);
+    border-color: transparent;
+    padding-inline: var(--s-3);
+}
+.btn-a.quiet:hover { background: var(--surface-sunken); color: var(--ink); }
+
+.btn-a.danger { background: var(--risk); color: #fff; }
+
+.btn-a.lg { font-size: var(--fs-md); padding: var(--s-4) var(--s-6); border-radius: var(--r-md); }
+.btn-a.sm { font-size: var(--fs-2xs); padding: var(--s-2) var(--s-3); }
+.btn-a[disabled], .btn-a.is-disabled { opacity: 0.5; pointer-events: none; }
+
+/* ---- Brand: a tally mark ------------------------------------------------- */
+/* Four strokes and a slash — how attendance has always been counted. Lives
+   here rather than in landing.css because all three shells — landing, auth,
+   and the console — put it in their header.                                */
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-3);
+    font-weight: 600;
+    font-size: var(--fs-lg);
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    text-decoration: none;
+    margin-right: auto;
+}
+.brand:hover { color: var(--ink); }
+
+.tally { width: 26px; height: 24px; flex: none; overflow: visible; }
+.tally line {
+    stroke: var(--ink);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+}
+.tally .slash {
+    stroke: var(--accent);
+    stroke-width: 2.6;
+    stroke-dasharray: 26;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 380ms var(--ease-out);
+}
+.brand:hover .tally .slash { stroke-dashoffset: 26; }
+
+/* Footer / kiosk variants */
+.tally.sm { width: 19px; height: 17px; }
+.tally.on-dark line { stroke: #F1F0E9; }
+.tally.on-dark .slash { stroke: #9BD04A; }
+
+/* ---- Status chips — colour is never the only signal ---------------------- */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px var(--s-2) 3px 6px;
+    border-radius: var(--r-pill);
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+.chip::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex: none;
+}
+.chip.ok    { color: var(--ok);   background: var(--ok-wash);   border-color: color-mix(in srgb, var(--ok) 26%, transparent); }
+.chip.warn  { color: var(--warn); background: var(--warn-wash); border-color: color-mix(in srgb, var(--warn) 26%, transparent); }
+.chip.risk  { color: var(--risk); background: var(--risk-wash); border-color: color-mix(in srgb, var(--risk) 26%, transparent); }
+.chip.idle  { color: var(--idle); background: var(--idle-wash); border-color: color-mix(in srgb, var(--idle) 26%, transparent); }
+.chip.info  { color: var(--accent); background: var(--accent-wash); border-color: var(--accent-edge); }
+
+/* ---- Cards --------------------------------------------------------------- */
+.card-a {
+    background: var(--surface);
+    border: var(--border);
+    border-radius: var(--r-md);
+    padding: var(--s-5);
+}
+.card-a.pop { box-shadow: var(--shadow-pop); }
+.card-a.float { box-shadow: var(--shadow-float); border-radius: var(--r-lg); }
+
+.card-a.interactive {
+    transition: transform var(--t-med) var(--ease-out),
+                border-color var(--t-med) var(--ease-out),
+                box-shadow var(--t-med) var(--ease-out);
+}
+.card-a.interactive:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent-edge);
+    box-shadow: var(--shadow-float);
+}
+
+/* ---- Tables — the workhorse of this app ---------------------------------- */
+.table-a {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--surface);
+    border: var(--border);
+    border-radius: var(--r-md);
+    overflow: hidden;
+    font-size: var(--fs-sm);
+}
+.table-a thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--surface-sunken);
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    text-align: left;
+    padding: var(--s-3) var(--s-4);
+    border-bottom: var(--border);
+    white-space: nowrap;
+}
+.table-a tbody td {
+    padding: var(--s-3) var(--s-4);
+    border-bottom: var(--border);
+    vertical-align: middle;
+    color: var(--ink-2);
+}
+.table-a tbody tr:last-child td { border-bottom: 0; }
+.table-a tbody tr { transition: background-color var(--t-fast) var(--ease-out); }
+.table-a tbody tr:hover { background: var(--accent-wash); }
+.table-a td.num, .table-a th.num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.table-a td strong { color: var(--ink); font-weight: 600; }
+
+/* ---- Forms --------------------------------------------------------------- */
+.field { margin-bottom: var(--s-4); }
+.field > label {
+    display: block;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--ink-2);
+    margin-bottom: var(--s-2);
+}
+.field .hint { display: block; font-size: var(--fs-2xs); color: var(--ink-3); margin-top: var(--s-2); }
+
+.input-a,
+input[type="text"].input-a,
+input[type="email"].input-a,
+input[type="password"].input-a,
+select.input-a,
+textarea.input-a {
+    width: 100%;
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-sm);
+    padding: var(--s-3) var(--s-4);
+    transition: border-color var(--t-fast) var(--ease-out),
+                box-shadow var(--t-fast) var(--ease-out),
+                background-color var(--t-fast) var(--ease-out);
+}
+.input-a::placeholder { color: var(--ink-3); }
+.input-a:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-wash);
+}
+.input-a.mono { font-family: var(--font-mono); letter-spacing: 0.08em; }
+
+/* ---- Empty state — every screen gets a real one, with an action ---------- */
+.empty-a {
+    text-align: center;
+    padding: var(--s-8) var(--s-5);
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--r-md);
+    background: var(--surface-sunken);
+}
+.empty-a .glyph {
+    font-size: 2rem;
+    line-height: 1;
+    margin-bottom: var(--s-4);
+    opacity: 0.7;
+}
+.empty-a h4 { margin-bottom: var(--s-2); }
+.empty-a p { margin-inline: auto; color: var(--ink-3); font-size: var(--fs-sm); }
+
+/* ---- Theme toggle -------------------------------------------------------- */
+.theme-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 var(--s-3);
+    background: var(--surface);
+    border: var(--border-strong);
+    border-radius: var(--r-pill);
+    color: var(--ink-2);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: color var(--t-fast) var(--ease-out),
+                border-color var(--t-fast) var(--ease-out);
+}
+.theme-toggle:hover { color: var(--ink); border-color: var(--ink-3); }
+.theme-toggle .tt-icon {
+    display: inline-block;
+    width: 15px; height: 15px;
+    transition: transform var(--t-slow) var(--ease-spring);
+}
+.theme-toggle:hover .tt-icon { transform: rotate(35deg); }
+.theme-toggle .tt-sun { display: none; }
+[data-theme="dark"] .theme-toggle .tt-sun { display: inline-block; }
+[data-theme="dark"] .theme-toggle .tt-moon { display: none; }
+.theme-toggle .tt-label::after { content: "Dark"; }
+[data-theme="dark"] .theme-toggle .tt-label::after { content: "Light"; }

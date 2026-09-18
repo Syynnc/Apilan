@@ -1,0 +1,67 @@
+@model Apilan.ViewModels.TicketViewModel
+@*
+    Event registration stub. The same component backs the landing page, the
+    registration confirmation screen, and My Events.
+*@
+
+<article class="ticket" data-type="@Model.TypeKey" @(Model.Interactive ? "data-tilt" : null)>
+
+    <div class="ticket-body">
+
+        <div class="ticket-kicker">
+            <span class="ticket-type">@Model.TypeLabel</span>
+            <span class="ticket-org">@Model.Org</span>
+        </div>
+
+        <h3 class="ticket-title">@Model.Title</h3>
+
+        <div class="ticket-main">
+            <div class="datepad" aria-hidden="true">
+                <span class="m">@Model.StartsAt.ToString("MMM")</span>
+                <span class="d">@Model.StartsAt.ToString("dd")</span>
+                <span class="w">@Model.StartsAt.ToString("ddd")</span>
+            </div>
+
+            <dl class="ticket-meta">
+                <div>
+                    <dt>When</dt>
+                    <dd>@Model.StartsAt.ToString("ddd d MMM") · @Model.TimeRange</dd>
+                </div>
+                <div>
+                    <dt>Where</dt>
+                    <dd>@Model.Venue</dd>
+                </div>
+                <div>
+                    <dt>Session</dt>
+                    <dd>@Model.Session</dd>
+                </div>
+            </dl>
+        </div>
+
+        <div class="ticket-who">
+            <div>
+                <span class="nm">@Model.RegistrantName</span>
+                <span class="sn">@Model.StudentNo</span>
+            </div>
+            <span class="chip @Model.StatusChip">@Model.StatusLabel</span>
+        </div>
+
+    </div>
+
+    <div class="ticket-stub">
+        @{
+            // A real, scannable symbol. The viewBox carries the two-module
+            // quiet zone the spec wants, which the path itself leaves out.
+            var qr = Apilan.Helpers.QrCode.Render(Model.Code);
+            var span = qr.Modules + 4;
+        }
+        <svg class="qr" viewBox="-2 -2 @span @span" role="img"
+             aria-label="QR code for check-in code @Model.Code">
+            <path d="@qr.Path" />
+        </svg>
+
+        <span class="stub-code">@Model.Code</span>
+        <span class="stub-note">@Model.StubNote</span>
+    </div>
+
+</article>

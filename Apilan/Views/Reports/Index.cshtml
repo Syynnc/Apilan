@@ -1,0 +1,194 @@
+@model Apilan.ViewModels.ParticipationReportViewModel
+@{
+    ViewData["Title"] = "Participation";
+    ViewData["Module"] = "Reports";
+    Layout = "_LayoutAdmin";
+}
+
+@section Actions {
+    <a class="btn-a sm"
+       asp-action="Export"
+       asp-route-from="@Model.From.ToString("yyyy-MM-dd")"
+       asp-route-to="@Model.To.ToString("yyyy-MM-dd")"
+       asp-route-typeId="@Model.TypeId"
+       asp-route-organizationId="@Model.OrganizationId"
+       asp-route-course="@Model.Course">Export to Excel</a>
+}
+
+<form class="filter-bar" method="get" asp-action="Index">
+    <div class="field">
+        <label for="from">From</label>
+        <input id="from" class="input-a mono" type="date" name="from" value="@Model.From.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="field">
+        <label for="to">To</label>
+        <input id="to" class="input-a mono" type="date" name="to" value="@Model.To.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="field">
+        <label for="organizationId">Organization</label>
+        <select id="organizationId" class="input-a" name="organizationId">
+            <option value="">Every organization</option>
+            @foreach (var o in Model.Organizations)
+            {
+                <option value="@o.Id" selected="@(Model.OrganizationId == o.Id)">@o.Acronym — @o.Name</option>
+            }
+        </select>
+    </div>
+    <div class="field">
+        <label for="typeId">Event type</label>
+        <select id="typeId" class="input-a" name="typeId">
+            <option value="">Every type</option>
+            @foreach (var t in Model.Types)
+            {
+                <option value="@t.Id" selected="@(Model.TypeId == t.Id)">@t.Name</option>
+            }
+        </select>
+    </div>
+    <div class="field">
+        <label for="course">Course</label>
+        <select id="course" class="input-a" name="course">
+            <option value="">Every course</option>
+            @foreach (var c in Model.Courses)
+            {
+                <option value="@c" selected="@(Model.Course == c)">@c</option>
+            }
+        </select>
+    </div>
+    <div class="field">
+        <label>&nbsp;</label>
+        <div class="row-actions">
+            <button type="submit" class="btn-a sm">Run</button>
+            <a class="btn-a ghost sm" asp-action="Index">Reset</a>
+        </div>
+    </div>
+</form>
+
+<div class="tiles">
+    <div class="tile accent">
+        <span class="l">Turnout</span>
+        <span class="n">@Model.TurnoutPercent%</span>
+        <span class="s">@Model.Attended of @Model.Registered registered turned up</span>
+    </div>
+    <div class="tile">
+        <span class="l">Events</span>
+        <span class="n">@Model.Events</span>
+        <span class="s">@Model.From.ToString("d MMM yyyy") – @Model.To.ToString("d MMM yyyy")</span>
+    </div>
+    <div class="tile">
+        <span class="l">Certificates</span>
+        <span class="n">@Model.Certificates</span>
+        <span class="s">Earned across the window</span>
+    </div>
+    <div class="tile">
+        <span class="l">Walk-ins</span>
+        <span class="n">@Model.WalkIns</span>
+        <span class="s">Added at the door</span>
+    </div>
+    <div class="tile">
+        <span class="l">Late arrivals</span>
+        <span class="n">@Model.Rows.Sum(r => r.LateArrivals)</span>
+        <span class="s">People late to at least one session</span>
+    </div>
+</div>
+
+@if (!Model.Rows.Any())
+{
+    <div class="empty-a">
+        <h4>No events in this window</h4>
+        <p>Widen the dates, or drop the type and course filters. Drafts are never counted — an event has to have been published to have participation.</p>
+    </div>
+}
+else
+{
+    <div class="panel">
+        <div class="panel-head">
+            <h2>Event by event</h2>
+            @if (Model.Best is { } best)
+            {
+                <span class="dim">Best turnout: @best.Title (@best.TurnoutPercent%)</span>
+            }
+        </div>
+        <table class="table-a">
+            <thead>
+                <tr>
+                    <th>Event</th>
+                    <th>Date</th>
+                    <th class="num">Sessions</th>
+                    <th class="num">Registered</th>
+                    <th class="num">Attended</th>
+                    <th class="num">No-shows</th>
+                    <th style="width:180px">Turnout</th>
+                    <th class="num">Late</th>
+                    <th class="num">Walk-ins</th>
+                    <th class="num">Certificates</th>
+                    <th class="num">Rating</th>
+                    <th style="width:1%"></th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var r in Model.Rows)
+            {
+                <tr>
+                    <td>
+                        <strong><span class="swatch" data-type="@r.ColorKey"></span>@r.Title</strong>
+                        <div class="dim" style="font-size:var(--fs-2xs)">
+                            @r.OrgAcronym · @r.TypeLabel · @r.VenueName
+                        </div>
+                    </td>
+                    <td class="mono nowrap">@r.StartsAt.ToString("d MMM yyyy")</td>
+                    <td class="num mono">@r.Sessions</td>
+                    <td class="num mono">@r.Registered</td>
+                    <td class="num mono">@r.Attended</td>
+                    <td class="num mono">@r.NoShows</td>
+                    <td>
+                        <div class="bar-cell">
+                            <div class="meter"><i style="width:@(r.TurnoutPercent)%"></i></div>
+                            <span class="pct">@r.TurnoutPercent%</span>
+                        </div>
+                    </td>
+                    <td class="num mono">@r.LateArrivals</td>
+                    <td class="num mono">@r.WalkIns</td>
+                    <td class="num mono">@r.Certificates</td>
+                    <td class="num mono">
+                        @if (r.AverageRating.HasValue)
+                        {
+                            <a asp-controller="Feedback" asp-action="Event" asp-route-id="@r.EventId"
+                               title="@r.Responses response(s)">@r.AverageRating.Value.ToString("0.0")</a>
+                        }
+                        else
+                        {
+                            <span class="dim">—</span>
+                        }
+                    </td>
+                    <td><a class="btn-a ghost sm" asp-action="Event" asp-route-id="@r.EventId">Report</a></td>
+                </tr>
+            }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td><strong>@Model.Events event@(Model.Events == 1 ? "" : "s")</strong></td>
+                    <td></td>
+                    <td></td>
+                    <td class="num mono"><strong>@Model.Registered</strong></td>
+                    <td class="num mono"><strong>@Model.Attended</strong></td>
+                    <td class="num mono"><strong>@(Model.Registered - Model.Attended)</strong></td>
+                    <td><strong class="mono">@Model.TurnoutPercent%</strong></td>
+                    <td class="num mono"><strong>@Model.Rows.Sum(r => r.LateArrivals)</strong></td>
+                    <td class="num mono"><strong>@Model.WalkIns</strong></td>
+                    <td class="num mono"><strong>@Model.Certificates</strong></td>
+                    <td class="num mono"><strong>@Model.Rows.Sum(r => r.Responses)</strong></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+        <div class="report-note">
+            Registered counts slots actually held — confirmed and pending, never cancelled ones.
+            Attended counts anyone who turned up to at least one session, late or on time —
+            arriving late is a punctuality problem, not an absence.
+            @if (!string.IsNullOrWhiteSpace(Model.Course))
+            {
+                <text> With a course filter on, every figure counts only @Model.Course participants.</text>
+            }
+        </div>
+    </div>
+}

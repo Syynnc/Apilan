@@ -1,0 +1,204 @@
+/* ==========================================================================
+   Apilan - Design Tokens
+   Direction: "Bulletin Press" - a records system that looks printed rather
+   than rendered. Warm paper, near-black ink, mono facts, and one deep leaf
+   green doing the pointing; persimmon, ochre, teal and rose classify events
+   behind it.
+
+   On colour: --accent has to work twice - as link text on paper and as a
+   button fill under --accent-ink - so it is chosen to clear 4.5:1 both ways.
+   --accent-bright is the same hue with the brakes off, used only where
+   nothing has to be read on top of it: meters, bars, pips, spines.
+
+   Green is also the success colour, so the two are kept a good distance
+   apart in hue: the brand is a yellow-leaning leaf, --ok is a blue-leaning
+   emerald, and --ok only ever appears as a pale chip with a label on it.
+
+   Two themes. Light is the default; dark is a real theme, not an inversion.
+   ========================================================================== */
+
+:root {
+    /* ---- Type ------------------------------------------------------------ */
+    --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+
+    --fs-3xs: 0.6875rem; /* 11 — table micro-labels */
+    --fs-2xs: 0.75rem;   /* 12 — chips, captions */
+    --fs-xs:  0.8125rem; /* 13 */
+    --fs-sm:  0.875rem;  /* 14 — table body */
+    --fs-md:  1rem;      /* 16 — body */
+    --fs-lg:  1.25rem;   /* 20 */
+    --fs-xl:  1.625rem;  /* 26 */
+    --fs-2xl: 2.125rem;  /* 34 */
+    --fs-3xl: 3rem;      /* 48 */
+    --fs-4xl: 4.25rem;   /* 68 — landing only */
+
+    --lh-tight: 1.05;
+    --lh-snug: 1.25;
+    --lh-body: 1.6;
+
+    --tracking-tight: -0.022em;
+    --tracking-flat: 0;
+    --tracking-wide: 0.08em;
+
+    /* ---- Space (8px grid) ------------------------------------------------ */
+    --s-1: 0.25rem;
+    --s-2: 0.5rem;
+    --s-3: 0.75rem;
+    --s-4: 1rem;
+    --s-5: 1.5rem;
+    --s-6: 2rem;
+    --s-7: 3rem;
+    --s-8: 4rem;
+    --s-9: 6rem;
+    --s-10: 8rem;
+
+    /* ---- Shape ----------------------------------------------------------- */
+    --r-xs: 4px;
+    --r-sm: 6px;
+    --r-md: 10px;
+    --r-lg: 16px;
+    --r-xl: 24px;
+    --r-pill: 999px;
+
+    --border: 1px solid var(--line);
+    --border-strong: 1px solid var(--line-strong);
+
+    /* ---- Motion ---------------------------------------------------------- */
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --t-fast: 140ms;
+    --t-med: 260ms;
+    --t-slow: 520ms;
+
+    /* ---- Layout ---------------------------------------------------------- */
+    --shell-max: 1180px;
+    --shell-pad: var(--s-5);
+    --sidebar-w: 248px;
+    --sidebar-w-rail: 72px;   /* the collapsed console rail */
+    --topbar-h: 68px;
+}
+
+/* ==========================================================================
+   LIGHT - "Bulletin"
+   Warm paper you would actually pin a poster to. Ink is near-black, never
+   pure, and the leaf green is the only thing allowed to shout.
+   ========================================================================== */
+:root,
+[data-theme="light"] {
+    color-scheme: light;
+
+    --paper: #F7F5EF;
+    --paper-deep: #EFEBE1;
+    --surface: #FFFFFF;
+    --surface-raised: #FFFFFF;
+    --surface-sunken: #F1EEE6;
+
+    --ink: #1A1B18;
+    --ink-2: #4B4E48;
+    --ink-3: #72756D;
+    --ink-inverse: #FFFFFF;
+
+    --line: #E3DDD1;
+    --line-strong: #CAC3B4;
+
+    --accent: #3A7018;         /* leaf green - text and fills alike */
+    --accent-hover: #2B5411;
+    --accent-ink: #FFFFFF;
+    --accent-wash: #E9F3DC;
+    --accent-edge: #A7CE83;
+
+    /* Same hue, brakes off. Fills only. */
+    --accent-bright: #5FA524;
+    --accent-bright-ink: #FFFFFF;
+
+    --mango: #C6521E;          /* persimmon - the warm counterweight */
+    --mango-wash: #FAE7DC;
+    --gold: #B07D06;           /* ochre */
+    --gold-wash: #F8EED6;
+    --teal: #0E6E6B;           /* the one cool hue, for separation */
+    --teal-wash: #DBEFEE;
+    --rose: #A62E55;
+    --rose-wash: #FAE1E8;
+
+    /* Status - reserved meaning, never decoration */
+    --ok: #10795A;
+    --ok-wash: #DDF1EA;
+    --warn: #9A4F0B;
+    --warn-wash: #FAE6D0;
+    --risk: #B32D22;
+    --risk-wash: #FBE4E1;
+    --idle: #74757F;
+    --idle-wash: #ECE9E1;
+
+    --focus: #3A7018;
+
+    --shadow-pop: 0 2px 0 0 var(--line-strong);
+    --shadow-float: 0 10px 30px -12px rgba(26, 27, 24, 0.22), 0 2px 6px -2px rgba(26, 27, 24, 0.10);
+    --shadow-lift: 0 22px 60px -24px rgba(26, 27, 24, 0.32);
+
+    --grid-line: rgba(26, 27, 24, 0.055);
+    --scrim: rgba(18, 19, 16, 0.45);
+}
+
+/* ==========================================================================
+   DARK - "Night Press"
+   A desk lit low: charcoal with a trace of green in it, warm off-white ink.
+   The leaf lifts to a bright green that still reads as leaf, not neon.
+   Surfaces step UP with elevation; borders carry structure, not shadows.
+   ========================================================================== */
+[data-theme="dark"] {
+    color-scheme: dark;
+
+    --paper: #101210;
+    --paper-deep: #0A0C0A;
+    --surface: #1A1D19;
+    --surface-raised: #222620;
+    --surface-sunken: #141613;
+
+    --ink: #F1F0E9;
+    --ink-2: #B6B8AE;
+    --ink-3: #84877E;
+    --ink-inverse: #101210;
+
+    --line: #2A2E27;
+    --line-strong: #3B4037;
+
+    --accent: #9BD04A;
+    --accent-hover: #B4E06E;
+    --accent-ink: #16220A;
+    --accent-wash: #22331A;
+    --accent-edge: #4B6B2A;
+
+    --accent-bright: #9BD04A;
+    --accent-bright-ink: #16220A;
+
+    --mango: #FF8A4F;
+    --mango-wash: #2A1A14;
+    --gold: #E3B341;
+    --gold-wash: #2B2413;
+    --teal: #35C6C0;
+    --teal-wash: #0D2626;
+    --rose: #E06B86;
+    --rose-wash: #2E1620;
+
+    --ok: #45C98F;
+    --ok-wash: #0E2A22;
+    --warn: #FFA63D;
+    --warn-wash: #2E2010;
+    --risk: #FF7A63;
+    --risk-wash: #2D1613;
+    --idle: #7E8279;
+    --idle-wash: #1A1D18;
+
+    --focus: #9BD04A;
+
+    --shadow-pop: 0 2px 0 0 var(--line-strong);
+    --shadow-float: 0 12px 34px -14px rgba(0, 0, 0, 0.85), 0 2px 8px -3px rgba(0, 0, 0, 0.6);
+    --shadow-lift: 0 26px 70px -26px rgba(0, 0, 0, 0.9);
+
+    --grid-line: rgba(241, 240, 233, 0.045);
+    --scrim: rgba(4, 5, 4, 0.68);
+}

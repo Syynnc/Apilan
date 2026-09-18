@@ -1,0 +1,348 @@
+/* ==========================================================================
+   Apilan — Console shell (officers and admins)
+   Dense, table-led, and quiet. The landing page does the talking; this does
+   the work. Same tokens, no new colours.
+   ========================================================================== */
+
+.console {
+    min-height: 100vh;
+    display: grid;
+    /* The rail sizes itself; the column follows it, so the collapse animates
+       from one place rather than two. */
+    grid-template-columns: auto minmax(0, 1fr);
+    background: var(--paper);
+}
+
+/* ---- Sidebar ------------------------------------------------------------- */
+.side {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: var(--sidebar-w);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+    padding: 0 var(--s-4) var(--s-5);
+    background: var(--surface);
+    border-right: var(--border);
+    overflow-x: hidden;
+    overflow-y: auto;
+    transition: width var(--t-med) var(--ease-out),
+                padding var(--t-med) var(--ease-out);
+}
+
+/* Brand row, set to the height of the console bar so the wordmark and the
+   page title sit on the same line across the top of the screen. */
+.side-head {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    height: var(--topbar-h);
+    flex: none;
+}
+
+.side .brand {
+    font-size: var(--fs-md);
+    margin: 0 auto 0 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.side-toggle {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--ink-3);
+    cursor: pointer;
+    transition: background-color var(--t-fast) var(--ease-out),
+                color var(--t-fast) var(--ease-out),
+                border-color var(--t-fast) var(--ease-out);
+}
+.side-toggle:hover { background: var(--surface-sunken); color: var(--ink); border-color: var(--line); }
+.side-toggle svg {
+    width: 17px; height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.side-toggle .caret { transition: transform var(--t-med) var(--ease-out); transform-origin: 14px 12px; }
+
+.side-org {
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-bottom: var(--s-4);
+    border-bottom: var(--border);
+    white-space: nowrap;
+    transition: opacity var(--t-fast) var(--ease-out);
+}
+
+.side-group { display: grid; gap: 2px; }
+.side-group h6 {
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 var(--s-2);
+    padding-inline: var(--s-3);
+}
+
+.side-link {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-2) var(--s-3);
+    border-radius: var(--r-sm);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--ink-2);
+    text-decoration: none;
+    transition: background-color var(--t-fast) var(--ease-out),
+                color var(--t-fast) var(--ease-out);
+}
+.side-link:hover { background: var(--surface-sunken); color: var(--ink); }
+.side-link.is-active {
+    background: var(--accent-wash);
+    color: var(--accent);
+    font-weight: 600;
+}
+.side-link svg {
+    width: 16px; height: 16px;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.side-link .lbl {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: opacity var(--t-fast) var(--ease-out);
+}
+
+.side-link .count {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: var(--r-pill);
+    background: var(--warn-wash);
+    color: var(--warn);
+}
+
+.side-foot { margin-top: auto; padding-top: var(--s-4); border-top: var(--border); }
+.side-user { display: flex; align-items: center; gap: var(--s-3); margin-bottom: var(--s-3); }
+.side-user .av {
+    width: 32px; height: 32px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border-radius: var(--r-sm);
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+}
+.side-user .who { min-width: 0; }
+.side-user .nm {
+    display: block;
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.side-user .rl {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+.side-foot form { display: block; }
+.side-foot .btn-a { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2); }
+.side-out svg {
+    width: 15px; height: 15px;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    display: none;
+}
+
+/* ---- Main column --------------------------------------------------------- */
+.console-main { min-width: 0; display: flex; flex-direction: column; }
+
+.console-bar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: var(--s-4);
+    flex-wrap: wrap;
+    padding: var(--s-4) var(--s-6);
+    background: var(--paper);
+    border-bottom: var(--border);
+}
+.console-bar .titles { margin-right: auto; min-width: 0; }
+.console-bar .crumb {
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+.console-bar h1 {
+    font-size: var(--fs-xl);
+    margin: 2px 0 0;
+    letter-spacing: -0.025em;
+}
+.console-bar .actions { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; }
+
+.console-body { padding: var(--s-6); flex: 1; }
+.console-body > * + * { margin-top: var(--s-5); }
+
+/* ==========================================================================
+   COLLAPSED RAIL
+   Icons only, at the width of a comfortable hit target. Labels are clipped
+   rather than removed, so they stay in the accessibility tree and a screen
+   reader still reads a full menu; sighted users get the name as a tooltip.
+   ========================================================================== */
+[data-side="collapsed"] .side {
+    width: var(--sidebar-w-rail);
+    padding-inline: var(--s-2);
+}
+
+[data-side="collapsed"] .side-head { justify-content: center; }
+
+/* The wordmark folds down to the tally mark itself. */
+[data-side="collapsed"] .brand { margin-right: 0; }
+[data-side="collapsed"] .brand .lbl,
+[data-side="collapsed"] .side-link .lbl,
+[data-side="collapsed"] .side-user .who,
+[data-side="collapsed"] .side-out .lbl {
+    width: 0;
+    opacity: 0;
+    margin: 0;
+    pointer-events: none;
+}
+
+/* The toggle sits under the mark rather than beside it, and its caret flips
+   to point the way the rail will move. */
+[data-side="collapsed"] .side-head .brand { display: none; }
+[data-side="collapsed"] .side-toggle .caret { transform: rotate(180deg); }
+
+[data-side="collapsed"] .side-org {
+    height: 0;
+    padding: 0;
+    opacity: 0;
+    border-bottom-color: transparent;
+    overflow: hidden;
+}
+
+[data-side="collapsed"] .side-group { gap: 4px; }
+[data-side="collapsed"] .side-group h6 {
+    height: 0;
+    margin: 0;
+    opacity: 0;
+    overflow: hidden;
+}
+
+/* A rule between groups keeps the rail readable once the headings are gone. */
+[data-side="collapsed"] .side-group + .side-group {
+    margin-top: var(--s-3);
+    padding-top: var(--s-3);
+    border-top: var(--border);
+}
+
+[data-side="collapsed"] .side-link {
+    justify-content: center;
+    padding-inline: 0;
+    gap: 0;
+}
+
+/* The pending count has no room for a number, so it becomes a dot on the icon. */
+[data-side="collapsed"] .side-link .count {
+    position: absolute;
+    margin: 0;
+    top: 4px;
+    right: 12px;
+    width: 7px;
+    height: 7px;
+    padding: 0;
+    overflow: hidden;
+    color: transparent;
+    background: var(--warn);
+    border: 2px solid var(--surface);
+}
+[data-side="collapsed"] .side-link { position: relative; }
+
+[data-side="collapsed"] .side-user { justify-content: center; margin-bottom: var(--s-2); }
+[data-side="collapsed"] .side-foot { padding-top: var(--s-3); }
+[data-side="collapsed"] .side-out svg { display: block; }
+[data-side="collapsed"] .side-foot .btn-a { padding-inline: 0; }
+
+/* Motion is decoration here — the rail still works without it. */
+@media (prefers-reduced-motion: reduce) {
+    .side,
+    .side .lbl,
+    .side-org,
+    .side-toggle .caret,
+    .side-group h6 {
+        transition: none;
+    }
+}
+
+/* ---- Narrow screens ------------------------------------------------------ */
+@media (max-width: 960px) {
+    .console { grid-template-columns: 1fr; }
+    .side-toggle { display: none; }
+    .side-head { height: auto; }
+
+    /* Whatever the rail was doing on a wider screen, undo it here. */
+    [data-side="collapsed"] .side,
+    .side { width: auto; padding-inline: var(--s-4); }
+    [data-side="collapsed"] .side-head .brand { display: inline-flex; }
+    [data-side="collapsed"] .side-link { justify-content: flex-start; gap: var(--s-3); padding-inline: var(--s-3); }
+    [data-side="collapsed"] .side-link .lbl,
+    [data-side="collapsed"] .side-user .who,
+    [data-side="collapsed"] .side-out .lbl { width: auto; opacity: 1; }
+    [data-side="collapsed"] .side-group + .side-group { margin-top: 0; padding-top: 0; border-top: 0; }
+    .side {
+        position: static;
+        height: auto;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--s-3);
+        border-right: 0;
+        border-bottom: var(--border);
+    }
+    .side-org, .side-group h6 { display: none; }
+    .side-group { display: flex; flex-wrap: wrap; }
+    .side-foot { margin-top: 0; padding-top: 0; border-top: 0; margin-left: auto; }
+    .side-foot .btn-a { width: auto; }
+    .console-body { padding: var(--s-5) var(--s-4); }
+    .console-bar { padding-inline: var(--s-4); }
+}

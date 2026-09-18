@@ -1,0 +1,148 @@
+@model Apilan.ViewModels.CertificateListViewModel
+@using Apilan.Services
+@{
+    var e = Model.Event;
+    ViewData["Title"] = "Certificates · " + e.Title;
+    ViewData["Module"] = "Transactions · Certificates";
+    Layout = "_LayoutAdmin";
+
+    string Tab(string? f) => Model.Filter == f ? "is-active" : "";
+}
+
+@section Actions {
+    <a class="btn-a ghost sm" asp-action="Index">All events</a>
+    <a class="btn-a ghost sm" asp-controller="Events" asp-action="Details" asp-route-id="@e.Id">Event</a>
+    <a class="btn-a ghost sm" asp-controller="Reports" asp-action="Event" asp-route-id="@e.Id">Report</a>
+    <form asp-action="Recompute" asp-route-id="@e.Id" method="post">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn-a sm">Recompute</button>
+    </form>
+}
+
+<div class="tiles">
+    <div class="tile accent">
+        <span class="l">Certificates earned</span>
+        <span class="n">@Model.Earned</span>
+        <span class="s">@Model.EarnedPercent% of @Model.Total participant@(Model.Total == 1 ? "" : "s")</span>
+    </div>
+    <div class="tile">
+        <span class="l">The rule</span>
+        <span class="n">@e.CertificateThresholdPercent%</span>
+        <span class="s">of @e.Sessions.Count session@(e.Sessions.Count == 1 ? "" : "s") attended</span>
+    </div>
+    <div class="tile">
+        <span class="l">Officer overrides</span>
+        <span class="n">@Model.Overridden</span>
+        <span class="s">Kept through every recompute</span>
+    </div>
+    <div class="tile">
+        <span class="l">Out of date</span>
+        <span class="n">@Model.Unsettled</span>
+        <span class="s">
+            @if (Model.Unsettled > 0)
+            {
+                <text>Attendance changed since the last settle — recompute.</text>
+            }
+            else
+            {
+                <text>Every decision matches the record</text>
+            }
+        </span>
+    </div>
+</div>
+
+<div class="toolbar">
+    <div class="segmented">
+        <a class="@Tab(null)" asp-action="Event" asp-route-id="@e.Id">Everyone</a>
+        <a class="@Tab("earned")" asp-action="Event" asp-route-id="@e.Id" asp-route-filter="earned">Earned (@Model.Earned)</a>
+        <a class="@Tab("short")" asp-action="Event" asp-route-id="@e.Id" asp-route-filter="short">Fell short</a>
+        <a class="@Tab("overridden")" asp-action="Event" asp-route-id="@e.Id" asp-route-filter="overridden">Overridden (@Model.Overridden)</a>
+    </div>
+    <span class="grow"></span>
+    <span class="count">@Model.Rows.Count shown</span>
+</div>
+
+@if (!e.IssuesCertificate)
+{
+    <div class="flash bad"><strong>Heads up.</strong> This event is set not to issue certificates. Turn it on in the event form if that is wrong.</div>
+}
+
+@if (!Model.Rows.Any())
+{
+    <div class="empty-a">
+        <h4>Nobody in this view</h4>
+        <p>Try another filter, or check the roster on the event screen.</p>
+    </div>
+}
+else
+{
+    <div class="panel">
+        <table class="table-a">
+            <thead>
+                <tr>
+                    <th>Participant</th>
+                    <th style="width:200px">Attendance</th>
+                    <th>The rule says</th>
+                    <th>Decision</th>
+                    <th style="width:320px">Override</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var r in Model.Rows)
+            {
+                <tr>
+                    <td>
+                        <strong>@r.ListName</strong>
+                        <div class="dim" style="font-size:var(--fs-2xs)">@r.StudentNumber · @r.CourseYear</div>
+                        @if (!string.IsNullOrWhiteSpace(r.Note))
+                        {
+                            <div class="dim" style="font-size:var(--fs-2xs)">Note: @r.Note</div>
+                        }
+                    </td>
+                    <td>
+                        <div class="bar-cell">
+                            <div class="meter"><i style="width:@(r.AttendancePercent)%"></i></div>
+                            <span class="pct">@r.Attended/@r.Sessions</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="chip @(r.MeetsRule ? "ok" : "idle")">@(r.MeetsRule ? "Meets it" : "Falls short")</span>
+                        @if (r.NeedsSettling)
+                        {
+                            <div class="dim" style="font-size:var(--fs-2xs)">Recompute to apply</div>
+                        }
+                    </td>
+                    <td><span class="chip @AttendanceRules.Chip(r.Eligibility)">@AttendanceRules.Label(r.Eligibility)</span></td>
+                    <td>
+                        @if (r.IsOverride)
+                        {
+                            <form asp-action="ClearOverride" asp-route-id="@e.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="registrationId" value="@r.RegistrationId" />
+                                <button type="submit" class="btn-a ghost sm">Clear the override</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-action="Override" asp-route-id="@e.Id" method="post"
+                                  style="display:flex; gap:var(--s-2); align-items:center">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="registrationId" value="@r.RegistrationId" />
+                                <input type="hidden" name="grant" value="@((!r.Earned).ToString().ToLowerInvariant())" />
+                                <input class="input-a" type="text" name="note" placeholder="Reason" style="font-size:var(--fs-2xs)" />
+                                <button type="submit" class="btn-a @(r.Earned ? "danger" : "")" style="white-space:nowrap">
+                                    @(r.Earned ? "Revoke" : "Grant")
+                                </button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        <div class="report-note">
+            An override is a deliberate judgement — someone who was there but whose record is
+            short, or the reverse — so it survives every later recompute until it is cleared.
+        </div>
+    </div>
+}

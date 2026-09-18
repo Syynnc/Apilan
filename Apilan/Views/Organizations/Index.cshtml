@@ -1,0 +1,121 @@
+@model Apilan.ViewModels.OrganizationListViewModel
+@{
+    ViewData["Title"] = "Organizations";
+    ViewData["Module"] = "Master data";
+    Layout = "_LayoutAdmin";
+
+    var isAdmin = User.IsInRole(Roles.Admin);
+}
+
+@section Actions {
+    @if (isAdmin)
+    {
+        <a class="btn-a sm" asp-action="Create">Add organization</a>
+    }
+}
+
+<form method="get" asp-action="Index" class="toolbar">
+    <span class="count">
+        @Model.Organizations.Count organization@(Model.Organizations.Count == 1 ? "" : "s")
+        @if (Model.TotalEvents > 0)
+        {
+            <text>· @Model.TotalEvents event@(Model.TotalEvents == 1 ? "" : "s")</text>
+        }
+    </span>
+
+    <span class="grow"></span>
+
+    <input class="input-a sm" type="search" name="search" value="@Model.Search"
+           placeholder="Name or acronym" aria-label="Search organizations" />
+
+    <label class="check-inline">
+        <input type="checkbox" name="includeInactive" value="true"
+               checked="@Model.IncludeInactive" onchange="this.form.submit()" />
+        <span>Show archived (@Model.InactiveCount)</span>
+    </label>
+
+    <button type="submit" class="btn-a sm">Filter</button>
+    <a class="btn-a ghost sm" asp-action="Index">Clear</a>
+</form>
+
+@if (!Model.Organizations.Any())
+{
+    <div class="empty-a">
+        <h4>No organizations yet</h4>
+        <p>
+            Every event is filed against an organization, so there has to be at least one
+            before an event can be created.
+        </p>
+        @if (isAdmin)
+        {
+            <a class="btn-a" style="margin-top:var(--s-4)" asp-action="Create">Add the first organization</a>
+        }
+        else
+        {
+            <p class="dim">An administrator sets these up.</p>
+        }
+    </div>
+}
+else
+{
+    <div class="panel">
+        <table class="table-a">
+            <thead>
+                <tr>
+                    <th>Organization</th>
+                    <th>Adviser</th>
+                    <th class="num">Events</th>
+                    <th class="num">Upcoming</th>
+                    <th class="num">Registrations</th>
+                    <th class="num">Officers</th>
+                    <th>Status</th>
+                    <th style="width:1%"></th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var o in Model.Organizations)
+            {
+                <tr>
+                    <td>
+                        <span class="swatch" data-type="@o.ColorKey" aria-hidden="true"></span>
+                        <a asp-action="Details" asp-route-id="@o.Id"><strong>@o.Acronym</strong></a>
+                        <div class="dim" style="font-size:var(--fs-2xs)">@o.Name</div>
+                    </td>
+                    <td>
+                        @(o.Adviser ?? "—")
+                        @if (!string.IsNullOrWhiteSpace(o.ContactEmail))
+                        {
+                            <div class="dim mono" style="font-size:var(--fs-2xs)">@o.ContactEmail</div>
+                        }
+                    </td>
+                    <td class="num mono">@o.TotalEvents</td>
+                    <td class="num mono">@o.UpcomingEvents</td>
+                    <td class="num mono">@o.Registrations</td>
+                    <td class="num mono">@o.Officers</td>
+                    <td><span class="chip @o.StatusChip">@(o.IsActive ? "Active" : "Archived")</span></td>
+                    <td>
+                        <div class="row-actions">
+                            <a class="btn-a ghost sm" asp-action="Details" asp-route-id="@o.Id">Events</a>
+                            @if (isAdmin)
+                            {
+                                <a class="btn-a ghost sm" asp-action="Edit" asp-route-id="@o.Id">Edit</a>
+                                <form asp-action="Toggle" asp-route-id="@o.Id" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn-a quiet sm">
+                                        @(o.IsActive ? "Archive" : "Restore")
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <p class="dim" style="margin-top:var(--s-4); font-size:var(--fs-2xs)">
+        Archiving hides an organization from the event form and the public calendar filter.
+        Its events and their reports stay exactly where they are.
+    </p>
+}

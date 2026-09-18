@@ -1,0 +1,138 @@
+@model Apilan.ViewModels.FeedbackFormViewModel
+@{
+    ViewData["Title"] = "Feedback · " + Model.EventTitle;
+    Layout = "_LayoutPublic";
+
+    // The four scales, so the markup states each one once.
+    var scales = new (string Field, int Value, string Label, string Hint)[]
+    {
+        (nameof(Model.OverallRating), Model.OverallRating, "Overall",
+            "Taken as a whole, was it worth your afternoon?"),
+        (nameof(Model.ContentRating), Model.ContentRating, "Content and speakers",
+            "Did you get what was advertised?"),
+        (nameof(Model.VenueRating), Model.VenueRating, "Venue and facilities",
+            "Could you see, hear, and sit down?"),
+        (nameof(Model.OrganizationRating), Model.OrganizationRating, "How well it was run",
+            "Registration, the door, the programme running on time.")
+    };
+
+    var words = new[] { "Poor", "Fair", "Good", "Very good", "Excellent" };
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/landing.css" asp-append-version="true" />
+}
+
+<section class="section">
+    <div class="shell shell-narrow">
+
+        <div class="section-head">
+            <span class="eyebrow">
+                <span class="swatch" data-type="@Model.ColorKey" aria-hidden="true"></span>
+                @Model.TypeLabel · @Model.OrgName
+            </span>
+            <h2>How was @Model.EventTitle?</h2>
+            <p>
+                @Model.StartsAt.ToString("dddd, d MMMM yyyy") · @Model.VenueName.
+                You attended @Model.Attended of @Model.Sessions session@(Model.Sessions == 1 ? "" : "s").
+                This goes to the officers who ran it.
+            </p>
+        </div>
+
+        @if (Model.AlreadySubmitted)
+        {
+            <div class="flash ok">
+                <strong>You already left feedback</strong>
+                on @Model.SubmittedOn?.ToString("d MMM yyyy, h:mm tt"). Changing anything below replaces it.
+            </div>
+        }
+
+        <form method="post" asp-action="Submit" asp-route-id="@Model.RegistrationId">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <h3>Scores</h3>
+                </div>
+                <div class="panel-body">
+                    @foreach (var (field, value, label, hint) in scales)
+                    {
+                        <fieldset class="rate">
+                            <legend>
+                                @label
+                                <span class="dim">@hint</span>
+                            </legend>
+
+                            <div class="rate-scale" role="radiogroup" aria-label="@label">
+                                @for (var score = 1; score <= 5; score++)
+                                {
+                                    var id = $"{field}-{score}";
+                                    <input type="radio" id="@id" name="@field" value="@score"
+                                           checked="@(value == score)" />
+                                    <label for="@id" title="@words[score - 1]">
+                                        <span class="n">@score</span>
+                                        <span class="w">@words[score - 1]</span>
+                                    </label>
+                                }
+                            </div>
+
+                            <span class="field-error">
+                                @Html.ValidationMessage(field)
+                            </span>
+                        </fieldset>
+                    }
+
+                    <label class="check-inline">
+                        <input asp-for="WouldRecommend" />
+                        <span>@Html.DisplayNameFor(m => m.WouldRecommend)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <h3>In your own words</h3>
+                </div>
+                <div class="panel-body form-a">
+                    <div class="field span-4">
+                        <label asp-for="Comment"></label>
+                        <textarea class="input-a" asp-for="Comment" rows="3"
+                                  placeholder="The speakers were actually from the industry."></textarea>
+                        <span class="hint">Optional — but this is the part officers actually read.</span>
+                        <span class="field-error" asp-validation-for="Comment"></span>
+                    </div>
+
+                    <div class="field span-4">
+                        <label asp-for="Improvement"></label>
+                        <textarea class="input-a" asp-for="Improvement" rows="3"
+                                  placeholder="Start on time. We waited 40 minutes for the opening remarks."></textarea>
+                        <span class="field-error" asp-validation-for="Improvement"></span>
+                    </div>
+
+                    <div class="field span-4">
+                        <label class="check-inline">
+                            <input asp-for="IsAnonymous" />
+                            <span>@Html.DisplayNameFor(m => m.IsAnonymous)</span>
+                        </label>
+                        <span class="hint">
+                            Officers still see the scores and what you wrote — just not who wrote it.
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-foot">
+                <a class="btn-a ghost" asp-controller="MyEvents" asp-action="Index">Back to my events</a>
+                <button type="submit" class="btn-a">
+                    @(Model.AlreadySubmitted ? "Update my feedback" : "Send feedback")
+                </button>
+            </div>
+        </form>
+
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

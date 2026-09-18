@@ -1,0 +1,107 @@
+@model Apilan.ViewModels.MemberDetailsViewModel
+@using Apilan.Services
+@{
+    var m = Model.Member;
+    ViewData["Title"] = m.FullName;
+    ViewData["Module"] = "Master data · Members";
+    Layout = "_LayoutAdmin";
+}
+
+@section Actions {
+    <a class="btn-a ghost sm" asp-action="Index">Back to roster</a>
+    <a class="btn-a sm" asp-action="Edit" asp-route-id="@m.Id">Edit</a>
+}
+
+<div class="tiles">
+    <div class="tile accent">
+        <span class="l">Events registered</span>
+        <span class="n">@Model.History.Count</span>
+        <span class="s">@Model.EventsAttended attended at least one session</span>
+    </div>
+    <div class="tile">
+        <span class="l">Certificates earned</span>
+        <span class="n">@Model.CertificatesEarned</span>
+        <span class="s">Across all completed events</span>
+    </div>
+    <div class="tile">
+        <span class="l">Standing</span>
+        <span class="n" style="font-size:var(--fs-lg)">@m.Status</span>
+        <span class="s">@m.MembershipType member since @m.JoinedOn.ToString("MMM yyyy")</span>
+    </div>
+    <div class="tile">
+        <span class="l">Login account</span>
+        <span class="n" style="font-size:var(--fs-lg)">@(Model.HasAccount ? Model.AccountStatus.ToString() : "None")</span>
+        <span class="s">@(Model.AccountEmail ?? "Roster record only")</span>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head">
+        <h2>Record</h2>
+        <form asp-action="ToggleStatus" asp-route-id="@m.Id" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn-a ghost sm">
+                @(m.Status == MembershipStatus.Active ? "Mark inactive" : "Reactivate")
+            </button>
+        </form>
+    </div>
+    <div class="panel-body">
+        <dl class="detail-list">
+            <div><dt>Student number</dt><dd class="mono">@m.StudentNumber</dd></div>
+            <div><dt>Full name</dt><dd>@m.LastName, @m.FirstName @(m.MiddleName ?? "")</dd></div>
+            <div><dt>Course &amp; year</dt><dd>@m.Course · Year @m.YearLevel@(string.IsNullOrWhiteSpace(m.Section) ? "" : $" · {m.Section}")</dd></div>
+            <div><dt>Email</dt><dd>@(m.Email ?? "—")</dd></div>
+            <div><dt>Contact</dt><dd class="mono">@(m.ContactNumber ?? "—")</dd></div>
+            <div><dt>Membership</dt><dd>@m.MembershipType</dd></div>
+        </dl>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head">
+        <h2>Event history</h2>
+        <span class="dim">@Model.History.Count record@(Model.History.Count == 1 ? "" : "s")</span>
+    </div>
+
+    @if (!Model.History.Any())
+    {
+        <div class="panel-body">
+            <p class="muted">This member has not registered for anything yet.</p>
+        </div>
+    }
+    else
+    {
+        <table class="table-a">
+            <thead>
+                <tr>
+                    <th>Event</th>
+                    <th>When</th>
+                    <th>Registration</th>
+                    <th class="num">Attendance</th>
+                    <th>Certificate</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var h in Model.History)
+            {
+                <tr>
+                    <td>
+                        <strong>@h.Title</strong>
+                        <div class="dim" style="font-size:var(--fs-2xs)">@h.TypeLabel</div>
+                    </td>
+                    <td class="mono nowrap">@h.StartsAt.ToString("dd MMM yyyy")</td>
+                    <td>
+                        <span class="chip @(h.Status switch {
+                            RegistrationStatus.Confirmed => "ok",
+                            RegistrationStatus.Pending => "info",
+                            RegistrationStatus.Waitlisted => "warn",
+                            _ => "risk" })">@h.Status</span>
+                    </td>
+                    <td class="num mono">@h.Attended / @h.Sessions</td>
+                    <td><span class="chip @AttendanceRules.Chip(h.Eligibility)">@AttendanceRules.Label(h.Eligibility)</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</div>

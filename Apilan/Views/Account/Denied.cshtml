@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Access denied";
+    Layout = "_LayoutAuth";
+}
+
+<div class="auth-card">
+    <div class="auth-state bad">
+
+        <svg class="seal" viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="17" />
+            <path d="M14 14 L26 26 M26 14 L14 26" />
+        </svg>
+
+        <h1>You do not have access</h1>
+        <p>
+            Your account is signed in, but this page is limited to a role you do
+            not hold. If you think you should be an officer, ask an administrator
+            to update your role.
+        </p>
+
+        <div class="hero-cta">
+            <a class="btn-a" asp-controller="Home" asp-action="Index">Back to the site</a>
+            <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn-a ghost">Sign out</button>
+            </form>
+        </div>
+
+    </div>
+</div>
