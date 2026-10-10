@@ -1,0 +1,42 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Sign in";
+    Layout = "_LayoutAuth";
+}
+
+<div class="auth-card">
+
+    <div class="auth-head">
+        <span class="eyebrow">Apilan</span>
+        <h1>Sign in</h1>
+        <p>Officers and members sign in here.</p>
+    </div>
+
+    <form asp-action="Login" method="post" novalidate>
+        <input type="hidden" asp-for="ReturnUrl" />
+
+        <div asp-validation-summary="ModelOnly" class="auth-alert"></div>
+
+        <div class="field">
+            <label asp-for="Identifier"></label>
+            <input asp-for="Identifier" class="input-a" autocomplete="username"
+                   placeholder="officer, 2022-00101, or you@school.edu" autofocus />
+            <span asp-validation-for="Identifier" class="field-error"></span>
+        </div>
+
+        <div class="field">
+            <label asp-for="Password"></label>
+            <input asp-for="Password" class="input-a" type="password" autocomplete="current-password" />
+            <span asp-validation-for="Password" class="field-error"></span>
+        </div>
+
+        <div class="auth-actions">
+            <button type="submit" class="btn-a lg">Sign in</button>
+        </div>
+    </form>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

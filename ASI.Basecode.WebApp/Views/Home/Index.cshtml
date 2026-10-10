@@ -1,0 +1,420 @@
+@using ASI.Basecode.WebApp.Helpers
+@{
+    ViewData["Title"] = "Event attendance for student orgs";
+    Layout = "_LayoutPublic";
+
+    // The hero pass is a real, scannable symbol: point the door camera at the
+    // screen and it reads this student number like any member's pass.
+    const string demoStudentNo = "2022-04417";
+    var heroQr = QrCode.Render(demoStudentNo);
+    var heroSpan = heroQr.Modules + 4;
+
+    // The closing stub goes somewhere: a phone pointed at it lands on sign-in.
+    var signInUrl = Url.Action("Login", "Account", null, Context.Request.Scheme);
+    var signInQr = QrCode.Render(signInUrl);
+    var signInSpan = signInQr.Modules + 4;
+}
+
+@* ============================================================ HERO ======= *@
+<section class="hero">
+    <div class="shell hero-grid">
+
+        <div class="hero-copy">
+            <span class="hero-tag">
+                <b>For student orgs</b>
+                Events · QR check-in · Reports
+            </span>
+
+            <h1>Stop taking attendance on a <em>sign-in sheet</em>.</h1>
+
+            <p class="hero-lede">
+                Officers set up the event. Every member carries a QR pass. At the door
+                one scan times them in and the next times them out — and the
+                participation report reads straight from those same records.
+            </p>
+
+            <div class="hero-cta">
+                <a class="btn-a lg" asp-controller="Account" asp-action="Login">Sign in</a>
+                <a class="btn-a ghost lg" href="#how">How it works</a>
+            </div>
+
+            <ul class="hero-facts">
+                <li>Time-in and time-out per event</li>
+                <li>Late arrivals flagged automatically</li>
+                <li>Absentees listed when it ends</li>
+            </ul>
+        </div>
+
+        @* ---- The pass a member carries, and the door it goes through ---- *@
+        <div class="hero-visual">
+            <article class="ticket" data-type="talk" data-tilt id="pass">
+                <div class="ticket-body">
+                    <div class="ticket-kicker">
+                        <span class="ticket-type">Seminar</span>
+                        <span class="ticket-org">CCS Student Council</span>
+                    </div>
+
+                    <h3 class="ticket-title">Tech Night 2026</h3>
+
+                    <div class="ticket-main">
+                        <div class="datepad" aria-hidden="true">
+                            <span class="m">Oct</span>
+                            <span class="d">02</span>
+                            <span class="w">Fri</span>
+                        </div>
+
+                        <dl class="ticket-meta">
+                            <div><dt>When</dt><dd>Fri 2 Oct · 5:00 – 8:00 PM</dd></div>
+                            <div><dt>Where</dt><dd>AVR 2, Main Building</dd></div>
+                            <div><dt>Late</dt><dd>After 5:15 PM</dd></div>
+                        </dl>
+                    </div>
+
+                    <div class="ticket-who">
+                        <div>
+                            <span class="nm">Mara Villanueva</span>
+                            <span class="sn">@demoStudentNo</span>
+                        </div>
+                        <span class="chip ok">Timed in</span>
+                    </div>
+                </div>
+
+                <div class="ticket-stub">
+                    <svg class="qr" viewBox="-2 -2 @heroSpan @heroSpan" role="img"
+                         aria-label="QR pass for student number @demoStudentNo">
+                        <path d="@heroQr.Path" />
+                    </svg>
+                    <span class="stub-code">@demoStudentNo</span>
+                    <span class="stub-note">Show at<br />the door</span>
+                </div>
+            </article>
+
+            <aside class="door-card" aria-label="Attendance in progress">
+                <div class="door-head">
+                    <span>Door · Tech Night</span>
+                    <span class="state">Open</span>
+                </div>
+
+                <div class="door-count">
+                    <span class="n" data-count>0</span>
+                    <span class="of">/ 180 capacity</span>
+                </div>
+
+                <div class="door-bar" role="img" aria-label="Attendance progress">
+                    <i data-bar></i>
+                </div>
+
+                <ul class="door-feed" data-feed aria-live="polite"></ul>
+            </aside>
+        </div>
+
+    </div>
+</section>
+
+@* ============================================================ TYPES ====== *@
+<div class="types">
+    <div class="shell inner">
+        <span class="lbl">Built around what orgs actually run</span>
+        <span class="code-tag">General assembly</span>
+        <span class="code-tag">Seminar</span>
+        <span class="code-tag">Workshop</span>
+        <span class="code-tag">Leadership training</span>
+        <span class="code-tag">Outreach</span>
+        <span class="code-tag">Org week</span>
+        <span class="code-tag">Recollection</span>
+    </div>
+</div>
+
+@* ============================================================ HOW ======== *@
+<section class="section" id="how">
+    <div class="shell">
+        <div class="section-head reveal">
+            <span class="eyebrow">The whole loop</span>
+            <h2>Four steps, setup to report.</h2>
+            <p>The same flow your org already follows on paper — minus the sign-in sheet that goes missing.</p>
+        </div>
+
+        <div class="steps">
+            <article class="step reveal" style="--d:0ms">
+                <span class="num" aria-hidden="true"></span>
+                <h4>Officers set it up</h4>
+                <p>Name, type, venue, schedule, capacity, and how many minutes before an arrival counts as late.</p>
+            </article>
+            <article class="step reveal" style="--d:80ms">
+                <span class="num" aria-hidden="true"></span>
+                <h4>Members carry a pass</h4>
+                <p>Every member has a QR pass with their student number. Save it to a phone or print it once.</p>
+            </article>
+            <article class="step reveal" style="--d:160ms">
+                <span class="num" aria-hidden="true"></span>
+                <h4>You scan them in</h4>
+                <p>Point the camera at the pass. The first scan is time-in, the next is time-out.</p>
+            </article>
+            <article class="step reveal" style="--d:240ms">
+                <span class="num" aria-hidden="true"></span>
+                <h4>The report is done</h4>
+                <p>Turnout, late arrivals, and absentees come out of the check-ins. Export it as a spreadsheet.</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+@* ============================================================ KIOSK ====== *@
+<section class="section" id="checkin">
+    <div class="shell kiosk-demo">
+
+        <div class="reveal">
+            <span class="eyebrow">At the door</span>
+            <h2>The part that usually ruins the event.</h2>
+            <p class="muted">
+                No more passing a clipboard down a row of 180 people. One screen, one
+                scan, and the attendance record is already saved.
+            </p>
+
+            <ul class="demo-notes">
+                <li><span class="k" aria-hidden="true">1</span><span>Works with a phone or laptop camera, a handheld scanner, or plain typing.</span></li>
+                <li><span class="k" aria-hidden="true">2</span><span>A second scan records time-out instead of a duplicate entry.</span></li>
+                <li><span class="k" aria-hidden="true">3</span><span>Arrivals after the grace period are marked late on their own.</span></li>
+                <li><span class="k" aria-hidden="true">4</span><span>Unknown or inactive students are rejected clearly, not silently.</span></li>
+            </ul>
+        </div>
+
+        <div class="kiosk reveal" data-kiosk>
+            <div class="kiosk-brand">
+                <svg class="tally sm on-dark" viewBox="0 0 26 24" aria-hidden="true">
+                    <line x1="4"  y1="5" x2="4"  y2="19" />
+                    <line x1="9"  y1="5" x2="9"  y2="19" />
+                    <line x1="14" y1="5" x2="14" y2="19" />
+                    <line x1="19" y1="5" x2="19" y2="19" />
+                    <line class="slash" x1="1.5" y1="18.5" x2="21.5" y2="5.5" />
+                </svg>
+                Check-in · Tech Night 2026
+            </div>
+
+            <div class="kiosk-code" data-kiosk-code></div>
+
+            <div class="kiosk-result" data-kiosk-result>
+                <svg class="kiosk-seal" viewBox="0 0 40 40" aria-hidden="true">
+                    <circle cx="20" cy="20" r="17" />
+                    <path d="M13 20.5 L18 25.5 L27.5 15" />
+                </svg>
+                <div class="who" data-kiosk-who></div>
+                <span class="verdict" data-kiosk-verdict></span>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+@* ============================================================ REPORT ===== *@
+<section class="section" id="reports">
+    <div class="shell">
+        <div class="section-head reveal">
+            <span class="eyebrow">After the event</span>
+            <h2>The report is already written.</h2>
+            <p>
+                Attendance is data, not a photo of a sign-in sheet — so the numbers
+                your adviser asks for are there when the event ends.
+            </p>
+        </div>
+
+        <div class="report reveal">
+
+            <div class="report-head">
+                <div>
+                    <div class="doc">Participation report</div>
+                    <h3>General Assembly 2026</h3>
+                </div>
+                <div class="ref">
+                    <b>CCS Student Council</b>
+                    14 Oct 2026
+                </div>
+            </div>
+
+            <div class="report-body">
+
+                <div class="report-block">
+                    <div class="report-label">Arrivals by half hour</div>
+                    <div class="bars" aria-hidden="true">
+                        <i style="--h:64%; --i:0"></i><i style="--h:100%; --i:1"></i>
+                        <i style="--h:82%; --i:2"></i><i style="--h:41%; --i:3"></i>
+                        <i style="--h:22%; --i:4"></i><i style="--h:9%; --i:5"></i>
+                    </div>
+                    <div class="bars-axis" aria-hidden="true">
+                        <span>2:30</span><span>3:00</span><span>3:30</span>
+                        <span>4:00</span><span>4:30</span><span>5:00</span>
+                    </div>
+
+                    <div class="report-stats">
+                        <div class="rstat">
+                            <span class="n">400</span>
+                            <span class="l">Capacity</span>
+                        </div>
+                        <div class="rstat accent">
+                            <span class="n">312</span>
+                            <span class="l">Attended</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-block">
+                    <div class="report-label">Arrived on time</div>
+                    <div class="ring-wrap">
+                        <svg class="ring" viewBox="0 0 84 84" aria-hidden="true">
+                            <circle class="track" cx="42" cy="42" r="36" />
+                            <circle class="fill" cx="42" cy="42" r="36" />
+                        </svg>
+                        <div class="ring-mid" aria-hidden="true">77%</div>
+                    </div>
+                    <div class="metric-label">241 of 312 inside the grace period</div>
+                </div>
+
+            </div>
+
+            <div class="report-foot">
+                <span class="sig">Generated 14 Oct 2026</span>
+                <span class="report-exports">
+                    <a class="btn-a ghost sm" href="#reports">Export CSV</a>
+                </span>
+            </div>
+
+        </div>
+
+        <div class="strip reveal">
+            <div>
+                <span class="si" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M5.5 16.5c.9-1.6 2-2.4 3.5-2.4s2.6.8 3.5 2.4M15 10h4M15 13.5h4"/></svg>
+                </span>
+                <div>
+                    <h4>Member records</h4>
+                    <p>One record per member, with their full attendance history.</p>
+                </div>
+            </div>
+            <div>
+                <span class="si" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+                </span>
+                <div>
+                    <h4>Late detection</h4>
+                    <p>A grace period per event decides who was on time.</p>
+                </div>
+            </div>
+            <div>
+                <span class="si" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="7" cy="6" r="2.4"/><circle cx="7" cy="12" r="2.4"/><circle cx="7" cy="18" r="2.4"/><path d="M12 6h8M12 12h8M12 18h5"/></svg>
+                </span>
+                <div>
+                    <h4>Capacity &amp; absentees</h4>
+                    <p>The door stops at capacity; the no-shows are listed after.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ============================================================ ROLES ===== *@
+<section class="section" id="roles">
+    <div class="shell">
+        <div class="section-head reveal">
+            <span class="eyebrow">Who sees what</span>
+            <h2>One sign-in, two different apps.</h2>
+            <p>Everyone comes in the same door and lands somewhere built for their job.</p>
+        </div>
+
+        <div class="screens">
+
+            <div class="screen-set reveal">
+                <div class="screen">
+                    <div class="screen-bar">
+                        <span class="screen-role">Member</span>
+                        <span class="screen-route">/Home/MyAttendance</span>
+                    </div>
+                    <div class="screen-body">
+                        <span class="mini-label">My attendance</span>
+
+                        <div class="mini-row">
+                            <div class="t">Tech Night 2026</div>
+                            <span class="r chip ok">On time</span>
+                        </div>
+
+                        <div class="mini-row">
+                            <div class="t">General Assembly</div>
+                            <span class="r chip warn">Late</span>
+                        </div>
+
+                        <div class="mini-note">QR pass ready to show</div>
+                    </div>
+                </div>
+
+                <ul class="screen-can">
+                    <li>Carry a QR pass for the door</li>
+                    <li>See every event they attended</li>
+                    <li>Check their late and missing time-outs</li>
+                </ul>
+            </div>
+
+            <div class="screen-set reveal" style="--d:80ms">
+                <div class="screen">
+                    <div class="screen-bar">
+                        <span class="screen-role">Officer</span>
+                        <span class="screen-route">/Dashboard</span>
+                    </div>
+                    <div class="screen-body">
+                        <span class="mini-label">Checked in · Tech Night</span>
+
+                        <div>
+                            <span class="mini-big">128</span>
+                            <span class="mini-of"> / 180</span>
+                        </div>
+                        <div class="mini-bar" aria-hidden="true"><i style="width:71%"></i></div>
+
+                        <div class="mini-row">
+                            <div class="t">Late so far</div>
+                            <span class="r chip warn">6</span>
+                        </div>
+
+                        <div class="mini-note">Next: General Assembly</div>
+                    </div>
+                </div>
+
+                <ul class="screen-can">
+                    <li>Create events and manage members</li>
+                    <li>Run the door with a camera or scanner</li>
+                    <li>Read and export the participation report</li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+@* ============================================================ CTA ======== *@
+<section class="section">
+    <div class="shell">
+        <div class="cta-ticket reveal">
+
+            <div class="cta-ticket-body">
+                <span class="eyebrow">Admit one organization</span>
+                <h2>Your next general assembly can check in 400 people.</h2>
+                <p>
+                    Officers create member accounts and set up the event. Members sign in
+                    once to get their pass — and the door does the rest.
+                </p>
+                <div class="hero-cta">
+                    <a class="btn-a lg" asp-controller="Account" asp-action="Login">Sign in</a>
+                    <a class="btn-a ghost lg" href="#how">How it works</a>
+                </div>
+            </div>
+
+            <div class="cta-stub">
+                <svg class="qr" viewBox="-2 -2 @signInSpan @signInSpan" role="img"
+                     aria-label="QR code to the sign-in page">
+                    <path d="@signInQr.Path" />
+                </svg>
+                <span class="admit">APL · SIGN IN</span>
+                <span class="fine">Members<br />Officers<br />One door</span>
+            </div>
+
+        </div>
+    </div>
+</section>

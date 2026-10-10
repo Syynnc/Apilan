@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="14.0.0" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ASI.Basecode.Data\ASI.Basecode.Data.csproj" />
+    <ProjectReference Include="..\ASI.Basecode.Resources\ASI.Basecode.Resources.csproj" />
+  </ItemGroup>
+
+</Project>

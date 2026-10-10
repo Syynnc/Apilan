@@ -1,0 +1,52 @@
+@model StudentDetailViewModel
+@{
+    var st = Model.Student;
+    ViewData["Title"] = $"{st.FirstName} {st.LastName}";
+    ViewData["Module"] = "Members";
+}
+
+@section Actions {
+    <a class="btn-a ghost" asp-action="Edit" asp-route-id="@st.Id">Edit</a>
+}
+
+<div class="split">
+    <div class="stack-lg">
+        <div class="tiles">
+            <div class="tile accent"><span class="l">Events attended</span><span class="n">@Model.EventsAttended</span></div>
+            <div class="tile"><span class="l">Times late</span><span class="n">@Model.TimesLate</span></div>
+            <div class="tile"><span class="l">Missing time-outs</span><span class="n">@Model.MissingTimeOuts</span></div>
+        </div>
+
+        <partial name="_AttendanceHistory" model="Model.History" />
+    </div>
+
+    <div class="rail">
+        <div class="panel">
+            <div class="panel-head">
+                <h3>Member</h3>
+                @if (st.IsActive)
+                {
+                    <span class="chip ok">Active</span>
+                }
+                else
+                {
+                    <span class="chip idle">Inactive</span>
+                }
+            </div>
+            <div class="panel-body">
+                <dl class="detail-list">
+                    <div><dt>Student no.</dt><dd class="mono">@st.StudentNumber</dd></div>
+                    <div><dt>Course</dt><dd>@(string.IsNullOrEmpty(st.Course) ? "—" : st.Course)</dd></div>
+                    <div><dt>Year</dt><dd>@(st.YearLevel?.ToString() ?? "—")</dd></div>
+                    <div><dt>Gender</dt><dd>@(string.IsNullOrEmpty(st.Gender) ? "—" : st.Gender)</dd></div>
+                    <div><dt>Email</dt><dd>@(string.IsNullOrEmpty(st.Email) ? "—" : st.Email)</dd></div>
+                    <div><dt>Contact</dt><dd class="mono">@(string.IsNullOrEmpty(st.ContactNumber) ? "—" : st.ContactNumber)</dd></div>
+                </dl>
+            </div>
+        </div>
+
+        @{ ViewData["PassDownload"] = Url.Action("Pass", new { id = st.Id }); }
+        <partial name="_MemberPass" model="st" view-data="ViewData" />
+
+    </div>
+</div>
