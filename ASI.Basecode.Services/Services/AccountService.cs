@@ -30,11 +30,11 @@ namespace ASI.Basecode.Services.Services
 
             var identifier = (username ?? string.Empty).Trim();
 
-            // Sign in with the username, or — for a member — the linked student's
-            // student number or email. The database keeps all three unique.
+            // Sign in with a student ID (the linked member's student number) or
+            // a username. Email is not accepted. The database keeps both unique.
             var found = _accounts.GetAccounts().FirstOrDefault(a =>
                 a.Username == identifier
-                || (a.User != null && (a.User.StudentNumber == identifier || a.User.Email == identifier)));
+                || (a.User != null && a.User.StudentNumber == identifier));
 
             if (found == null || !PasswordManager.VerifyPassword(password, found.PasswordHash))
             {
