@@ -73,11 +73,6 @@
             </button>
         </div>
 
-        <div class="side-org" title="@Apilan.Value.SchoolName">
-            <span class="org">@Apilan.Value.OrganizationName</span>
-            <span class="school">@Apilan.Value.SchoolShortName</span>
-        </div>
-
         <nav class="side-group">
             <h6>Transactions</h6>
             <a class="@nav("Dashboard")" title="Dashboard" asp-controller="Dashboard" asp-action="Index">
@@ -123,6 +118,12 @@
                open from here, where people look for them. *@
             <button type="button" class="side-user" popovertarget="account-pop"
                     aria-haspopup="true" aria-expanded="false" title="Your account">
+            @* Whose console this is, beside who is using it. *@
+            <div class="side-org" title="@Apilan.Value.OrganizationName · @Apilan.Value.SchoolName">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10l8-5 8 5M6 10v7M10 10v7M14 10v7M18 10v7M3.5 19.5h17"/></svg>
+                <span class="org">@Apilan.Value.OrganizationName</span>
+                <span class="school">@Apilan.Value.SchoolShortName</span>
+            </div>
                 <span class="av" aria-hidden="true">@initials</span>
                 <span class="who">
                     <span class="nm">@displayName</span>
