@@ -27,7 +27,7 @@ namespace ASI.Basecode.Data.Repositories
                 @event_name = {evt.EventName}, @event_type_id = {evt.EventTypeId},
                 @event_start = {evt.EventStart}, @event_end = {evt.EventEnd},
                 @description = {evt.Description}, @venue = {evt.Venue}, @event_capacity = {evt.EventCapacity},
-                @event_host = {evt.EventHost}, @late_grace_minutes = {evt.LateGraceMinutes},
+                @event_host = {evt.EventHost},
                 @attendance_window_minutes = {evt.AttendanceWindowMinutes}, @created_by = {createdBy}");
         }
 
@@ -37,7 +37,7 @@ namespace ASI.Basecode.Data.Repositories
                 @event_name = {evt.EventName}, @event_type_id = {evt.EventTypeId},
                 @event_start = {evt.EventStart}, @event_end = {evt.EventEnd},
                 @description = {evt.Description}, @venue = {evt.Venue}, @event_capacity = {evt.EventCapacity},
-                @event_host = {evt.EventHost}, @late_grace_minutes = {evt.LateGraceMinutes},
+                @event_host = {evt.EventHost},
                 @attendance_window_minutes = {evt.AttendanceWindowMinutes}, @updated_by = {updatedBy}");
         }
 

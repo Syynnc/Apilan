@@ -33,6 +33,7 @@ namespace ASI.Basecode.Services.ServiceModels
 
         public string Description { get; set; }
 
+        [Required(ErrorMessage = "Venue is required.")]
         [StringLength(255)]
         public string Venue { get; set; }
 
@@ -43,10 +44,6 @@ namespace ASI.Basecode.Services.ServiceModels
         [StringLength(255)]
         [Display(Name = "Host")]
         public string EventHost { get; set; }
-
-        [Range(0, 30, ErrorMessage = "Late after is 0 to 30 minutes, inside the time-in window.")]
-        [Display(Name = "Late after (minutes)")]
-        public int LateGraceMinutes { get; set; } = 15;
 
         [Range(15, 30, ErrorMessage = "The window is 15 to 30 minutes.")]
         [Display(Name = "Time-in / time-out window")]
@@ -67,10 +64,6 @@ namespace ASI.Basecode.Services.ServiceModels
                 yield return new ValidationResult(Errors.WindowLongerThanEvent, new[] { nameof(AttendanceWindowMinutes) });
             }
 
-            if (LateGraceMinutes > AttendanceWindowMinutes)
-            {
-                yield return new ValidationResult(Errors.GraceOutsideWindow, new[] { nameof(LateGraceMinutes) });
-            }
         }
     }
 
@@ -88,7 +81,6 @@ namespace ASI.Basecode.Services.ServiceModels
     {
         public EventSummary Summary { get; set; }
         public string Description { get; set; }
-        public int LateGraceMinutes { get; set; }
         public AttendanceWindow Window { get; set; }
         public List<AttendanceDetail> Attendance { get; set; } = new();
         public List<EventAbsentee> Absentees { get; set; } = new();

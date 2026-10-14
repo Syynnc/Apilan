@@ -216,15 +216,6 @@ namespace ASI.Basecode.Resources.Messages {
         }
     
         /// <summary>
-        ///   Looks up a localized string similar to Time-in closed at {0}. Time-out opens when the event ends, at {1}..
-        /// </summary>
-        public static string DoorBetweenWindows {
-            get {
-                return ResourceManager.GetString("DoorBetweenWindows", resourceCulture);
-            }
-        }
-    
-        /// <summary>
         ///   Looks up a localized string similar to Attendance for this event closed at {0}..
         /// </summary>
         public static string DoorClosed {
@@ -239,15 +230,6 @@ namespace ASI.Basecode.Resources.Messages {
         public static string WindowLongerThanEvent {
             get {
                 return ResourceManager.GetString("WindowLongerThanEvent", resourceCulture);
-            }
-        }
-    
-        /// <summary>
-        ///   Looks up a localized string similar to Late after has to fall inside the time-in window..
-        /// </summary>
-        public static string GraceOutsideWindow {
-            get {
-                return ResourceManager.GetString("GraceOutsideWindow", resourceCulture);
             }
         }
     

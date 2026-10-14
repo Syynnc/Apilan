@@ -270,6 +270,8 @@
 .door-window { height: 4px; background: var(--surface-sunken); border-bottom: var(--border); }
 .door-window > i { display: block; height: 100%; background: var(--ok); transition: width 600ms var(--ease-out), background-color var(--t-med) var(--ease-out); }
 .door-station.is-out .door-window > i { background: var(--teal); }
+.door-station.is-late .door-phase { background: var(--warn-wash); color: var(--warn); }
+.door-station.is-late .door-window > i { background: var(--warn); }
 .door-window.is-ending > i { background: var(--warn); }
 
 .door-records { font-size: var(--fs-2xs); color: var(--ink-3); }

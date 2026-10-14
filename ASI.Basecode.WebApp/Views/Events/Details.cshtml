@@ -12,11 +12,14 @@
     var w = Model.Window;
     var now = DateTime.Now;
     var phase = w.At(now);
-    var doorOpen = phase == AttendanceWindow.Phase.TimeIn || phase == AttendanceWindow.Phase.TimeOut;
+    var doorOpen = phase == AttendanceWindow.Phase.TimeIn || phase == AttendanceWindow.Phase.LateTimeIn
+                   || phase == AttendanceWindow.Phase.TimeOut;
     var isFinished = phase == AttendanceWindow.Phase.Closed;
-    var timeIn = phase == AttendanceWindow.Phase.TimeIn;
-    var closesAt = timeIn ? w.TimeInCloses : w.TimeOutCloses;
-    var opensAt = timeIn ? w.TimeInOpens : w.TimeOutOpens;
+    var lateIn = phase == AttendanceWindow.Phase.LateTimeIn;
+    var timeIn = phase == AttendanceWindow.Phase.TimeIn || lateIn;
+    // The bar runs over what is open now: the window, the late stretch, or time-out.
+    var opensAt = phase == AttendanceWindow.Phase.TimeIn ? w.TimeInOpens : lateIn ? w.TimeInCloses : w.TimeOutOpens;
+    var closesAt = phase == AttendanceWindow.Phase.TimeIn ? w.TimeInCloses : lateIn ? w.TimeOutOpens : w.TimeOutCloses;
     var nextChange = w.NextChange(now);
 
     // The result of the last scan belongs next to the scanner, not at the top
@@ -49,7 +52,7 @@
         time-in or a time-out; how people are recorded (camera, typed, card) is
         the one switch, and only that way's controls are on screen.
     *@
-    <section class="panel door-station @(timeIn ? "is-in" : "is-out")" aria-label="Door">
+    <section class="panel door-station @(lateIn ? "is-late" : timeIn ? "is-in" : "is-out")" aria-label="Door">
         <div class="panel-head">
             <h2>Door</h2>
             <span class="door-phase">
@@ -63,7 +66,7 @@
                         <path d="M14 17l5-5-5-5M19 12H7M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4" />
                     }
                 </svg>
-                @(timeIn ? "Time-in" : "Time-out") window
+                @(lateIn ? "Late time-in" : timeIn ? "Time-in window" : "Time-out window")
             </span>
             <span class="door-until" data-window-left data-closes="@closesAt.ToString("yyyy-MM-ddTHH:mm:ss")">
                 closes @closesAt.ToString("h:mm tt")
@@ -71,7 +74,7 @@
         </div>
         <div class="door-window" role="presentation"
              data-window-bar data-opens="@opensAt.ToString("yyyy-MM-ddTHH:mm:ss")" data-closes="@closesAt.ToString("yyyy-MM-ddTHH:mm:ss")">
-            <i style="width:@(Math.Clamp((now - opensAt).TotalSeconds / (w.Minutes * 60.0) * 100, 0, 100).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))%"></i>
+            <i style="width:@(Math.Clamp((now - opensAt).TotalSeconds / Math.Max(1, (closesAt - opensAt).TotalSeconds) * 100, 0, 100).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))%"></i>
         </div>
 
         <form asp-controller="Attendance" asp-action="Record" method="post" autocomplete="off"
@@ -113,7 +116,7 @@
                         }
                     </div>
 
-                    <span class="door-records">Every scan records a <strong>@(timeIn ? "time-in" : "time-out")</strong></span>
+                    <span class="door-records">Every scan records a <strong>@(lateIn ? "late time-in" : timeIn ? "time-in" : "time-out")</strong></span>
                 </div>
 
                 <div class="door-pane" data-pane="camera">
@@ -191,9 +194,13 @@
                 }
 
                 <p class="door-hint">
-                    @if (timeIn)
+                    @if (lateIn)
                     {
-                        @:Late after @s.EventStart.AddMinutes(Model.LateGraceMinutes).ToString("h:mm tt"). Time-out opens at @w.TimeOutOpens.ToString("h:mm tt"), when the event ends.
+                        @:The on-time window closed at @w.TimeInCloses.ToString("h:mm tt"), so arrivals now are marked late. Time-out opens at @w.TimeOutOpens.ToString("h:mm tt"), when the event ends.
+                    }
+                    else if (timeIn)
+                    {
+                        @:Arrivals after @w.TimeInCloses.ToString("h:mm tt") are marked late. Time-out opens at @w.TimeOutOpens.ToString("h:mm tt"), when the event ends.
                     }
                     else
                     {
@@ -267,7 +274,7 @@
     <div class="rail">
         @if (!doorOpen)
         {
-            @* Between windows the pad would only be refused, so it is not offered. *@
+            @* Before the start and after time-out the pad would only be refused, so it is not offered. *@
             <div class="panel door-closed">
                 <div class="panel-head">
                     <h3>Door</h3>
@@ -278,11 +285,6 @@
                     {
                         <p class="door-opens">Time-in opens <strong>@w.TimeInOpens.ToString("MMM d, h:mm tt")</strong></p>
                         <p class="muted">When the event starts, for @w.Minutes minutes. The scanner appears on this page by itself.</p>
-                    }
-                    else if (phase == AttendanceWindow.Phase.Between)
-                    {
-                        <p class="door-opens">Time-out opens <strong>@w.TimeOutOpens.ToString("h:mm tt")</strong></p>
-                        <p class="muted">Time-in closed at @w.TimeInCloses.ToString("h:mm tt"). The scanner comes back by itself when the event ends.</p>
                     }
                     else
                     {
@@ -302,9 +304,9 @@
                     <div><dt>Venue</dt><dd>@(string.IsNullOrEmpty(s.Venue) ? "—" : s.Venue)</dd></div>
                     <div><dt>Starts</dt><dd class="mono">@s.EventStart.ToString("yyyy-MM-dd HH:mm")</dd></div>
                     <div><dt>Ends</dt><dd class="mono">@s.EventEnd.ToString("yyyy-MM-dd HH:mm")</dd></div>
-                    <div><dt>Time-in</dt><dd class="mono">@w.TimeInOpens.ToString("h:mm") – @w.TimeInCloses.ToString("h:mm tt")</dd></div>
+                    <div><dt>On time</dt><dd class="mono">@w.TimeInOpens.ToString("h:mm") – @w.TimeInCloses.ToString("h:mm tt")</dd></div>
+                    <div><dt>Late after</dt><dd class="mono">@w.TimeInCloses.ToString("h:mm tt")</dd></div>
                     <div><dt>Time-out</dt><dd class="mono">@w.TimeOutOpens.ToString("h:mm") – @w.TimeOutCloses.ToString("h:mm tt")</dd></div>
-                    <div><dt>Late after</dt><dd>@Model.LateGraceMinutes min</dd></div>
                 </dl>
 
                 @if (s.EventCapacity.HasValue)

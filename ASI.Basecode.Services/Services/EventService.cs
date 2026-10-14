@@ -85,7 +85,6 @@ namespace ASI.Basecode.Services.Services
             {
                 Summary = summary,
                 Description = evt.Description,
-                LateGraceMinutes = evt.LateGraceMinutes,
                 Window = new AttendanceWindow(evt.EventStart, evt.EventEnd, evt.AttendanceWindowMinutes),
                 Attendance = _attendance.GetAttendanceDetails()
                     .Where(a => a.EventId == id)
