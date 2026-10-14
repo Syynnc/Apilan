@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using ASI.Basecode.Resources.Constants;
 using ASI.Basecode.Resources.Messages;
 using ASI.Basecode.Services.Interfaces;
@@ -23,6 +24,23 @@ namespace ASI.Basecode.WebApp.Controllers
         public IActionResult Index(string search, bool showInactive = false)
         {
             return View(_students.GetStudents(search, showInactive));
+        }
+
+        /// <summary>JSON for the live search box: the closest few members.</summary>
+        [HttpGet]
+        public IActionResult Suggest(string term)
+        {
+            var items = _students.Suggest(term).Select(m => new
+            {
+                url = Url.Action(nameof(Details), new { id = m.Id }),
+                title = m.FullName,
+                subtitle = string.Join(" · ", new[] { m.StudentNumber, m.Course, m.YearLevel.HasValue ? $"Year {m.YearLevel}" : null }
+                    .Where(x => !string.IsNullOrWhiteSpace(x))),
+                meta = m.IsActive ? null : "Deactivated",
+                badge = Ui.Initials(m.FullName.Contains(',') ? m.FullName.Split(',')[1] + " " + m.FullName.Split(',')[0] : m.FullName),
+                tone = m.IsActive ? "" : "off",
+            });
+            return Json(items);
         }
 
         public IActionResult Details(int id)

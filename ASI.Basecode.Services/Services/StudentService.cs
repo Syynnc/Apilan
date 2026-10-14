@@ -36,6 +36,7 @@ namespace ASI.Basecode.Services.Services
                 var term = search.Trim();
                 query = query.Where(u => u.FirstName.Contains(term)
                                       || u.LastName.Contains(term)
+                                      || (u.FirstName + " " + u.LastName).Contains(term)
                                       || u.StudentNumber.Contains(term)
                                       || u.Course.Contains(term));
             }
@@ -61,12 +62,45 @@ namespace ASI.Basecode.Services.Services
             };
         }
 
+        public List<StudentListItem> Suggest(string term, int take = 6)
+        {
+            if (string.IsNullOrWhiteSpace(term))
+            {
+                return new List<StudentListItem>();
+            }
+
+            term = term.Trim();
+
+            return _users.GetUsers()
+                .Where(u => u.FirstName.Contains(term)
+                         || u.LastName.Contains(term)
+                         || (u.FirstName + " " + u.LastName).Contains(term)
+                         || u.StudentNumber.Contains(term)
+                         || u.Course.Contains(term))
+                .OrderBy(u => u.IsActive ? 0 : 1)
+                .ThenBy(u => u.LastName.StartsWith(term) || u.FirstName.StartsWith(term) || u.StudentNumber.StartsWith(term) ? 0 : 1)
+                .ThenBy(u => u.LastName).ThenBy(u => u.FirstName)
+                .Take(take)
+                .Select(u => new StudentListItem
+                {
+                    Id = u.Id,
+                    StudentNumber = u.StudentNumber,
+                    FullName = u.LastName + ", " + u.FirstName,
+                    Course = u.Course,
+                    YearLevel = u.YearLevel,
+                    Email = u.Email,
+                    IsActive = u.IsActive,
+                })
+                .ToList();
+        }
+
         public StudentDetailViewModel GetStudentDetail(int id)
         {
             var student = GetStudent(id);
+            // Most recent first: the last thing they attended is the first row.
             var history = _attendance.GetAttendanceDetails()
                 .Where(a => a.UserId == id)
-                .OrderByDescending(a => a.EventStart)
+                .OrderByDescending(a => a.TimeIn)
                 .ToList();
 
             return new StudentDetailViewModel

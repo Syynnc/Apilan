@@ -1,4 +1,6 @@
 using System.IO;
+using System.Linq;
+using ASI.Basecode.WebApp.Helpers;
 using ASI.Basecode.Resources.Constants;
 using ASI.Basecode.Resources.Messages;
 using ASI.Basecode.Services.Interfaces;
@@ -21,6 +23,22 @@ namespace ASI.Basecode.WebApp.Controllers
         public IActionResult Index(string status, string search)
         {
             return View(_events.GetEvents(status, search));
+        }
+
+        /// <summary>JSON for the live search box: the closest few events by name or venue.</summary>
+        [HttpGet]
+        public IActionResult Suggest(string term)
+        {
+            var items = _events.Suggest(term).Select(e => new
+            {
+                url = Url.Action(nameof(Details), new { id = e.EventId }),
+                title = e.EventName,
+                subtitle = string.Join(" · ", new[] { e.Venue, e.EventType }.Where(x => !string.IsNullOrWhiteSpace(x))),
+                meta = e.EventStart.ToString("MMM d, yyyy"),
+                badge = e.EventStart.ToString("MMM"),
+                tone = Ui.TicketType(e.EventType),
+            });
+            return Json(items);
         }
 
         public IActionResult Details(int id)

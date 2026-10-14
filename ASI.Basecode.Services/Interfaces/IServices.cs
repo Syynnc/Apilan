@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ASI.Basecode.Data.Models;
 using ASI.Basecode.Services.ServiceModels;
 using static ASI.Basecode.Resources.Constants.Enums;
 
@@ -23,11 +24,17 @@ namespace ASI.Basecode.Services.Interfaces
         void UpdateStudent(StudentViewModel model, string updatedBy);
         string SetActive(int id, bool isActive, string updatedBy);
         List<LookupItem> GetStudentLookup();
+
+        /// <summary>The closest few members to a search term, for the live search box.</summary>
+        List<StudentListItem> Suggest(string term, int take = 6);
     }
 
     public interface IEventService
     {
         EventListViewModel GetEvents(string status, string search);
+
+        /// <summary>The closest few events by name or venue, for the live search box.</summary>
+        List<EventSummary> Suggest(string term, int take = 6);
         EventDetailViewModel GetEventDetail(int id);
         EventViewModel GetEvent(int id);
         EventViewModel NewEvent();
