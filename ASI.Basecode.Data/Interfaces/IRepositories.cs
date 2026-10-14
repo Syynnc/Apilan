@@ -23,6 +23,12 @@ namespace ASI.Basecode.Data.Interfaces
         void RecordLogin(int id);
     }
 
+    public interface IAuditLogRepository
+    {
+        IQueryable<AuditLog> GetLogs();
+        void Add(AuditLog log);
+    }
+
     public interface IEventRepository
     {
         IQueryable<Event> GetEvents();

@@ -98,15 +98,21 @@ namespace ASI.Basecode.WebApp.Controllers
 
             try
             {
+                var label = $"{model.FirstName} {model.LastName} ({model.StudentNumber})";
                 if (model.Id == 0)
                 {
-                    _students.AddStudent(model, CurrentUserName);
+                    var id = _students.AddStudent(model, CurrentUserName);
+                    Audit(AuditActions.MemberCreated, AuditActions.TargetMember, id, label,
+                        $"With a sign-in: username {model.StudentNumber}, default password");
                     TempData["Success"] = string.Format(Common.StudentSaved, model.StudentNumber) + " "
                         + string.Format(Common.MemberAccountCreated, $"{model.FirstName} {model.LastName}");
                 }
                 else
                 {
+                    var before = _students.GetStudent(model.Id);
                     _students.UpdateStudent(model, CurrentUserName);
+                    Audit(AuditActions.MemberUpdated, AuditActions.TargetMember, model.Id, label,
+                        AuditDiff.Changes(before, model));
                     TempData["Success"] = string.Format(Common.StudentSaved, model.StudentNumber);
                 }
 
@@ -130,6 +136,7 @@ namespace ASI.Basecode.WebApp.Controllers
             try
             {
                 var name = _accounts.CreateMemberAccount(id, CurrentUserName);
+                Audit(AuditActions.AccountCreated, AuditActions.TargetMember, id, name, "Username is the student number, default password");
                 TempData["Success"] = string.Format(Common.MemberAccountCreated, name);
             }
             catch (InvalidDataException ex)
@@ -147,6 +154,8 @@ namespace ASI.Basecode.WebApp.Controllers
             try
             {
                 var name = _students.SetActive(id, isActive, CurrentUserName);
+                Audit(isActive ? AuditActions.MemberRestored : AuditActions.MemberDeactivated,
+                    AuditActions.TargetMember, id, name);
                 TempData["Success"] = string.Format(
                     isActive ? Common.StudentRestored : Common.StudentDeactivated, name);
             }

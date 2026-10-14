@@ -134,7 +134,7 @@ namespace ASI.Basecode.Services.Services
             return _mapper.Map<StudentViewModel>(user);
         }
 
-        public void AddStudent(StudentViewModel model, string createdBy)
+        public int AddStudent(StudentViewModel model, string createdBy)
         {
             var user = _mapper.Map<User>(model);
 
@@ -149,6 +149,7 @@ namespace ASI.Basecode.Services.Services
             _accounts.CreateMemberAccount(id, createdBy);
 
             transaction.Commit();
+            return id;
         }
 
         public void UpdateStudent(StudentViewModel model, string updatedBy)

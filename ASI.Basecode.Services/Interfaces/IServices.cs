@@ -36,12 +36,22 @@ namespace ASI.Basecode.Services.Interfaces
         string CurrentRole(int accountId);
     }
 
+    /// <summary>The activity log: who did what, and when.</summary>
+    public interface IAuditService
+    {
+        /// <summary>Writes one entry. Never throws: a failure goes to the server log.</summary>
+        void Record(AuditEntry entry);
+
+        ActivityPageViewModel GetPage(ActivityFilter filter);
+    }
+
     public interface IStudentService
     {
         StudentListViewModel GetStudents(string search, bool showInactive);
         StudentDetailViewModel GetStudentDetail(int id);
         StudentViewModel GetStudent(int id);
-        void AddStudent(StudentViewModel model, string createdBy);
+        /// <summary>Adds the member and their sign-in together. Returns the new member id.</summary>
+        int AddStudent(StudentViewModel model, string createdBy);
         void UpdateStudent(StudentViewModel model, string updatedBy);
         string SetActive(int id, bool isActive, string updatedBy);
         List<LookupItem> GetStudentLookup();
@@ -75,11 +85,14 @@ namespace ASI.Basecode.Services.Interfaces
     public interface IAttendanceService
     {
         /// <summary>
-        /// Records a time-in or time-out and returns the student's name, with
-        /// which of the two actually happened (an Auto entry resolves to one).
+        /// Records a time-in or time-out, whichever window is open, and returns
+        /// the student's name with which of the two it was.
         /// </summary>
         string Record(AttendanceEntryViewModel entry, string recordedBy, out AttendanceAction recorded);
         void DeleteAttendance(int id);
+
+        /// <summary>"Name (student no.) at Event", for the activity log; null if it is gone.</summary>
+        string DescribeAttendance(int id);
         string ExportEventCsv(int eventId, out string fileName);
     }
 
