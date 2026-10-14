@@ -4,7 +4,7 @@
 /* ==========================================================================
    Pagination and live filtering
    --------------------------------------------------------------------------
-   <table data-paginate="10" data-page-sizes="5,10,25,50" id="...">
+   <table data-paginate="5" data-page-sizes="5,10,25,50" id="...">
    Rows may carry data-search="…" to say what a filter should match against;
    otherwise their text is used. Without JavaScript every row is simply
    shown, so nothing is ever hidden for good.
@@ -31,11 +31,12 @@
         this.rows = Array.prototype.slice.call(this.body.rows).filter(function (r) { return !r.hasAttribute("data-static"); });
         this.rows.forEach(function (r) { r._text = norm(r.getAttribute("data-search") || r.textContent); });
         this.sizes = (table.getAttribute("data-page-sizes") || "5,10,25,50").split(",").map(Number);
-        this.key = table.id ? "apilan-page-size:" + location.pathname.toLowerCase() + "#" + table.id : null;
+        // "v2": every table now starts at 5 rows, so earlier remembered sizes are let go.
+        this.key = table.id ? "apilan-page-size:v2:" + location.pathname.toLowerCase() + "#" + table.id : null;
 
         var stored = null;
         try { stored = this.key && Number(localStorage.getItem(this.key)); } catch (e) { /* private mode */ }
-        this.size = stored && this.sizes.indexOf(stored) >= 0 ? stored : Number(table.getAttribute("data-paginate")) || 10;
+        this.size = stored && this.sizes.indexOf(stored) >= 0 ? stored : Number(table.getAttribute("data-paginate")) || 5;
         this.page = 1;
         this.term = "";
 
