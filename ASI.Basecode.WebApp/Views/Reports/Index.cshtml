@@ -1,71 +1,506 @@
 @model ReportViewModel
+@using System.Globalization
 @{
     ViewData["Title"] = "Participation";
     ViewData["Module"] = "Reports";
+
+    var f = Model.Filter;
+    var inv = CultureInfo.InvariantCulture;
+    Func<double, string> n = v => v.ToString("0.##", inv);
+    Func<double, string> pct = v => Math.Round(v * 100).ToString("0", inv) + "%";
+
+    // A clean top for a value axis: 5, 10, 20, 25, 50, 100, 200 …
+    Func<int, int> niceMax = max =>
+    {
+        if (max <= 4) return 4;
+        var mag = Math.Pow(10, Math.Floor(Math.Log10(max)));
+        foreach (var step in new[] { 1, 2, 2.5, 5, 10 })
+        {
+            var top = step * mag;
+            if (top >= max) return (int)Math.Ceiling(top);
+        }
+        return (int)(10 * mag);
+    };
+
+    // A column with a 4px rounded data-end and a square foot on the baseline.
+    Func<double, double, double, double, bool, string> column = (x, y, w, h, roundTop) =>
+    {
+        if (h <= 0) return string.Empty;
+        var r = roundTop ? Math.Min(4, Math.Min(w / 2, h)) : 0;
+        return $"M{n(x)} {n(y + h)}V{n(y + r)}" +
+               (r > 0 ? $"Q{n(x)} {n(y)} {n(x + r)} {n(y)}H{n(x + w - r)}Q{n(x + w)} {n(y)} {n(x + w)} {n(y + r)}" : $"H{n(x + w)}") +
+               $"V{n(y + h)}Z";
+    };
+
+    // Razor reserves <text> for itself, so SVG text is written out whole.
+    Func<string, double, double, string, string, Microsoft.AspNetCore.Html.IHtmlContent> svgText = (cls, x, y, anchor, content) =>
+        Html.Raw($"<text class=\"{cls}\" x=\"{n(x)}\" y=\"{n(y)}\" text-anchor=\"{anchor}\">{System.Net.WebUtility.HtmlEncode(content)}</text>");
+
+    // Gridlines on whole numbers: 10 splits into fifths, 20 into quarters.
+    Func<int, int> tickCount = max => max <= 5 ? max : max % 4 == 0 ? 4 : 5;
+
+    var anyData = Model.CheckIns > 0;
+    var filterCount = new object[] { f.Course, f.YearLevel, f.EventTypeId, f.EventId, f.From, f.To }
+        .Count(v => v != null && !(v is string s && string.IsNullOrWhiteSpace(s)));
 }
 
-<div class="stack-lg">
-    <form method="get" class="filter-bar">
-        <div class="field">
-            <label for="course">Course</label>
-            <select name="course" id="course" class="input-a" onchange="this.form.submit()">
+@* ============================================================ FILTERS ===== *@
+<form method="get" class="report-filters toolbar" aria-label="Filter the report">
+    <div class="rf-group" role="group" aria-label="Members">
+        <span class="rf-legend">Members</span>
+        <div class="rf-row">
+        <label class="rf-field">
+            <span>Course</span>
+            <select name="Course" class="input-a" onchange="this.form.submit()">
                 <option value="">All courses</option>
                 @foreach (var c in Model.Courses)
                 {
-                    <option value="@c" selected="@(c == Model.Course)">@c</option>
+                    <option value="@c" selected="@(c == f.Course)">@c</option>
                 }
             </select>
-        </div>
-    </form>
-
-    <div class="panel">
-        <div class="panel-head"><h2>Members</h2><span class="count">@Model.Students.Count</span></div>
-        @if (!Model.Students.Any())
-        {
-            <div class="panel-body"><p class="muted" style="margin:0">No members match this filter.</p></div>
-        }
-        else
-        {
-            <table class="table-a">
-                <thead>
-                    <tr><th>Name</th><th>Student no.</th><th>Course</th><th class="num">Attended</th><th class="num">Late</th><th class="num">Missing out</th><th>Last attended</th></tr>
-                </thead>
-                <tbody>
-                @foreach (var st in Model.Students)
+        </label>
+        <label class="rf-field">
+            <span>Year</span>
+            <select name="YearLevel" class="input-a" onchange="this.form.submit()">
+                <option value="">All years</option>
+                @for (var y = 1; y <= 6; y++)
                 {
-                    <tr>
-                        <td><strong>@st.FullName</strong></td>
-                        <td class="mono">@st.StudentNumber</td>
-                        <td>@st.Course</td>
-                        <td class="num">@(st.EventsAttended ?? 0)</td>
-                        <td class="num">@(st.TimesLate ?? 0)</td>
-                        <td class="num">@(st.MissingTimeOuts ?? 0)</td>
-                        <td class="mono">@(st.LastAttended?.ToString("yyyy-MM-dd") ?? "—")</td>
-                    </tr>
+                    <option value="@y" selected="@(f.YearLevel == y)">Year @y</option>
                 }
-                </tbody>
-            </table>
-        }
+            </select>
+        </label>
+        </div>
     </div>
 
+    <div class="rf-group" role="group" aria-label="Events">
+        <span class="rf-legend">Events</span>
+        <div class="rf-row">
+        <label class="rf-field">
+            <span>Type</span>
+            <select name="EventTypeId" class="input-a" onchange="this.form.submit()">
+                <option value="">All types</option>
+                @foreach (var t in Model.EventTypes)
+                {
+                    <option value="@t.Id" selected="@(f.EventTypeId == t.Id)">@t.Name</option>
+                }
+            </select>
+        </label>
+        <label class="rf-field grow">
+            <span>Event</span>
+            <select name="EventId" class="input-a" onchange="this.form.submit()">
+                <option value="">All events</option>
+                @foreach (var e in Model.Events)
+                {
+                    <option value="@e.Id" selected="@(f.EventId == e.Id)">@e.Name</option>
+                }
+            </select>
+        </label>
+        <label class="rf-field">
+            <span>From</span>
+            <input type="date" name="From" class="input-a" value="@f.From?.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
+        </label>
+        <label class="rf-field">
+            <span>To</span>
+            <input type="date" name="To" class="input-a" value="@f.To?.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
+        </label>
+        </div>
+    </div>
+
+    <div class="rf-actions">
+        <noscript><button type="submit" class="btn-a sm">Apply</button></noscript>
+        @if (filterCount > 0)
+        {
+            <a class="btn-a ghost sm" asp-action="Index">Clear @filterCount filter@(filterCount == 1 ? "" : "s")</a>
+        }
+    </div>
+</form>
+
+@* ============================================================ FIGURES ===== *@
+<section class="report-figures stagger" aria-label="Headline figures">
+    <div class="rfig hero">
+        <span class="l">Participation rate</span>
+        <span class="n">@pct(Model.ParticipationRate)</span>
+        <span class="s">@Model.Participants of @Model.MembersInScope active members came to at least one event</span>
+        <div class="meter"><i style="width:@pct(Model.ParticipationRate)"></i></div>
+    </div>
+    <div class="rfig">
+        <span class="l">Check-ins</span>
+        <span class="n">@Model.CheckIns</span>
+        <span class="s">across @Model.EventsInScope event@(Model.EventsInScope == 1 ? "" : "s")</span>
+    </div>
+    <div class="rfig">
+        <span class="l">Average per event</span>
+        <span class="n">@Model.AveragePerEvent.ToString("0.#", inv)</span>
+        <span class="s">members checked in</span>
+    </div>
+    <div class="rfig">
+        <span class="l">On time</span>
+        <span class="n">@pct(Model.OnTimeRate)</span>
+        <span class="s">@Model.Late late arrival@(Model.Late == 1 ? "" : "s")</span>
+    </div>
+    <div class="rfig @(Model.MissingTimeOuts > 0 ? "warn" : null)">
+        <span class="l">Missing time-outs</span>
+        <span class="n">@Model.MissingTimeOuts</span>
+        <span class="s">left without scanning out</span>
+    </div>
+    <div class="rfig">
+        <span class="l">Average stay</span>
+        <span class="n">@(Model.AverageMinutesAttended.HasValue ? $"{(int)Model.AverageMinutesAttended / 60}h {(int)Model.AverageMinutesAttended % 60}m" : "—")</span>
+        <span class="s">from time-in to time-out</span>
+    </div>
+</section>
+
+@if (!anyData)
+{
     <div class="panel">
-        <div class="panel-head"><h2>Events</h2><span class="count">@Model.Events.Count</span></div>
-        <table class="table-a">
+        <div class="panel-body">
+            <div class="empty-a">
+                <div class="glyph">▥</div>
+                <h4>No check-ins match these filters</h4>
+                <p>@(Model.EventsInScope == 0 ? "No event that has started falls inside them." : "Nobody in this group checked in to these events.") Widen the filters to see more.</p>
+                @if (filterCount > 0)
+                {
+                    <a class="btn-a ghost sm" asp-action="Index">Clear filters</a>
+                }
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="report-grid">
+
+        @* ---------------------------------------- Attendance per event *@
+        <section class="chart-card c-wide" aria-labelledby="ch-events">
+            <header class="chart-head">
+                <div>
+                    <h2 id="ch-events">Attendance per event</h2>
+                    <p>Check-ins at each event, split by arrival. Hover a column for the numbers.</p>
+                </div>
+                <ul class="legend" aria-label="Legend">
+                    <li><i class="sw ontime"></i>On time</li>
+                    <li><i class="sw late"></i>Late</li>
+                </ul>
+            </header>
+            @{
+                const double W = 760, H = 280, padL = 40, padR = 12, padT = 14, padB = 44;
+                var plotW = W - padL - padR;
+                var plotH = H - padT - padB;
+                var evs = Model.PerEvent;
+                var yMax = niceMax(Math.Max(1, evs.Select(e => e.Total).DefaultIfEmpty(0).Max()));
+                var band = plotW / Math.Max(1, evs.Count);
+                var bw = Math.Min(24, band * 0.56);
+                var labelEvery = Math.Max(1, (int)Math.Ceiling(evs.Count / 10.0));
+                Func<double, double> yOf = v => padT + plotH - (v / yMax * plotH);
+            }
+            <svg class="chart" viewBox="0 0 @n(W) @n(H)" role="img" aria-label="Column chart of check-ins per event, on time and late">
+                @for (var t = 0; t <= tickCount(yMax); t++)
+                {
+                    var v = yMax * t / (double)tickCount(yMax);
+                    var y = yOf(v);
+                    <line class="grid" x1="@n(padL)" x2="@n(W - padR)" y1="@n(y)" y2="@n(y)" />
+                    @svgText("tick", padL - 8, y + 4, "end", n(Math.Round(v)))
+                }
+                @for (var i = 0; i < evs.Count; i++)
+                {
+                    var e = evs[i];
+                    var cx = padL + band * i + band / 2;
+                    var x = cx - bw / 2;
+                    var hOn = e.OnTime / (double)yMax * plotH;
+                    var hLate = e.Late / (double)yMax * plotH;
+                    var gap = hOn > 0 && hLate > 0 ? 2 : 0;
+                    var tip = $"{e.Name}|{e.Start:ddd, MMM d, yyyy}|On time: {e.OnTime}|Late: {e.Late}|Total: {e.Total}{(e.Capacity.HasValue ? $" of {e.Capacity}" : "")}";
+                    <g class="col" style="--i:@i">
+                        <path class="ontime" d="@column(x, padT + plotH - hOn, bw, hOn, hLate == 0)" />
+                        <path class="late" d="@column(x, padT + plotH - hOn - gap - hLate, bw, hLate, true)" />
+                        @if (e.Total > 0)
+                        {
+                            @svgText("cap", cx, padT + plotH - hOn - gap - hLate - 6, "middle", e.Total.ToString())
+                        }
+                        <rect class="hit" x="@n(padL + band * i)" y="@n(padT)" width="@n(band)" height="@n(plotH + padB)" data-tip="@tip" tabindex="0">
+                            <title>@tip.Replace("|", " · ")</title>
+                        </rect>
+                    </g>
+                    @if (i % labelEvery == 0)
+                    {
+                        @svgText("tick", cx, padT + plotH + 18, "middle", e.Start.ToString("MMM d"))
+                    }
+                }
+                <line class="axis" x1="@n(padL)" x2="@n(W - padR)" y1="@n(padT + plotH)" y2="@n(padT + plotH)" />
+            </svg>
+        </section>
+
+        @* ---------------------------------------------- Punctuality *@
+        <section class="chart-card c-narrow" aria-labelledby="ch-punct">
+            <header class="chart-head">
+                <div>
+                    <h2 id="ch-punct">Punctuality</h2>
+                    <p>Arrivals inside each event's grace period.</p>
+                </div>
+            </header>
+            @{
+                var onPct = Model.CheckIns > 0 ? Model.OnTime * 100.0 / Model.CheckIns : 0;
+                var circ = 2 * Math.PI * 52;
+                var onLen = circ * onPct / 100;
+                var lateLen = circ - onLen;
+                var ringGap = Model.OnTime > 0 && Model.Late > 0 ? 3 : 0;
+            }
+            <div class="punct">
+                <svg class="donut" viewBox="0 0 140 140" role="img" aria-label="@n(Math.Round(onPct))% on time, @n(Math.Round(100 - onPct))% late">
+                    <circle class="track" cx="70" cy="70" r="52" />
+                    @if (Model.Late > 0)
+                    {
+                        <circle class="late" cx="70" cy="70" r="52"
+                                stroke-dasharray="@n(Math.Max(0, lateLen - ringGap)) @n(circ)"
+                                stroke-dashoffset="@n(-(onLen + ringGap / 2.0))"
+                                data-tip="Late|@Model.Late arrivals|@n(Math.Round(100 - onPct))%" />
+                    }
+                    @if (Model.OnTime > 0)
+                    {
+                        <circle class="ontime" cx="70" cy="70" r="52"
+                                stroke-dasharray="@n(Math.Max(0, onLen - ringGap)) @n(circ)"
+                                stroke-dashoffset="@n(-ringGap / 2.0)"
+                                data-tip="On time|@Model.OnTime arrivals|@n(Math.Round(onPct))%" />
+                    }
+                    <text class="donut-n" x="70" y="72" text-anchor="middle">@n(Math.Round(onPct))%</text>
+                    <text class="donut-l" x="70" y="90" text-anchor="middle">on time</text>
+                </svg>
+                <ul class="legend stacked">
+                    <li><i class="sw ontime"></i><span>On time</span><b>@Model.OnTime</b></li>
+                    <li><i class="sw late"></i><span>Late</span><b>@Model.Late</b></li>
+                    <li><i class="sw none"></i><span>No time-out</span><b>@Model.MissingTimeOuts</b></li>
+                </ul>
+            </div>
+        </section>
+
+        @* ------------------------------------------ By course / by year *@
+        <section class="chart-card c-half" aria-labelledby="ch-course">
+            <header class="chart-head">
+                <div>
+                    <h2 id="ch-course">Who takes part</h2>
+                    <p>Share of each group's active members who attended at least one event.</p>
+                </div>
+                <div class="seg-tabs" role="tablist" aria-label="Group by">
+                    <button type="button" role="tab" aria-selected="true" data-tab="by-course">Course</button>
+                    <button type="button" role="tab" aria-selected="false" data-tab="by-year">Year</button>
+                </div>
+            </header>
+            @foreach (var (key, groups) in new[] { ("by-course", Model.ByCourse), ("by-year", Model.ByYear) })
+            {
+                <ol class="hbars" id="@key" role="tabpanel" hidden="@(key != "by-course")">
+                    @foreach (var g in groups)
+                    {
+                        <li data-tip="@g.Label|@g.Participants of @g.Members members took part|@g.CheckIns check-ins">
+                            <span class="hb-label">@g.Label</span>
+                            <span class="hb-track"><i style="width:@pct(g.Rate)"></i></span>
+                            <span class="hb-value"><b>@pct(g.Rate)</b> @g.Participants/@g.Members</span>
+                        </li>
+                    }
+                </ol>
+            }
+        </section>
+
+        @* ------------------------------------------ Arrival timing *@
+        <section class="chart-card c-half" aria-labelledby="ch-arrive">
+            <header class="chart-head">
+                <div>
+                    <h2 id="ch-arrive">When people arrive</h2>
+                    <p>Minutes after the event's start, at time-in.</p>
+                </div>
+                <ul class="legend" aria-label="Legend">
+                    <li><i class="sw ontime"></i>On time</li>
+                    <li><i class="sw late"></i>Late</li>
+                </ul>
+            </header>
+            @{
+                const double AW = 420, AH = 220, aL = 32, aR = 8, aT = 14, aB = 36;
+                var aPlotW = AW - aL - aR;
+                var aPlotH = AH - aT - aB;
+                var arr = Model.Arrivals;
+                var aMax = niceMax(Math.Max(1, arr.Select(a => a.Total).DefaultIfEmpty(0).Max()));
+                var aBand = aPlotW / arr.Count;
+                var abw = Math.Min(24, aBand * 0.56);
+            }
+            <svg class="chart" viewBox="0 0 @n(AW) @n(AH)" role="img" aria-label="Column chart of arrival times relative to the start">
+                @for (var t = 0; t <= tickCount(aMax); t++)
+                {
+                    var v = aMax * t / (double)tickCount(aMax);
+                    var y = aT + aPlotH - v / aMax * aPlotH;
+                    <line class="grid" x1="@n(aL)" x2="@n(AW - aR)" y1="@n(y)" y2="@n(y)" />
+                    @svgText("tick", aL - 6, y + 4, "end", n(Math.Round(v)))
+                }
+                @for (var i = 0; i < arr.Count; i++)
+                {
+                    var a = arr[i];
+                    var cx = aL + aBand * i + aBand / 2;
+                    var x = cx - abw / 2;
+                    var hOn = a.OnTime / (double)aMax * aPlotH;
+                    var hLate = a.Late / (double)aMax * aPlotH;
+                    var gap = hOn > 0 && hLate > 0 ? 2 : 0;
+                    var tip = $"{a.Label}|On time: {a.OnTime}|Late: {a.Late}";
+                    <g class="col" style="--i:@i">
+                        <path class="ontime" d="@column(x, aT + aPlotH - hOn, abw, hOn, hLate == 0)" />
+                        <path class="late" d="@column(x, aT + aPlotH - hOn - gap - hLate, abw, hLate, true)" />
+                        <rect class="hit" x="@n(aL + aBand * i)" y="@n(aT)" width="@n(aBand)" height="@n(aPlotH + aB)" data-tip="@tip" tabindex="0">
+                            <title>@tip.Replace("|", " · ")</title>
+                        </rect>
+                    </g>
+                    @svgText("tick", cx, aT + aPlotH + 16, "middle", a.Label.Replace(" min", ""))
+                }
+                <line class="axis" x1="@n(aL)" x2="@n(AW - aR)" y1="@n(aT + aPlotH)" y2="@n(aT + aPlotH)" />
+            </svg>
+        </section>
+
+        @* ------------------------------------------ By event type *@
+        <section class="chart-card c-third" aria-labelledby="ch-type">
+            <header class="chart-head">
+                <div>
+                    <h2 id="ch-type">By event type</h2>
+                    <p>Average check-ins per event.</p>
+                </div>
+            </header>
+            @{ var typeMax = Model.ByType.Select(t => t.Average).DefaultIfEmpty(0).Max(); }
+            <ol class="hbars">
+                @foreach (var t in Model.ByType)
+                {
+                    <li data-tip="@t.Label|@t.Events event@(t.Events == 1 ? "" : "s")|@t.CheckIns check-ins in all" class="cell-event" data-type="@Ui.TicketType(t.Label)">
+                        <span class="hb-label"><span class="type-dot" aria-hidden="true"></span>@t.Label</span>
+                        <span class="hb-track"><i style="width:@(typeMax > 0 ? n(t.Average / typeMax * 100) : "0")%"></i></span>
+                        <span class="hb-value"><b>@t.Average.ToString("0.#", inv)</b> / event</span>
+                    </li>
+                }
+            </ol>
+        </section>
+
+        @* ------------------------------------------ Most active *@
+        <section class="chart-card c-two-thirds" aria-labelledby="ch-top">
+            <header class="chart-head">
+                <div>
+                    <h2 id="ch-top">Most active members</h2>
+                    <p>Ranked by events attended, then fewest late arrivals.</p>
+                </div>
+            </header>
+            <ol class="leaders">
+                @foreach (var (m, i) in Model.Members.Where(m => m.Attended > 0).Take(5).Select((m, i) => (m, i)))
+                {
+                    <li>
+                        <span class="rank">@(i + 1)</span>
+                        <span class="cell-person">
+                            <span class="av" aria-hidden="true">@Ui.Initials(m.FullName.Split(',').Last() + " " + m.FullName.Split(',').First())</span>
+                            <a asp-controller="Members" asp-action="Details" asp-route-id="@m.UserId"><strong>@m.FullName</strong></a>
+                        </span>
+                        <span class="dim">@m.Course@(m.YearLevel.HasValue ? $" · Y{m.YearLevel}" : "")</span>
+                        <span class="hb-track"><i style="width:@pct(m.Rate)"></i></span>
+                        <span class="lead-n"><b>@m.Attended</b>/@Model.EventsInScope</span>
+                    </li>
+                }
+            </ol>
+        </section>
+    </div>
+}
+
+@* ============================================================ TABLES ====== *@
+<div class="panel">
+    <div class="panel-head">
+        <h2>Members</h2>
+        <span class="count">@Model.Members.Count in scope · @Model.Members.Count(m => m.Attended == 0) never attended</span>
+        <div class="searchbar compact">
+            <svg class="s-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /></svg>
+            <input type="search" id="report-member-search" class="input-a" placeholder="Filter members…" aria-label="Filter members"
+                   data-live-search data-target="#report-members" />
+        </div>
+    </div>
+    @if (!Model.Members.Any())
+    {
+        <div class="panel-body"><p class="muted" style="margin:0">No active members match these filters.</p></div>
+    }
+    else
+    {
+        <table class="table-a" id="report-members" data-paginate="10">
             <thead>
-                <tr><th>Event</th><th>When</th><th class="num">Present</th><th class="num">Late</th><th>Status</th></tr>
+                <tr><th>Name</th><th>Student no.</th><th>Course</th><th class="num">Year</th><th>Attendance</th><th class="num">Late</th><th class="num">No time-out</th><th>Last attended</th></tr>
             </thead>
             <tbody>
-            @foreach (var e in Model.Events)
+            @foreach (var m in Model.Members)
             {
-                <tr>
-                    <td><a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId"><strong>@e.EventName</strong></a></td>
-                    <td class="mono">@e.EventStart.ToString("yyyy-MM-dd")</td>
-                    <td class="num">@(e.TotalPresent ?? 0)</td>
-                    <td class="num">@(e.LateCount ?? 0)</td>
-                    <td><span class="chip @(e.EventStatus == Const.StatusOngoing ? "info" : e.EventStatus == Const.StatusUpcoming ? "idle" : "ok")">@e.EventStatus</span></td>
+                <tr data-search="@m.FullName @m.StudentNumber @m.Course">
+                    <td><a asp-controller="Members" asp-action="Details" asp-route-id="@m.UserId"><strong>@m.FullName</strong></a></td>
+                    <td class="mono">@m.StudentNumber</td>
+                    <td>@(m.Course ?? "—")</td>
+                    <td class="num">@(m.YearLevel?.ToString() ?? "—")</td>
+                    <td>
+                        <div class="bar-cell">
+                            <div class="meter"><i style="width:@pct(m.Rate)"></i></div>
+                            <span class="pct">@m.Attended/@Model.EventsInScope</span>
+                        </div>
+                    </td>
+                    <td class="num">@m.Late</td>
+                    <td class="num">@m.MissingTimeOuts</td>
+                    <td class="mono">@(m.LastAttended?.ToString("MMM d, yyyy") ?? "Never")</td>
                 </tr>
             }
             </tbody>
         </table>
-    </div>
+    }
 </div>
+
+<div class="panel">
+    <div class="panel-head"><h2>Events</h2><span class="count">@Model.PerEvent.Count in scope</span></div>
+    @if (!Model.PerEvent.Any())
+    {
+        <div class="panel-body"><p class="muted" style="margin:0">No events that have started match these filters.</p></div>
+    }
+    else
+    {
+        <table class="table-a" id="report-events" data-paginate="10">
+            <thead>
+                <tr><th>Event</th><th>When</th><th class="num">On time</th><th class="num">Late</th><th class="num">No time-out</th><th>Turnout</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var e in Model.PerEvent.OrderByDescending(e => e.Start))
+            {
+                var of = e.Capacity is int cap && cap > 0 ? cap : Model.MembersInScope;
+                var share = of > 0 ? Math.Min(1.0, e.Total / (double)of) : 0;
+                <tr>
+                    <td>
+                        <div class="cell-event" data-type="@Ui.TicketType(e.Type)">
+                            <span class="mini-pad" aria-hidden="true"><b>@e.Start.ToString("MMM")</b>@e.Start.ToString("dd")</span>
+                            <span><a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId"><strong>@e.Name</strong></a><span class="dim">@e.Type</span></span>
+                        </div>
+                    </td>
+                    <td class="mono">@e.Start.ToString("MMM d, yyyy")</td>
+                    <td class="num">@e.OnTime</td>
+                    <td class="num">@e.Late</td>
+                    <td class="num">@e.MissingTimeOut</td>
+                    <td>
+                        <div class="bar-cell" title="@e.Total of @of @(e.Capacity.HasValue ? "seats" : "members in scope")">
+                            <div class="meter"><i style="width:@pct(share)"></i></div>
+                            <span class="pct">@pct(share)</span>
+                        </div>
+                    </td>
+                    <td><span class="@Ui.StatusChip(e.Status)">@e.Status</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</div>
+
+<div class="chart-tip" id="chart-tip" role="tooltip" hidden></div>
+
+@section Scripts {
+    <script>
+        // Course / Year tabs on "Who takes part".
+        document.querySelectorAll(".seg-tabs").forEach(function (tabs) {
+            tabs.addEventListener("click", function (e) {
+                var btn = e.target.closest("[data-tab]");
+                if (!btn) { return; }
+                tabs.querySelectorAll("[data-tab]").forEach(function (b) {
+                    var on = b === btn;
+                    b.setAttribute("aria-selected", String(on));
+                    document.getElementById(b.getAttribute("data-tab")).hidden = !on;
+                });
+            });
+        });
+    </script>
+}

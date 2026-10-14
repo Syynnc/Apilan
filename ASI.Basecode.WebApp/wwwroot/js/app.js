@@ -62,3 +62,51 @@
         });
     });
 }());
+
+/* ---- Chart tooltips: any [data-tip="Title|line|line"] ------------------- */
+/* Follows the pointer over a mark; on keyboard focus it sits above the mark. */
+(function () {
+    "use strict";
+    var tip = document.getElementById("chart-tip");
+    if (!tip) { return; }
+
+    function show(el, x, y) {
+        var parts = el.getAttribute("data-tip").split("|");
+        tip.innerHTML = "";
+        parts.forEach(function (p, i) {
+            var line = document.createElement(i === 0 ? "strong" : "span");
+            line.textContent = p;
+            tip.appendChild(line);
+        });
+        tip.hidden = false;
+        var r = tip.getBoundingClientRect();
+        var left = Math.min(window.innerWidth - r.width - 12, Math.max(12, x - r.width / 2));
+        var top = y - r.height - 14;
+        if (top < 8) { top = y + 18; }
+        tip.style.left = left + "px";
+        tip.style.top = top + "px";
+        el.classList.add("is-hot");
+    }
+
+    function hide(el) {
+        tip.hidden = true;
+        if (el) { el.classList.remove("is-hot"); }
+    }
+
+    document.addEventListener("pointermove", function (e) {
+        var el = e.target.closest ? e.target.closest("[data-tip]") : null;
+        document.querySelectorAll("[data-tip].is-hot").forEach(function (h) { if (h !== el) { h.classList.remove("is-hot"); } });
+        if (el) { show(el, e.clientX, e.clientY); } else { hide(); }
+    });
+    document.addEventListener("focusin", function (e) {
+        var el = e.target.closest && e.target.closest("[data-tip]");
+        if (!el) { return; }
+        var r = el.getBoundingClientRect();
+        show(el, r.left + r.width / 2, r.top);
+    });
+    document.addEventListener("focusout", function (e) {
+        var el = e.target.closest && e.target.closest("[data-tip]");
+        if (el) { hide(el); }
+    });
+    window.addEventListener("scroll", function () { hide(); }, { passive: true });
+}());
