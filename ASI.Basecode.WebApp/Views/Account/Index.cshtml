@@ -62,6 +62,13 @@
                                     {
                                         <span class="dim">You</span>
                                     }
+                                    @if (a.IsInitialOfficer)
+                                    {
+                                        <span class="initial-tag" title="Only this officer can disable it, reset its password or change its role.">
+                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" /></svg>
+                                            Initial officer
+                                        </span>
+                                    }
                                 </span>
                             </div>
                         </td>
@@ -92,12 +99,35 @@
                             }
                         </td>
                         <td>
+                            @if (a.IsInitialOfficer && !isMe)
+                            {
+                                @* Nobody but the initial officer touches the initial officer. *@
+                                <span class="protected-note">Protected</span>
+                            }
+                            else
+                            {
                             <div class="row-actions">
                                 <button type="button" class="btn-a quiet sm" data-dialog-open="#reset-dialog"
                                         data-account-id="@a.Id" data-account-name="@a.Username"
                                         data-account-who="@(a.StudentName ?? a.Username)">
                                     Change password
                                 </button>
+                                @if (a.RoleName == Const.RoleMember && a.IsActive)
+                                {
+                                    <button type="button" class="btn-a quiet sm" data-dialog-open="#role-dialog"
+                                            data-account-id="@a.Id" data-account-name="@a.Username"
+                                            data-account-who="@(a.StudentName ?? a.Username)" data-make-officer="true">
+                                        Make officer
+                                    </button>
+                                }
+                                else if (a.RoleName == Const.RoleOfficer && !isMe && !a.IsInitialOfficer && a.UserId.HasValue)
+                                {
+                                    <button type="button" class="btn-a quiet sm" data-dialog-open="#role-dialog"
+                                            data-account-id="@a.Id" data-account-name="@a.Username"
+                                            data-account-who="@(a.StudentName ?? a.Username)" data-make-officer="false">
+                                        Make member
+                                    </button>
+                                }
                                 @if (!isMe)
                                 {
                                     <form asp-action="SetActive" method="post">
@@ -108,6 +138,7 @@
                                     </form>
                                 }
                             </div>
+                            }
                         </td>
                     </tr>
                 }
@@ -163,14 +194,78 @@
     </div>
 </dialog>
 
+@* The role prompt: one dialog for both directions, filled in by the row. *@
+<dialog class="modal" id="role-dialog" aria-labelledby="role-title">
+    <div class="modal-content">
+        <form asp-action="SetOfficer" method="post" class="ticket ticket-form narrow confirm-ticket" data-type="assembly">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="" data-bind="id" />
+            <input type="hidden" name="makeOfficer" value="true" data-bind="make" />
+
+            <div class="ticket-body">
+                <header class="tf-head">
+                    <div class="ticket-kicker">
+                        <span class="ticket-type">Officer access</span>
+                        <span class="ticket-org">Administration</span>
+                    </div>
+                    <h2 class="ticket-title" id="role-title">
+                        <span data-when="promote">Make <span data-bind="who">this member</span> an officer?</span>
+                        <span data-when="demote" hidden>Make <span data-bind="who">this officer</span> a member again?</span>
+                    </h2>
+                    <button type="button" class="tf-close" data-modal-close aria-label="Close">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                    </button>
+                </header>
+
+                <div class="confirm-copy" data-when="promote">
+                    <p><strong class="mono" data-bind="name"></strong> gets the whole console from their next page:</p>
+                    <ul class="role-list">
+                        <li>Members, events and event types</li>
+                        <li>The door, and every event's attendance</li>
+                        <li>Participation reports and these accounts</li>
+                    </ul>
+                    <p class="dim">Their member record, pass and attendance stay as they are. They cannot disable or change the initial officer.</p>
+                </div>
+                <div class="confirm-copy" data-when="demote" hidden>
+                    <p>
+                        <strong class="mono" data-bind="name"></strong> loses the console on their next page and goes back
+                        to their own pass and attendance. Nothing they recorded is removed.
+                    </p>
+                </div>
+
+                <footer class="tf-foot">
+                    <button type="button" class="btn-a ghost" data-modal-close>Cancel</button>
+                    <button type="submit" class="btn-a" data-when="promote">Make officer</button>
+                    <button type="submit" class="btn-a danger" data-when="demote" hidden>Make member</button>
+                </footer>
+            </div>
+
+            <aside class="ticket-stub tf-stub" aria-hidden="true">
+                <svg class="tf-key" viewBox="0 0 48 48"><path d="M24 6l14 6v10c0 9-6 16-14 20-8-4-14-11-14-20V12z" /><path d="M18 24l4 4 8-8" /></svg>
+                <span class="stub-code" data-bind="name"></span>
+                <span class="stub-note" data-when="promote">Officer<br />access</span>
+                <span class="stub-note" data-when="demote" hidden>Back to<br />member</span>
+            </aside>
+        </form>
+    </div>
+</dialog>
+
 @section Scripts {
     <script>
-        // Fill the reset prompt from the row that opened it.
+        // Fill the reset and role prompts from the row that opened them.
         window.Apilan.onDialogOpen = function (dialog, opener) {
-            if (dialog.id !== "reset-dialog") { return; }
+            if (dialog.id !== "reset-dialog" && dialog.id !== "role-dialog") { return; }
             dialog.querySelector("[data-bind=id]").value = opener.getAttribute("data-account-id");
             dialog.querySelectorAll("[data-bind=name]").forEach(function (el) { el.textContent = opener.getAttribute("data-account-name"); });
-            dialog.querySelector("[data-bind=who]").textContent = opener.getAttribute("data-account-who");
+            dialog.querySelectorAll("[data-bind=who]").forEach(function (el) { el.textContent = opener.getAttribute("data-account-who"); });
+
+            if (dialog.id === "role-dialog") {
+                var promote = opener.getAttribute("data-make-officer") === "true";
+                dialog.querySelector("[data-bind=make]").value = String(promote);
+                dialog.querySelectorAll("[data-when]").forEach(function (el) {
+                    el.hidden = el.getAttribute("data-when") !== (promote ? "promote" : "demote");
+                });
+            }
         };
     </script>
 }

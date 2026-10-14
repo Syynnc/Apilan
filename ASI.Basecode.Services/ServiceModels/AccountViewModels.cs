@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using ASI.Basecode.Resources.Constants;
 
 namespace ASI.Basecode.Services.ServiceModels
 {
@@ -61,6 +62,9 @@ namespace ASI.Basecode.Services.ServiceModels
         public bool IsActive { get; set; }
         public DateTime? LastLogin { get; set; }
         public DateTime CreatedTime { get; set; }
+
+        /// <summary>The bootstrap officer: only that officer can change this account.</summary>
+        public bool IsInitialOfficer => Id == Const.InitialOfficerAccountId;
     }
 
     public class AccountsPageViewModel

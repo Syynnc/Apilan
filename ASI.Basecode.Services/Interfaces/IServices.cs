@@ -20,7 +20,20 @@ namespace ASI.Basecode.Services.Interfaces
         string SetActive(int id, bool isActive, int currentAccountId, string updatedBy);
 
         /// <summary>Puts an account back on the default password. Returns the username.</summary>
-        string ResetPassword(int id, string updatedBy);
+        string ResetPassword(int id, int currentAccountId, string updatedBy);
+
+        /// <summary>
+        /// Makes an account an officer, or an officer a member again. Returns
+        /// the username.
+        /// </summary>
+        string SetOfficer(int id, bool makeOfficer, int currentAccountId, string updatedBy);
+
+        /// <summary>
+        /// The role a signed-in account holds now, or null when it may no longer
+        /// be signed in (disabled, deactivated or gone). Checked on every request
+        /// so a role change or a disable takes effect at once.
+        /// </summary>
+        string CurrentRole(int accountId);
     }
 
     public interface IStudentService

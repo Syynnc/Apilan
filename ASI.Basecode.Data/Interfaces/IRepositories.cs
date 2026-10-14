@@ -19,6 +19,7 @@ namespace ASI.Basecode.Data.Interfaces
         void AddAccount(string username, string passwordHash, int roleId, int? userId, string createdBy);
         void ChangePassword(int id, string passwordHash, string updatedBy);
         void SetActive(int id, bool isActive, string updatedBy);
+        void SetRole(int id, int roleId, string updatedBy);
         void RecordLogin(int id);
     }
 

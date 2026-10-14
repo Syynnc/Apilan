@@ -161,5 +161,50 @@ namespace ASI.Basecode.Resources.Messages {
                 return ResourceManager.GetString("NewPasswordIsDefault", resourceCulture);
             }
         }
+    
+        /// <summary>
+        ///   Looks up a localized string similar to The initial officer account can only be changed by that officer..
+        /// </summary>
+        public static string InitialOfficerProtected {
+            get {
+                return ResourceManager.GetString("InitialOfficerProtected", resourceCulture);
+            }
+        }
+    
+        /// <summary>
+        ///   Looks up a localized string similar to You cannot remove your own officer role. Ask another officer to do it..
+        /// </summary>
+        public static string CannotDemoteSelf {
+            get {
+                return ResourceManager.GetString("CannotDemoteSelf", resourceCulture);
+            }
+        }
+    
+        /// <summary>
+        ///   Looks up a localized string similar to Enable this account before making it an officer..
+        /// </summary>
+        public static string DisabledCannotBePromoted {
+            get {
+                return ResourceManager.GetString("DisabledCannotBePromoted", resourceCulture);
+            }
+        }
+    
+        /// <summary>
+        ///   Looks up a localized string similar to This officer is not linked to a member, so they cannot be made a member..
+        /// </summary>
+        public static string OfficerHasNoMember {
+            get {
+                return ResourceManager.GetString("OfficerHasNoMember", resourceCulture);
+            }
+        }
+    
+        /// <summary>
+        ///   Looks up a localized string similar to The Officer role is missing from dbo.roles..
+        /// </summary>
+        public static string OfficerRoleMissing {
+            get {
+                return ResourceManager.GetString("OfficerRoleMissing", resourceCulture);
+            }
+        }
     }
 }
