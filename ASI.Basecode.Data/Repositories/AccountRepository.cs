@@ -37,6 +37,11 @@ namespace ASI.Basecode.Data.Repositories
             Execute($"EXEC dbo.sp_Account_SetActive @id = {id}, @is_active = {isActive}, @updated_by = {updatedBy}");
         }
 
+        public void SetRole(int id, int roleId, string updatedBy)
+        {
+            Execute($"EXEC dbo.sp_Account_SetRole @id = {id}, @role_id = {roleId}, @updated_by = {updatedBy}");
+        }
+
         public void RecordLogin(int id)
         {
             Execute($"EXEC dbo.sp_Account_RecordLogin @id = {id}");

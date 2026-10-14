@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Security.Claims;
 using ASI.Basecode.Data;
 using ASI.Basecode.Data.Interfaces;
 using ASI.Basecode.Data.Repositories;
@@ -5,6 +7,7 @@ using ASI.Basecode.Resources.Constants;
 using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.Services.Services;
 using ASI.Basecode.WebApp.MappingConfiguration;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -48,6 +51,38 @@ builder.Services
         options.AccessDeniedPath = "/Account/Denied";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
+
+        // The cookie remembers the role it was issued with. Check the account
+        // on every request instead, so making someone an officer (or a member
+        // again), or disabling them, applies on their next page, not hours later.
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            var idClaim = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(idClaim, out var accountId))
+            {
+                return;
+            }
+
+            var accounts = context.HttpContext.RequestServices.GetRequiredService<IAccountService>();
+            var role = accounts.CurrentRole(accountId);
+
+            if (role == null)
+            {
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync(Const.AuthenticationScheme);
+                return;
+            }
+
+            if (!context.Principal.IsInRole(role))
+            {
+                var claims = context.Principal.Claims
+                    .Where(c => c.Type != ClaimTypes.Role)
+                    .Append(new Claim(ClaimTypes.Role, role));
+                context.ReplacePrincipal(new ClaimsPrincipal(
+                    new ClaimsIdentity(claims, Const.AuthenticationScheme, ClaimTypes.Name, ClaimTypes.Role)));
+                context.ShouldRenew = true;
+            }
+        };
     });
 
 builder.Services.AddAuthorization(options =>

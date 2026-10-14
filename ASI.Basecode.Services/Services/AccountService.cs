@@ -148,17 +148,87 @@ namespace ASI.Basecode.Services.Services
             {
                 throw new InvalidDataException(Errors.CannotDeactivateSelf);
             }
+            GuardInitialOfficer(id, currentAccountId);
 
             var username = UsernameOf(id);
             Run(() => _accounts.SetActive(id, isActive, updatedBy));
             return username;
         }
 
-        public string ResetPassword(int id, string updatedBy)
+        public string ResetPassword(int id, int currentAccountId, string updatedBy)
         {
+            // Resetting it to the known default would hand the account to
+            // whoever reset it, so the initial officer is covered here too.
+            GuardInitialOfficer(id, currentAccountId);
+
             var username = UsernameOf(id);
             Run(() => _accounts.ChangePassword(id, PasswordManager.HashPassword(_settings.DefaultPassword), updatedBy));
             return username;
+        }
+
+        public string SetOfficer(int id, bool makeOfficer, int currentAccountId, string updatedBy)
+        {
+            GuardInitialOfficer(id, currentAccountId);
+
+            var account = _accounts.GetAccounts()
+                .Where(a => a.Id == id)
+                .Select(a => new { a.Username, a.IsActive, a.UserId, a.Role.RoleName })
+                .FirstOrDefault() ?? throw NotFound();
+
+            var target = makeOfficer ? Const.RoleOfficer : Const.RoleMember;
+            if (account.RoleName == target)
+            {
+                return account.Username;
+            }
+
+            if (makeOfficer && !account.IsActive)
+            {
+                throw new InvalidDataException(Errors.DisabledCannotBePromoted);
+            }
+
+            if (!makeOfficer)
+            {
+                // Nobody locks themselves out of the console by accident.
+                if (id == currentAccountId)
+                {
+                    throw new InvalidDataException(Errors.CannotDemoteSelf);
+                }
+
+                // A member account without a member behind it has no pass and
+                // no attendance page to land on.
+                if (account.UserId == null)
+                {
+                    throw new InvalidDataException(Errors.OfficerHasNoMember);
+                }
+            }
+
+            var roleId = _accounts.GetRoles()
+                .Where(r => r.RoleName == target)
+                .Select(r => (int?)r.Id)
+                .FirstOrDefault()
+                ?? throw new InvalidDataException(makeOfficer ? Errors.OfficerRoleMissing : Errors.MemberRoleMissing);
+
+            Run(() => _accounts.SetRole(id, roleId, updatedBy));
+            return account.Username;
+        }
+
+        public string CurrentRole(int accountId)
+        {
+            var state = _accounts.GetAccounts()
+                .Where(a => a.Id == accountId)
+                .Select(a => new { a.IsActive, MemberActive = a.User == null || a.User.IsActive, a.Role.RoleName })
+                .FirstOrDefault();
+
+            return state != null && state.IsActive && state.MemberActive ? state.RoleName : null;
+        }
+
+        /// <summary>Only the initial officer may change the initial officer's account.</summary>
+        private static void GuardInitialOfficer(int id, int currentAccountId)
+        {
+            if (id == Const.InitialOfficerAccountId && currentAccountId != Const.InitialOfficerAccountId)
+            {
+                throw new InvalidDataException(Errors.InitialOfficerProtected);
+            }
         }
 
         private string UsernameOf(int id)

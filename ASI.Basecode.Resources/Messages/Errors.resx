@@ -51,4 +51,19 @@
   <data name="NewPasswordIsDefault" xml:space="preserve">
     <value>Pick a password other than the default one.</value>
   </data>
+  <data name="InitialOfficerProtected" xml:space="preserve">
+    <value>The initial officer account can only be changed by that officer.</value>
+  </data>
+  <data name="CannotDemoteSelf" xml:space="preserve">
+    <value>You cannot remove your own officer role. Ask another officer to do it.</value>
+  </data>
+  <data name="DisabledCannotBePromoted" xml:space="preserve">
+    <value>Enable this account before making it an officer.</value>
+  </data>
+  <data name="OfficerHasNoMember" xml:space="preserve">
+    <value>This officer is not linked to a member, so they cannot be made a member.</value>
+  </data>
+  <data name="OfficerRoleMissing" xml:space="preserve">
+    <value>The Officer role is missing from dbo.roles.</value>
+  </data>
 </root>

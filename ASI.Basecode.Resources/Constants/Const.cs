@@ -15,6 +15,14 @@ namespace ASI.Basecode.Resources.Constants
         public const string RoleOfficer = "Officer";
         public const string RoleMember = "Member";
 
+        /// <summary>
+        /// accounts.id of the initial officer, the bootstrap account that
+        /// database/01_RolesAndAccounts.sql sets up. Other officers cannot
+        /// disable it, reset its password or take its officer role away, so the
+        /// organization can never be locked out of its own console.
+        /// </summary>
+        public const int InitialOfficerAccountId = 1;
+
         /// <summary>Authorization policy guarding the console: Officer role only</summary>
         public const string OfficerOnlyPolicy = "OfficerOnly";
 

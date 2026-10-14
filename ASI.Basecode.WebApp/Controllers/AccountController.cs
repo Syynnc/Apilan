@@ -206,8 +206,27 @@ namespace ASI.Basecode.WebApp.Controllers
             // member is then made to pick their own at the next sign-in.
             try
             {
-                var username = _accountService.ResetPassword(id, CurrentUserName);
+                var username = _accountService.ResetPassword(id, AccountId, CurrentUserName);
                 TempData["Success"] = string.Format(Common.PasswordReset, username);
+            }
+            catch (InvalidDataException ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [Authorize(Policy = Const.OfficerOnlyPolicy)]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SetOfficer(int id, bool makeOfficer)
+        {
+            try
+            {
+                var username = _accountService.SetOfficer(id, makeOfficer, AccountId, CurrentUserName);
+                TempData["Success"] = string.Format(Common.RoleChanged, username,
+                    makeOfficer ? "an officer" : "a member");
             }
             catch (InvalidDataException ex)
             {

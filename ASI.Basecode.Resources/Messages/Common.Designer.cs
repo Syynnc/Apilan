@@ -170,5 +170,14 @@ namespace ASI.Basecode.Resources.Messages {
                 return ResourceManager.GetString("MemberAccountCreated", resourceCulture);
             }
         }
+    
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is now {1}. The change applies the next time they open a page..
+        /// </summary>
+        public static string RoleChanged {
+            get {
+                return ResourceManager.GetString("RoleChanged", resourceCulture);
+            }
+        }
     }
 }

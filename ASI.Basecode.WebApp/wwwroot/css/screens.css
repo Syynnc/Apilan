@@ -1274,6 +1274,26 @@ label.req::after { content: " *"; color: var(--risk); font-weight: 700; }
 /* Confirmation tickets (reset password) */
 .confirm-ticket .ticket-title { font-size: 1.5rem; }
 .confirm-copy { margin: 0; font-size: var(--fs-sm); color: var(--ink-2); }
+.confirm-copy p { margin: 0 0 var(--s-3); }
+.confirm-copy p:last-child { margin-bottom: 0; }
+.role-list { margin: 0 0 var(--s-3); padding: 0; list-style: none; display: grid; gap: var(--s-2); }
+.role-list li { display: flex; gap: var(--s-2); align-items: baseline; color: var(--ink); }
+.role-list li::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-bright); transform: translateY(-1px); }
+
+/* The bootstrap officer's account: marked, and closed to everyone else. */
+.initial-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    width: fit-content;
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--accent);
+}
+.initial-tag svg { width: 12px; height: 12px; fill: var(--accent-wash); stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+.protected-note { display: block; text-align: right; font-size: var(--fs-2xs); color: var(--ink-3); }
 .default-pass {
     display: flex;
     align-items: center;

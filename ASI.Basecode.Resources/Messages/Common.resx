@@ -54,4 +54,7 @@
   <data name="MemberAccountCreated" xml:space="preserve">
     <value>{0} can now sign in with their student number and the default password.</value>
   </data>
+  <data name="RoleChanged" xml:space="preserve">
+    <value>{0} is now {1}. The change applies the next time they open a page.</value>
+  </data>
 </root>
