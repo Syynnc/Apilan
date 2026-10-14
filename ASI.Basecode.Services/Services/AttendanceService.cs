@@ -85,6 +85,14 @@ namespace ASI.Basecode.Services.Services
                 .FirstOrDefault() ?? studentNumber;
         }
 
+        public string DescribeAttendance(int id)
+        {
+            return _attendance.GetAttendanceDetails()
+                .Where(a => a.AttendanceId == id)
+                .Select(a => a.FullName + " (" + a.StudentNumber + ") at " + a.EventName)
+                .FirstOrDefault();
+        }
+
         public void DeleteAttendance(int id)
         {
             Run(() => _attendance.DeleteAttendance(id));

@@ -52,25 +52,26 @@ namespace ASI.Basecode.WebApp.Controllers
 
             var result = _accountService.AuthenticateUser(model.Identifier, model.Password, out var account);
 
-            if (result == LoginResult.Inactive)
-            {
-                ModelState.AddModelError(string.Empty, Errors.AccountInactive);
-                return View(model);
-            }
-
-            if (result == LoginResult.MemberInactive)
-            {
-                ModelState.AddModelError(string.Empty, Errors.MemberDeactivated);
-                return View(model);
-            }
-
             if (result != LoginResult.Success)
             {
-                ModelState.AddModelError(string.Empty, Errors.InvalidLogin);
+                // Nobody is signed in, so the log names what was typed.
+                var typed = (model.Identifier ?? string.Empty).Trim();
+                var reason = result == LoginResult.Inactive ? "Account disabled"
+                    : result == LoginResult.MemberInactive ? "Member deactivated"
+                    : "Wrong student ID, username or password";
+                Audit(AuditActions.SignInFailed, AuditActions.TargetSession, null, typed, reason, actor: typed);
+
+                ModelState.AddModelError(string.Empty,
+                    result == LoginResult.Inactive ? Errors.AccountInactive
+                    : result == LoginResult.MemberInactive ? Errors.MemberDeactivated
+                    : Errors.InvalidLogin);
                 return View(model);
             }
 
             await SignInAsync(account);
+            Audit(AuditActions.SignedIn, AuditActions.TargetSession, account.Id, account.DisplayName,
+                account.MustChangePassword ? "Still on the default password" : null,
+                accountId: account.Id, actor: account.Username);
 
             if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
             {
@@ -84,6 +85,7 @@ namespace ASI.Basecode.WebApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
+            Audit(AuditActions.SignedOut, AuditActions.TargetSession, AccountId, DisplayName);
             await HttpContext.SignOutAsync(Const.AuthenticationScheme);
             return RedirectToAction(nameof(Login));
         }
@@ -130,6 +132,8 @@ namespace ASI.Basecode.WebApp.Controllers
             try
             {
                 _accountService.ChangePassword(AccountId, model, CurrentUserName);
+                Audit(AuditActions.PasswordChanged, AuditActions.TargetAccount, AccountId, CurrentUserName,
+                    model.FirstSignIn ? "Replaced the default password at first sign-in" : null);
             }
             catch (InvalidDataException ex)
             {
@@ -187,6 +191,8 @@ namespace ASI.Basecode.WebApp.Controllers
             try
             {
                 var username = _accountService.SetActive(id, isActive, AccountId, CurrentUserName);
+                Audit(isActive ? AuditActions.AccountEnabled : AuditActions.AccountDisabled,
+                    AuditActions.TargetAccount, id, username);
                 TempData["Success"] = string.Format(Common.AccountStatusChanged, username, isActive ? "active" : "disabled");
             }
             catch (InvalidDataException ex)
@@ -207,6 +213,7 @@ namespace ASI.Basecode.WebApp.Controllers
             try
             {
                 var username = _accountService.ResetPassword(id, AccountId, CurrentUserName);
+                Audit(AuditActions.PasswordReset, AuditActions.TargetAccount, id, username, "Back to the default password");
                 TempData["Success"] = string.Format(Common.PasswordReset, username);
             }
             catch (InvalidDataException ex)
@@ -225,6 +232,9 @@ namespace ASI.Basecode.WebApp.Controllers
             try
             {
                 var username = _accountService.SetOfficer(id, makeOfficer, AccountId, CurrentUserName);
+                Audit(makeOfficer ? AuditActions.MadeOfficer : AuditActions.MadeMember,
+                    AuditActions.TargetAccount, id, username,
+                    makeOfficer ? "Member → Officer" : "Officer → Member");
                 TempData["Success"] = string.Format(Common.RoleChanged, username,
                     makeOfficer ? "an officer" : "a member");
             }

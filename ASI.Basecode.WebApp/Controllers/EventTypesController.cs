@@ -1,3 +1,4 @@
+using ASI.Basecode.WebApp.Helpers;
 using System.IO;
 using ASI.Basecode.Resources.Constants;
 using ASI.Basecode.Resources.Messages;
@@ -50,7 +51,17 @@ namespace ASI.Basecode.WebApp.Controllers
 
             try
             {
+                var before = model.Id != 0 ? _eventTypes.GetEventType(model.Id) : null;
                 _eventTypes.SaveEventType(model);
+                if (before == null)
+                {
+                    Audit(AuditActions.EventTypeCreated, AuditActions.TargetEventType, null, model.TypeName);
+                }
+                else
+                {
+                    Audit(AuditActions.EventTypeUpdated, AuditActions.TargetEventType, model.Id, model.TypeName,
+                        AuditDiff.Changes(before, model));
+                }
                 TempData["Success"] = string.Format(Common.EventTypeSaved, model.TypeName);
                 return SavedRedirect(Url.Action(nameof(Index)));
             }

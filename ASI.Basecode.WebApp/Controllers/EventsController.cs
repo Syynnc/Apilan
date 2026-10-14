@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ASI.Basecode.WebApp.Helpers;
@@ -84,10 +86,23 @@ namespace ASI.Basecode.WebApp.Controllers
                 if (model.Id == 0)
                 {
                     _events.AddEvent(model, CurrentUserName);
+                    Audit(AuditActions.EventCreated, AuditActions.TargetEvent, null, model.EventName,
+                        $"{model.EventStart:MMM d, yyyy h:mm tt} to {model.EventEnd:h:mm tt}"
+                        + (string.IsNullOrWhiteSpace(model.Venue) ? "" : $" at {model.Venue}")
+                        + $", {model.AttendanceWindowMinutes}-minute window");
                 }
                 else
                 {
+                    var before = _events.GetEvent(model.Id);
                     _events.UpdateEvent(model, CurrentUserName);
+
+                    // The type is stored as an id; the log says its name.
+                    var types = before.EventTypes.ToDictionary(t => (int?)t.Id, t => t.Name);
+                    Audit(AuditActions.EventUpdated, AuditActions.TargetEvent, model.Id, model.EventName,
+                        AuditDiff.Changes(before, model, new Dictionary<string, Func<object, string>>
+                        {
+                            [nameof(EventViewModel.EventTypeId)] = v => v is int id && types.TryGetValue(id, out var n) ? n : "—",
+                        }));
                 }
 
                 TempData["Success"] = string.Format(Common.EventSaved, model.EventName);
@@ -110,7 +125,9 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             try
             {
+                var name = _events.GetEvent(id).EventName;
                 _events.DeleteEvent(id);
+                Audit(AuditActions.EventDeleted, AuditActions.TargetEvent, id, name);
                 TempData["Success"] = Common.EventDeleted;
             }
             catch (InvalidDataException ex)

@@ -58,7 +58,9 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             try
             {
+                var what = _attendance.DescribeAttendance(id);
                 _attendance.DeleteAttendance(id);
+                Audit(AuditActions.AttendanceRemoved, AuditActions.TargetAttendance, eventId, what);
                 TempData["Success"] = Common.AttendanceDeleted;
             }
             catch (InvalidDataException ex)
