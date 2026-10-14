@@ -1,20 +1,18 @@
-﻿using ASI.Basecode.Data;
+using System;
 using ASI.Basecode.Data.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System;
 
-namespace Basecode.Data.Repositories
+namespace ASI.Basecode.Data.Repositories
 {
     public class BaseRepository
     {
         protected IUnitOfWork UnitOfWork { get; set; }
 
-        protected AsiBasecodeDBContext Context => (AsiBasecodeDBContext)UnitOfWork.Database;
+        protected AllianceDbContext Context => (AllianceDbContext)UnitOfWork.Database;
 
         public BaseRepository(IUnitOfWork unitOfWork)
         {
-            if (unitOfWork == null) throw new ArgumentNullException(nameof(unitOfWork));
-            UnitOfWork = unitOfWork;
+            UnitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         }
 
         protected virtual DbSet<TEntity> GetDbSet<TEntity>() where TEntity : class
@@ -22,9 +20,13 @@ namespace Basecode.Data.Repositories
             return Context.Set<TEntity>();
         }
 
-        protected virtual void SetEntityState(object entity, EntityState entityState)
+        /// <summary>
+        /// Runs a stored procedure. Business-rule violations raised inside the
+        /// procedure (THROW 50xxx) surface to the caller as a SqlException.
+        /// </summary>
+        protected void Execute(FormattableString sql)
         {
-            Context.Entry(entity).State = entityState;
+            Context.Database.ExecuteSqlInterpolated(sql);
         }
     }
 }

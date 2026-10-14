@@ -1,20 +1,17 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
+using System.ComponentModel.DataAnnotations;
 
 namespace ASI.Basecode.WebApp.Models
 {
-    /// <summary>
-    /// Login View Model
-    /// </summary>
     public class LoginViewModel
     {
-        /// <summary>ユーザーID</summary>
-        [JsonPropertyName("userId")]
-        [Required(ErrorMessage = "UserId is required.")]
-        public string UserId { get; set; }
-        /// <summary>パスワード</summary>
-        [JsonPropertyName("password")]
-        [Required(ErrorMessage = "Password is required.")]
+        [Required(ErrorMessage = "Enter your username, student number, or email.")]
+        [Display(Name = "Username, student number, or email")]
+        public string Identifier { get; set; }
+
+        [Required(ErrorMessage = "Enter your password.")]
+        [DataType(DataType.Password)]
         public string Password { get; set; }
+
+        public string ReturnUrl { get; set; }
     }
 }

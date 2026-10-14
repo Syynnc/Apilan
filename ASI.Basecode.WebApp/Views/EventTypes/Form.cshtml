@@ -1,0 +1,37 @@
+@model EventTypeViewModel
+@{
+    var isNew = Model.Id == 0;
+    ViewData["Title"] = isNew ? "New event type" : "Edit event type";
+    ViewData["Module"] = "Event types";
+}
+
+<div class="panel" style="max-width:560px">
+    <div class="panel-head"><h2>@ViewData["Title"]</h2></div>
+    <div class="panel-body">
+        <form asp-action="Save" method="post" class="stack" novalidate>
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="field-error"></div>
+
+            <div class="field">
+                <label asp-for="TypeName"></label>
+                <input asp-for="TypeName" class="input-a" />
+                <span asp-validation-for="TypeName" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Description"></label>
+                <textarea asp-for="Description" class="input-a" rows="2"></textarea>
+                <span asp-validation-for="Description" class="field-error"></span>
+            </div>
+            <label class="check-inline"><input asp-for="IsActive" type="checkbox" /> Active</label>
+
+            <div class="form-foot">
+                <a class="btn-a ghost" asp-action="Index">Cancel</a>
+                <button type="submit" class="btn-a">@(isNew ? "Create" : "Save")</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

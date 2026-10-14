@@ -1,0 +1,112 @@
+@model AccountsPageViewModel
+@{
+    ViewData["Title"] = "Accounts";
+    ViewData["Module"] = "Administration";
+}
+
+<div class="split">
+    <div class="panel">
+        <div class="panel-head"><h2>Accounts</h2><span class="count">@Model.Accounts.Count total</span></div>
+        <table class="table-a">
+            <thead>
+                <tr>
+                    <th>Username</th><th>Role</th><th>Linked student</th><th>Last login</th><th>Status</th><th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (!Model.Accounts.Any())
+            {
+                <tr><td colspan="6"><div class="empty-a"><h4>No accounts</h4><p>Create the first one on the right.</p></div></td></tr>
+            }
+            @foreach (var a in Model.Accounts)
+            {
+                <tr>
+                    <td><strong>@a.Username</strong></td>
+                    <td>@a.RoleName</td>
+                    <td>@(a.StudentName ?? "—")</td>
+                    <td class="mono">@(a.LastLogin?.ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
+                    <td>
+                        @if (a.IsActive)
+                        {
+                            <span class="chip ok">Active</span>
+                        }
+                        else
+                        {
+                            <span class="chip idle">Disabled</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="row-actions">
+                            <form asp-action="SetActive" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@a.Id" />
+                                <input type="hidden" name="isActive" value="@((!a.IsActive).ToString().ToLower())" />
+                                <button type="submit" class="btn-a quiet sm">@(a.IsActive ? "Disable" : "Enable")</button>
+                            </form>
+                            <form asp-action="ResetPassword" method="post"
+                                  onsubmit="return confirm('Reset the password for @a.Username?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@a.Id" />
+                                <input type="password" name="newPassword" class="input-a sm" placeholder="New password"
+                                       style="width:140px;display:inline-block" minlength="8" required />
+                                <button type="submit" class="btn-a quiet sm">Reset</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="rail">
+        <div class="panel">
+            <div class="panel-head"><h3>New account</h3></div>
+            <div class="panel-body">
+                <form asp-action="Create" method="post" class="stack" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="field-error"></div>
+
+                    <div class="field">
+                        <label asp-for="NewAccount.Username"></label>
+                        <input asp-for="NewAccount.Username" class="input-a" />
+                        <span asp-validation-for="NewAccount.Username" class="field-error"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="NewAccount.Password"></label>
+                        <input asp-for="NewAccount.Password" class="input-a" type="password" />
+                        <span asp-validation-for="NewAccount.Password" class="field-error"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="NewAccount.ConfirmPassword"></label>
+                        <input asp-for="NewAccount.ConfirmPassword" class="input-a" type="password" />
+                        <span asp-validation-for="NewAccount.ConfirmPassword" class="field-error"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="NewAccount.RoleId"></label>
+                        <select asp-for="NewAccount.RoleId" class="input-a"
+                                asp-items="@(new SelectList(Model.Roles, nameof(LookupItem.Id), nameof(LookupItem.Name)))">
+                            <option value="">Choose a role…</option>
+                        </select>
+                        <span asp-validation-for="NewAccount.RoleId" class="field-error"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="NewAccount.UserId"></label>
+                        <select asp-for="NewAccount.UserId" class="input-a"
+                                asp-items="@(new SelectList(Model.Students, nameof(LookupItem.Id), nameof(LookupItem.Name)))">
+                            <option value="">No linked student</option>
+                        </select>
+                        <span class="hint">Link a student to make this a member account.</span>
+                    </div>
+
+                    <div class="form-foot">
+                        <button type="submit" class="btn-a">Create account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

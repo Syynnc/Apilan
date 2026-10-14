@@ -1,98 +1,34 @@
-﻿using Microsoft.Extensions.Configuration;
-using System;
-using System.IO;
-using System.Security.Cryptography;
-using System.Text;
-
 namespace ASI.Basecode.Services.Manager
 {
     /// <summary>
-    /// Password Manager
+    /// Password Manager. AllianceDB stores bcrypt hashes only — hashing and
+    /// verification happen here, never in the database.
     /// </summary>
-    public class PasswordManager
+    public static class PasswordManager
     {
-        /// <summary>
-        /// Gets or sets the secret key.
-        /// </summary>
-        public static string secretKey { get; set; }
+        private const int WorkFactor = 12;
 
-        /// <summary>
-        /// Sets up.
-        /// </summary>
-        /// <param name="tokenAuthConfig">Token authentication configuration</param>
-        public static void SetUp(IConfigurationSection tokenAuthConfig)
+        public static string HashPassword(string password)
         {
-            secretKey = tokenAuthConfig.GetValue<string>("SecretKey");
+            return BCrypt.Net.BCrypt.HashPassword(password, WorkFactor);
         }
 
-        /// <summary>
-        /// Encrypts the password.
-        /// </summary>
-        /// <param name="password">The password.</param>
-        /// <returns></returns>
-        public static string EncryptPassword(string password)
+        public static bool VerifyPassword(string password, string hash)
         {
-            byte[] iv = new byte[16];
-            byte[] aesKey = new byte[16];
-            byte[] array;
-
-            using (Aes aes = Aes.Create())
+            if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(hash))
             {
-                var keyBytes = Encoding.UTF8.GetBytes(secretKey);
-                Array.Copy(keyBytes, aesKey, Math.Min(keyBytes.Length, aesKey.Length));
-                aes.Key = aesKey;
-                aes.IV = iv;
-
-                ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
-
-                using (MemoryStream memoryStream = new MemoryStream())
-                {
-                    using (CryptoStream cryptoStream = new CryptoStream((Stream)memoryStream, encryptor, CryptoStreamMode.Write))
-                    {
-                        using (StreamWriter streamWriter = new StreamWriter((Stream)cryptoStream))
-                        {
-                            streamWriter.Write(password);
-                        }
-
-                        array = memoryStream.ToArray();
-                    }
-                }
+                return false;
             }
 
-            return Convert.ToBase64String(array);
-        }
-
-        /// <summary>
-        /// Decrypts the password.
-        /// </summary>
-        /// <param name="encryptedPassword">The encrypted password.</param>
-        /// <returns></returns>
-        public static string DecryptPassword(string encryptedPassword)
-        {
-            byte[] iv = new byte[16];
-            byte[] aesKey = new byte[16];
-            byte[] buffer = Convert.FromBase64String(encryptedPassword);
-
-            using (Aes aes = Aes.Create())
+            try
             {
-                var keyBytes = Encoding.UTF8.GetBytes(secretKey);
-                Array.Copy(keyBytes, aesKey, Math.Min(keyBytes.Length, aesKey.Length));
-                aes.Key = aesKey;
-                aes.IV = iv;
-                ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-
-                using (MemoryStream memoryStream = new MemoryStream(buffer))
-                {
-                    using (CryptoStream cryptoStream = new CryptoStream((Stream)memoryStream, decryptor, CryptoStreamMode.Read))
-                    {
-                        using (StreamReader streamReader = new StreamReader((Stream)cryptoStream))
-                        {
-                            return streamReader.ReadToEnd();
-                        }
-                    }
-                }
+                return BCrypt.Net.BCrypt.Verify(password, hash);
+            }
+            catch (BCrypt.Net.SaltParseException)
+            {
+                // A placeholder or corrupt hash in the table is a failed login, not a crash.
+                return false;
             }
         }
-
     }
 }

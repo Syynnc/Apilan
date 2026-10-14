@@ -1,0 +1,30 @@
+@model List<ASI.Basecode.Data.Models.AttendanceDetail>
+
+<div class="panel">
+    <div class="panel-head"><h3>Attendance history</h3><span class="count">@Model.Count</span></div>
+    @if (!Model.Any())
+    {
+        <div class="panel-body"><div class="empty-a"><h4>No attendance yet</h4><p>Events attended will appear here.</p></div></div>
+    }
+    else
+    {
+        <table class="table-a">
+            <thead>
+                <tr><th>Event</th><th>When</th><th>Mode</th><th>Time in</th><th>Time out</th><th>Late</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var a in Model)
+            {
+                <tr>
+                    <td><strong>@a.EventName</strong><br /><span class="dim">@a.EventType</span></td>
+                    <td class="mono">@a.EventStart.ToString("yyyy-MM-dd")</td>
+                    <td>@a.AttendanceMode</td>
+                    <td class="mono">@a.TimeIn.ToString("HH:mm")</td>
+                    <td class="mono">@(a.TimeOut?.ToString("HH:mm") ?? "—")</td>
+                    <td>@if (a.IsLate == 1) { <span class="chip warn">Late</span> } else { <span class="dim">On time</span> }</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</div>

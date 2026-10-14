@@ -1,0 +1,215 @@
+@model EventDetailViewModel
+@{
+    var s = Model.Summary;
+    ViewData["Title"] = s.EventName;
+    ViewData["Module"] = "Events";
+
+    var present = s.TotalPresent ?? 0;
+    var pct = s.EventCapacity is int cap && cap > 0 ? Math.Min(100, present * 100 / cap) : 0;
+    var isFinished = s.EventStatus == Const.StatusFinished;
+}
+
+@section Actions {
+    <a class="btn-a ghost" asp-controller="Attendance" asp-action="Export" asp-route-eventId="@s.EventId">Export CSV</a>
+    <a class="btn-a ghost" asp-action="Edit" asp-route-id="@s.EventId">Edit</a>
+}
+
+<div class="split">
+    <div class="stack-lg">
+        <div class="panel">
+            <div class="panel-head">
+                <h2>Checked in</h2>
+                <span class="count">@present@(s.EventCapacity.HasValue ? $" / {s.EventCapacity}" : "") present · @(s.LateCount ?? 0) late</span>
+            </div>
+            @if (!Model.Attendance.Any())
+            {
+                <div class="panel-body"><div class="empty-a"><h4>No one yet</h4><p>Use the pad to record the first arrival.</p></div></div>
+            }
+            else
+            {
+                <table class="table-a">
+                    <thead>
+                        <tr><th>Name</th><th>Student no.</th><th>Mode</th><th>Time in</th><th>Time out</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var a in Model.Attendance)
+                    {
+                        <tr>
+                            <td><strong>@a.FullName</strong> @if (a.IsLate == 1) { <span class="chip warn">Late</span> }</td>
+                            <td class="mono">@a.StudentNumber</td>
+                            <td>@a.AttendanceMode</td>
+                            <td class="mono">@a.TimeIn.ToString("HH:mm")</td>
+                            <td class="mono">@(a.TimeOut?.ToString("HH:mm") ?? "—")</td>
+                            <td>
+                                <form asp-controller="Attendance" asp-action="Delete" method="post"
+                                      onsubmit="return confirm('Remove @a.FullName from this event?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@a.AttendanceId" />
+                                    <input type="hidden" name="eventId" value="@s.EventId" />
+                                    <button type="submit" class="btn-a quiet sm">Remove</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            }
+        </div>
+
+        @if (isFinished && Model.Absentees.Any())
+        {
+            <div class="panel">
+                <div class="panel-head"><h3>Absentees</h3><span class="count">@Model.Absentees.Count</span></div>
+                <table class="table-a">
+                    <thead><tr><th>Name</th><th>Student no.</th><th>Course</th></tr></thead>
+                    <tbody>
+                    @foreach (var a in Model.Absentees)
+                    {
+                        <tr><td>@a.FullName</td><td class="mono">@a.StudentNumber</td><td>@a.Course</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <div class="rail">
+        <div class="panel">
+            <div class="panel-head"><h3>Details</h3><span class="chip @(s.EventStatus == Const.StatusOngoing ? "info" : s.EventStatus == Const.StatusUpcoming ? "idle" : "ok")">@s.EventStatus</span></div>
+            <div class="panel-body stack">
+                <dl class="detail-list">
+                    <div><dt>Type</dt><dd>@s.EventType</dd></div>
+                    <div><dt>Host</dt><dd>@(string.IsNullOrEmpty(s.EventHost) ? "—" : s.EventHost)</dd></div>
+                    <div><dt>Venue</dt><dd>@(string.IsNullOrEmpty(s.Venue) ? "—" : s.Venue)</dd></div>
+                    <div><dt>Starts</dt><dd class="mono">@s.EventStart.ToString("yyyy-MM-dd HH:mm")</dd></div>
+                    <div><dt>Ends</dt><dd class="mono">@s.EventEnd.ToString("yyyy-MM-dd HH:mm")</dd></div>
+                    <div><dt>Late after</dt><dd>@Model.LateGraceMinutes min</dd></div>
+                </dl>
+
+                @if (s.EventCapacity.HasValue)
+                {
+                    <div class="bar-cell">
+                        <div class="meter @(pct >= 100 ? "full" : "")"><i style="width:@(pct)%"></i></div>
+                        <span class="pct">@present/@s.EventCapacity</span>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <p class="muted" style="margin:0">@Model.Description</p>
+                }
+            </div>
+        </div>
+
+        @if (!isFinished)
+        {
+            <div class="panel">
+                <div class="panel-head"><h3>Door</h3></div>
+                <div class="panel-body">
+                    <form asp-controller="Attendance" asp-action="Record" method="post" autocomplete="off" id="scan-form">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="EventId" value="@s.EventId" />
+
+                        @*
+                            Auto is what a scan means: in if they are outside, out if
+                            they are inside. The explicit two are for fixing things.
+                        *@
+                        <div class="action-toggle three">
+                            <input type="radio" name="Action" id="act-auto" value="Auto" checked />
+                            <label for="act-auto">Auto</label>
+                            <input type="radio" name="Action" id="act-in" value="TimeIn" />
+                            <label for="act-in">Time in</label>
+                            <input type="radio" name="Action" id="act-out" value="TimeOut" />
+                            <label for="act-out">Time out</label>
+                        </div>
+
+                        <div class="field">
+                            <input type="text" name="StudentNumber" id="scan-field" class="input-a scan-input mono"
+                                   placeholder="Student no." aria-label="Student number" autofocus required />
+                        </div>
+
+                        <div class="field">
+                            <label for="mode">Mode</label>
+                            @* Manual by default; the camera switches it to QR Code before it submits. *@
+                            <select name="AttendanceModeId" id="mode" class="input-a">
+                                @foreach (var m in Model.Modes)
+                                {
+                                    <option value="@m.Id" selected="@(m.Id == Const.ManualAttendanceMode)">@m.Name</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="form-foot">
+                            <button type="submit" class="btn-a lg" style="width:100%">Record</button>
+                        </div>
+                    </form>
+
+                    <div class="scan-cam" id="scan-cam" hidden>
+                        <div class="scan-view">
+                            <video id="scan-video" playsinline muted></video>
+                            <span class="scan-frame" aria-hidden="true"></span>
+                        </div>
+                        <button type="button" class="btn-a quiet sm" id="scan-stop">Stop the camera</button>
+                    </div>
+
+                    <button type="button" class="btn-a ghost" id="scan-start"
+                            style="width:100%; margin-top:var(--s-3)" hidden>
+                        Scan with the camera
+                    </button>
+
+                    <span class="hint" id="scan-cam-note" hidden></span>
+                </div>
+                <div class="panel-note">
+                    Recorded as now. Scan a member's QR pass, use a handheld scanner, or type the student number.
+                </div>
+            </div>
+        }
+
+        <div class="panel">
+            <div class="panel-head"><h3>Danger zone</h3></div>
+            <div class="panel-body">
+                <p class="muted" style="margin-bottom:var(--s-3);font-size:var(--fs-sm)">An event can only be deleted while it has no attendance.</p>
+                <form asp-action="Delete" method="post"
+                      onsubmit="return confirm('Delete “@s.EventName”? This cannot be undone.');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@s.EventId" />
+                    <button type="submit" class="btn-a danger sm">Delete event</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @if (!isFinished)
+    {
+        <script src="~/lib/jsqr/jsQR.js"></script>
+        <script src="~/js/scanner.js" asp-append-version="true"></script>
+        <script>
+            (function () {
+                // The door is a keyboard-first screen: the field keeps focus
+                // between people so a hardware scanner can fire straight into it.
+                var field = document.getElementById("scan-field");
+                if (!field) { return; }
+
+                document.addEventListener("click", function (e) {
+                    if (e.target.closest("form, a, button, input, select, textarea, label, video")) { return; }
+                    field.focus();
+                });
+
+                window.ApilanScanner.attach({
+                    form: document.getElementById("scan-form"),
+                    field: field,
+                    mode: document.getElementById("mode"),
+                    qrModeId: "@Const.QrAttendanceMode",
+                    manualModeId: "@Const.ManualAttendanceMode",
+                    video: document.getElementById("scan-video"),
+                    shell: document.getElementById("scan-cam"),
+                    start: document.getElementById("scan-start"),
+                    stop: document.getElementById("scan-stop"),
+                    note: document.getElementById("scan-cam-note")
+                });
+            })();
+        </script>
+    }
+}

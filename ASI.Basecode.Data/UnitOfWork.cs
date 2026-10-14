@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using ASI.Basecode.Data.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace ASI.Basecode.Data
 {
-
     /// <summary>
     /// Unit of Work Implementation
     /// </summary>
@@ -15,11 +14,7 @@ namespace ASI.Basecode.Data
         /// </summary>
         public DbContext Database { get; private set; }
 
-        /// <summary>
-        /// Initializes a new instance of the UnitOfWork class.
-        /// </summary>
-        /// <param name="serviceContext">The service context.</param>
-        public UnitOfWork(AsiBasecodeDBContext serviceContext)
+        public UnitOfWork(AllianceDbContext serviceContext)
         {
             Database = serviceContext;
         }
@@ -32,9 +27,6 @@ namespace ASI.Basecode.Data
             Database.SaveChanges();
         }
 
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
         public void Dispose()
         {
             Database.Dispose();

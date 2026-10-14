@@ -1,19 +1,13 @@
-﻿using ASI.Basecode.Data.Interfaces;
-using ASI.Basecode.Data.Models;
-using Basecode.Data.Repositories;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using ASI.Basecode.Data.Interfaces;
+using ASI.Basecode.Data.Models;
 
 namespace ASI.Basecode.Data.Repositories
 {
     public class UserRepository : BaseRepository, IUserRepository
     {
-        public UserRepository(IUnitOfWork unitOfWork) : base(unitOfWork) 
+        public UserRepository(IUnitOfWork unitOfWork) : base(unitOfWork)
         {
-
         }
 
         public IQueryable<User> GetUsers()
@@ -21,16 +15,25 @@ namespace ASI.Basecode.Data.Repositories
             return this.GetDbSet<User>();
         }
 
-        public bool UserExists(string userId)
+        public void AddUser(User user, string createdBy)
         {
-            return this.GetDbSet<User>().Any(x => x.UserId == userId);
+            Execute($@"EXEC dbo.sp_User_Create
+                @student_number = {user.StudentNumber}, @first_name = {user.FirstName}, @last_name = {user.LastName},
+                @gender = {user.Gender}, @email = {user.Email}, @course = {user.Course},
+                @year_level = {user.YearLevel}, @contact_number = {user.ContactNumber}, @created_by = {createdBy}");
         }
 
-        public void AddUser(User user)
+        public void UpdateUser(User user, string updatedBy)
         {
-            this.GetDbSet<User>().Add(user);
-            UnitOfWork.SaveChanges();
+            Execute($@"EXEC dbo.sp_User_Update @id = {user.Id},
+                @student_number = {user.StudentNumber}, @first_name = {user.FirstName}, @last_name = {user.LastName},
+                @gender = {user.Gender}, @email = {user.Email}, @course = {user.Course},
+                @year_level = {user.YearLevel}, @contact_number = {user.ContactNumber}, @updated_by = {updatedBy}");
         }
 
+        public void SetActive(int id, bool isActive, string updatedBy)
+        {
+            Execute($"EXEC dbo.sp_User_SetActive @id = {id}, @is_active = {isActive}, @updated_by = {updatedBy}");
+        }
     }
 }

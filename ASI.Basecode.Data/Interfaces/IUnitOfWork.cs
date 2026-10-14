@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace ASI.Basecode.Data.Interfaces
 {
@@ -10,10 +10,8 @@ namespace ASI.Basecode.Data.Interfaces
         /// <summary>
         /// Gets the database context
         /// </summary>
-        /// <value>
-        /// The database.
-        /// </value>
         DbContext Database { get; }
+
         /// <summary>
         /// Saves the changes to database
         /// </summary>

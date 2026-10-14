@@ -1,38 +1,38 @@
-﻿namespace ASI.Basecode.Resources.Constants
+namespace ASI.Basecode.Resources.Constants
 {
     /// <summary>
     /// Class for variables with constant values
     /// </summary>
     public class Const
     {
-        /// <summary>
-        ///API result success
-        /// </summary>
-        public const string ApiResultSuccess = "Success";
+        /// <summary>Cookie authentication scheme name</summary>
+        public const string AuthenticationScheme = "Apilan";
 
-        /// <summary>
-        ///API result error
-        /// </summary>
-        public const string ApiResultError = "Error";
+        /// <summary>Claims issuer</summary>
+        public const string Issuer = "apilan";
 
-        /// <summary>
-        /// System
-        /// </summary>
-        public const string System = "sys";
+        /// <summary>Role names, exactly as stored in dbo.roles</summary>
+        public const string RoleOfficer = "Officer";
+        public const string RoleMember = "Member";
 
-        /// <summary>
-        /// Api Key Header Name
-        /// </summary>
-        public const string ApiKey = "X-Basecode-API-Key";
+        /// <summary>Authorization policy guarding the console: Officer role only</summary>
+        public const string OfficerOnlyPolicy = "OfficerOnly";
 
-        /// <summary>
-        /// authentication scheme Name
-        /// </summary>
-        public const string AuthenticationScheme = "ASI_Basecode";
+        /// <summary>Custom claim carrying the linked student's id, when the account has one</summary>
+        public const string ClaimUserId = "UserId";
 
-        /// <summary>
-        /// authentication Issuer
-        /// </summary>
-        public const string Issuer = "asi.basecode";
+        /// <summary>Custom claim carrying the linked student's display name</summary>
+        public const string ClaimDisplayName = "DisplayName";
+
+        /// <summary>attendance_modes.id for a member pass read by the door camera</summary>
+        public const int QrAttendanceMode = 1;
+
+        /// <summary>attendance_modes.id for an officer typing a student in by hand</summary>
+        public const int ManualAttendanceMode = 2;
+
+        /// <summary>Event status values produced by vw_EventAttendanceSummary</summary>
+        public const string StatusUpcoming = "Upcoming";
+        public const string StatusOngoing = "Ongoing";
+        public const string StatusFinished = "Finished";
     }
 }
