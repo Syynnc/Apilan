@@ -73,6 +73,6 @@ namespace ASI.Basecode.Services.Interfaces
     public interface IReportService
     {
         DashboardViewModel GetDashboard();
-        ReportViewModel GetReport(string course);
+        ReportViewModel GetReport(ReportFilter filter);
     }
 }
