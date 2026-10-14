@@ -46,6 +46,29 @@ namespace ASI.Basecode.WebApp.Helpers
                 .Take(2)
                 .Select(w => char.ToUpperInvariant(w[0])));
 
+        /// <summary>"in 3 days", "in 2h 15m", "tomorrow" — how far off a moment is, for a glance.</summary>
+        public static string Until(DateTime target, DateTime? now = null)
+        {
+            var from = now ?? DateTime.Now;
+            var span = target - from;
+            if (span.TotalMinutes < 1) return "now";
+            if (span.TotalMinutes < 60) return $"in {(int)span.TotalMinutes}m";
+            if (span.TotalHours < 24 && target.Date == from.Date) return $"in {(int)span.TotalHours}h {span.Minutes}m";
+            if (target.Date == from.Date.AddDays(1)) return "tomorrow";
+            var days = (target.Date - from.Date).Days;
+            return days < 14 ? $"in {days} days" : $"in {days / 7} weeks";
+        }
+
+        /// <summary>"2 days ago", "3h ago" — how long since a moment.</summary>
+        public static string Since(DateTime past, DateTime? now = null)
+        {
+            var span = (now ?? DateTime.Now) - past;
+            if (span.TotalMinutes < 60) return $"{Math.Max(1, (int)span.TotalMinutes)}m ago";
+            if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
+            if (span.TotalDays < 2) return "yesterday";
+            return span.TotalDays < 14 ? $"{(int)span.TotalDays} days ago" : $"{(int)(span.TotalDays / 7)} weeks ago";
+        }
+
         /// <summary>"5:00 – 8:00 PM", or with both meridiems when they differ.</summary>
         public static string TimeRange(DateTime start, DateTime end)
         {

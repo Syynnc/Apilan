@@ -3,59 +3,203 @@
     ViewData["Title"] = "Dashboard";
     ViewData["Module"] = "Transactions";
 
-    Func<string, string> chip = status => status switch
+    var now = DateTime.Now;
+    var live = Model.Ongoing.FirstOrDefault();
+    var alsoLive = Model.Ongoing.Skip(1).ToList();
+    var next = Model.Upcoming.FirstOrDefault();
+
+    // Turnout for a finished event: against its capacity when it had one,
+    // otherwise against the members who could have come.
+    Func<EventSummary, int> turnout = e =>
     {
-        Const.StatusOngoing => "chip info",
-        Const.StatusUpcoming => "chip idle",
-        _ => "chip ok",
+        var present = e.TotalPresent ?? 0;
+        var of = e.EventCapacity is int cap && cap > 0 ? cap : Model.ActiveStudents;
+        return of > 0 ? (int)Math.Round(Math.Min(100, present * 100.0 / of)) : 0;
     };
 }
 
-<div class="stack-lg">
-    <div class="tiles">
-        <div class="tile accent"><span class="l">Active members</span><span class="n">@Model.ActiveStudents</span></div>
-        <div class="tile"><span class="l">Events</span><span class="n">@Model.TotalEvents</span><span class="s">@Model.UpcomingEvents upcoming</span></div>
-        <div class="tile"><span class="l">Check-ins</span><span class="n">@Model.AttendanceRecords</span></div>
-        <div class="tile"><span class="l">Missing time-outs</span><span class="n">@Model.MissingTimeOuts</span><span class="s">finished events</span></div>
+@section Actions {
+    <a class="btn-a" asp-controller="Events" asp-action="Create" data-modal>
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        New event
+    </a>
+}
+
+<div class="bento">
+
+    @* ---------------------------------------------------- Happening now *@
+    <section class="bento-cell b-live @(live == null ? "is-quiet" : null)" aria-labelledby="live-title">
+        <header class="bento-head">
+            <span class="live-flag @(live != null ? "on" : null)"><i aria-hidden="true"></i><span id="live-title">Happening now</span></span>
+            <span class="bento-count">@Model.Ongoing.Count live</span>
+        </header>
+
+        @if (live != null)
+        {
+            var present = live.TotalPresent ?? 0;
+            var pct = live.EventCapacity is int cap && cap > 0 ? Math.Min(100, present * 100 / cap) : 0;
+            var elapsed = Math.Clamp((now - live.EventStart).TotalMinutes / Math.Max(1, (live.EventEnd - live.EventStart).TotalMinutes) * 100, 0, 100);
+
+            <article class="ticket live-ticket" data-type="@Ui.TicketType(live.EventType)">
+                <div class="ticket-body">
+                    <div class="ticket-kicker">
+                        <span class="ticket-type">@live.EventType</span>
+                        <span class="ticket-org">Ends @Ui.Until(live.EventEnd)</span>
+                    </div>
+                    <h2 class="ticket-title"><a asp-controller="Events" asp-action="Details" asp-route-id="@live.EventId">@live.EventName</a></h2>
+                    <div class="ticket-main">
+                        <div class="datepad" aria-hidden="true">
+                            <span class="m">@live.EventStart.ToString("MMM")</span>
+                            <span class="d">@live.EventStart.ToString("dd")</span>
+                            <span class="w">@live.EventStart.ToString("ddd")</span>
+                        </div>
+                        <dl class="ticket-meta">
+                            <div><dt>When</dt><dd>@Ui.TimeRange(live.EventStart, live.EventEnd)</dd></div>
+                            <div><dt>Where</dt><dd>@(string.IsNullOrEmpty(live.Venue) ? "—" : live.Venue)</dd></div>
+                            <div><dt>Host</dt><dd>@(string.IsNullOrEmpty(live.EventHost) ? "—" : live.EventHost)</dd></div>
+                        </dl>
+                    </div>
+                    <div class="live-clock" role="img" aria-label="@((int)elapsed)% of the event has passed">
+                        <span class="mono">@live.EventStart.ToString("h:mm")</span>
+                        <div class="live-track"><i style="width:@((int)elapsed)%"></i></div>
+                        <span class="mono">@live.EventEnd.ToString("h:mm tt")</span>
+                    </div>
+                </div>
+                <div class="ticket-stub live-stub">
+                    <span class="live-n">@present</span>
+                    <span class="stub-note">@(live.EventCapacity.HasValue ? $"of {live.EventCapacity} in" : "checked in")</span>
+                    @if (live.EventCapacity.HasValue)
+                    {
+                        <div class="meter @(pct >= 100 ? "full" : null)"><i style="width:@(pct)%"></i></div>
+                    }
+                    <span class="live-late">@(live.LateCount ?? 0) late</span>
+                    <a class="btn-a sm" asp-controller="Events" asp-action="Details" asp-route-id="@live.EventId">Open the door</a>
+                </div>
+            </article>
+
+            @if (alsoLive.Any())
+            {
+                <ul class="also-live">
+                    @foreach (var e in alsoLive)
+                    {
+                        <li>
+                            <a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId" class="cell-event" data-type="@Ui.TicketType(e.EventType)">
+                                <span class="type-dot" aria-hidden="true"></span>
+                                <strong>@e.EventName</strong>
+                                <span class="dim">@(e.TotalPresent ?? 0) in · ends @e.EventEnd.ToString("h:mm tt")</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            }
+        }
+        else
+        {
+            <div class="quiet-state">
+                <svg class="quiet-mark" viewBox="0 0 64 64" aria-hidden="true">
+                    <rect x="8" y="12" width="48" height="44" rx="6" /><path d="M8 24h48M20 6v10M44 6v10" />
+                    <path class="tick" d="M22 40l7 7 13-14" />
+                </svg>
+                <div>
+                    <h2>Nothing is running right now.</h2>
+                    @if (next != null)
+                    {
+                        <p>
+                            Next up is <a asp-controller="Events" asp-action="Details" asp-route-id="@next.EventId"><strong>@next.EventName</strong></a>,
+                            @next.EventStart.ToString("dddd, MMM d 'at' h:mm tt") — <span class="chip idle">@Ui.Until(next.EventStart)</span>
+                        </p>
+                        <p class="dim">The door opens an hour before it starts.</p>
+                    }
+                    else
+                    {
+                        <p>No events are scheduled. Set one up and the door will be ready an hour before it starts.</p>
+                        <a class="btn-a sm" asp-controller="Events" asp-action="Create" data-modal>Plan an event</a>
+                    }
+                </div>
+            </div>
+        }
+    </section>
+
+    @* --------------------------------------------------------- Figures *@
+    <a class="bento-cell b-stat accent" asp-controller="Members" asp-action="Index">
+        <span class="l">Active members</span>
+        <span class="n">@Model.ActiveStudents</span>
+        <span class="s">Members →</span>
+    </a>
+    <a class="bento-cell b-stat" asp-controller="Events" asp-action="Index">
+        <span class="l">Events</span>
+        <span class="n">@Model.TotalEvents</span>
+        <span class="s">@Model.UpcomingEvents upcoming</span>
+    </a>
+    <a class="bento-cell b-stat" asp-controller="Reports" asp-action="Index">
+        <span class="l">Check-ins</span>
+        <span class="n">@Model.AttendanceRecords</span>
+        <span class="s">@Model.LateArrivals late</span>
+    </a>
+    <div class="bento-cell b-stat @(Model.MissingTimeOuts > 0 ? "warn" : null)">
+        <span class="l">Missing time-outs</span>
+        <span class="n">@Model.MissingTimeOuts</span>
+        <span class="s">in finished events</span>
     </div>
 
-    @{
-        var sections = new[]
+    @* --------------------------------------------------------- Upcoming *@
+    <section class="bento-cell b-upcoming" aria-labelledby="up-title">
+        <header class="bento-head">
+            <h2 id="up-title">Upcoming</h2>
+            <a class="bento-count" asp-controller="Events" asp-action="Index" asp-route-status="@Const.StatusUpcoming">@Model.UpcomingTotal scheduled →</a>
+        </header>
+        @if (!Model.Upcoming.Any())
         {
-            ("Happening now", Model.Ongoing),
-            ("Upcoming", Model.Upcoming),
-            ("Recently finished", Model.RecentlyFinished),
-        };
-    }
+            <p class="bento-empty">Nothing scheduled yet.</p>
+        }
+        else
+        {
+            <ol class="up-list">
+                @foreach (var e in Model.Upcoming)
+                {
+                    <li>
+                        <a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId" class="up-item" data-type="@Ui.TicketType(e.EventType)">
+                            <span class="mini-pad" aria-hidden="true"><b>@e.EventStart.ToString("MMM")</b>@e.EventStart.ToString("dd")</span>
+                            <span class="up-main">
+                                <strong>@e.EventName</strong>
+                                <span class="dim">@e.EventStart.ToString("ddd h:mm tt")@(string.IsNullOrEmpty(e.Venue) ? "" : $" · {e.Venue}")</span>
+                            </span>
+                            <span class="chip idle">@Ui.Until(e.EventStart)</span>
+                        </a>
+                    </li>
+                }
+            </ol>
+        }
+    </section>
 
-    @foreach (var (title, list) in sections)
-    {
-        <div class="panel">
-            <div class="panel-head"><h2>@title</h2><span class="count">@list.Count</span></div>
-            @if (!list.Any())
-            {
-                <div class="panel-body"><p class="muted" style="margin:0">Nothing here right now.</p></div>
-            }
-            else
-            {
-                <table class="table-a">
-                    <thead>
-                        <tr><th>Event</th><th>When</th><th>Venue</th><th class="num">Present</th><th>Status</th></tr>
-                    </thead>
-                    <tbody>
-                    @foreach (var e in list)
-                    {
-                        <tr>
-                            <td><a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId"><strong>@e.EventName</strong></a><br /><span class="dim">@e.EventType</span></td>
-                            <td class="mono">@e.EventStart.ToString("yyyy-MM-dd HH:mm")</td>
-                            <td>@(string.IsNullOrEmpty(e.Venue) ? "—" : e.Venue)</td>
-                            <td class="num">@(e.TotalPresent ?? 0)@(e.EventCapacity.HasValue ? $" / {e.EventCapacity}" : "")</td>
-                            <td><span class="@chip(e.EventStatus)">@e.EventStatus</span></td>
-                        </tr>
-                    }
-                    </tbody>
-                </table>
-            }
-        </div>
-    }
+    @* ----------------------------------------------- Recently finished *@
+    <section class="bento-cell b-finished" aria-labelledby="done-title">
+        <header class="bento-head">
+            <h2 id="done-title">Recently finished</h2>
+            <a class="bento-count" asp-controller="Events" asp-action="Index" asp-route-status="@Const.StatusFinished">Top 3 of @Model.FinishedTotal →</a>
+        </header>
+        @if (!Model.RecentlyFinished.Any())
+        {
+            <p class="bento-empty">No finished events yet.</p>
+        }
+        else
+        {
+            <ol class="done-list">
+                @foreach (var e in Model.RecentlyFinished)
+                {
+                    var t = turnout(e);
+                    <li>
+                        <a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId" class="done-item" data-type="@Ui.TicketType(e.EventType)">
+                            <span class="done-ring" style="--p:@t" aria-hidden="true"><b>@t<small>%</small></b></span>
+                            <span class="up-main">
+                                <strong>@e.EventName</strong>
+                                <span class="dim">@Ui.Since(e.EventEnd) · @(e.TotalPresent ?? 0) attended@(e.EventCapacity.HasValue ? $" of {e.EventCapacity}" : "")</span>
+                            </span>
+                            <span class="done-late @((e.LateCount ?? 0) > 0 ? "has" : null)">@(e.LateCount ?? 0) late</span>
+                        </a>
+                    </li>
+                }
+            </ol>
+        }
+    </section>
 </div>
