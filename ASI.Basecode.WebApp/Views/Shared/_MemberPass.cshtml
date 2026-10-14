@@ -1,8 +1,8 @@
 @model StudentViewModel
-@using ASI.Basecode.WebApp.Helpers
 @*
-    A member's attendance pass. The QR carries the student number and nothing
-    else, so the door reads exactly what an officer would type.
+    A member's attendance pass, drawn as the same ticket the landing page
+    shows. The QR carries the student number and nothing else, so the door
+    reads exactly what an officer would type.
     ViewData["PassDownload"] — URL of the PNG copy, when the viewer may save one.
 *@
 @{
@@ -10,37 +10,66 @@
     // The viewBox puts back the two-module quiet zone the path leaves out.
     var span = qr.Modules + 4;
     var download = ViewData["PassDownload"] as string;
-    var course = string.Join(" · ", new[] { Model.Course, Model.YearLevel.HasValue ? $"Year {Model.YearLevel}" : null }
-        .Where(x => !string.IsNullOrWhiteSpace(x)));
 }
 
-<div>
-    <article class="pass" aria-label="Attendance pass">
-        <div class="pass-body">
-            <span class="pass-kicker">Apilan · Attendance pass</span>
-            <h3 class="pass-name">@Model.FirstName @Model.LastName</h3>
-            @if (!string.IsNullOrEmpty(course))
-            {
-                <span class="pass-meta">@course</span>
-            }
-            <span class="pass-how">
-                Show this at the door. The first scan times you in, the next one times you out.
-            </span>
+<div class="pass-wrap">
+    <article class="ticket pass" data-tilt aria-label="Attendance pass">
+        <div class="ticket-body">
+            <div class="ticket-kicker">
+                <span class="ticket-type">Attendance pass</span>
+                <span class="ticket-org">@Apilan.Value.SchoolShortName</span>
+            </div>
+
+            <h3 class="ticket-title">@Model.FirstName @Model.LastName</h3>
+
+            <div class="ticket-main">
+                <div class="datepad" aria-hidden="true">
+                    <span class="m">Year</span>
+                    <span class="d">@(Model.YearLevel?.ToString() ?? "—")</span>
+                    <span class="w">@(string.IsNullOrEmpty(Model.Course) ? "Level" : Model.Course)</span>
+                </div>
+
+                <dl class="ticket-meta">
+                    <div><dt>No.</dt><dd class="mono">@Model.StudentNumber</dd></div>
+                    <div><dt>Course</dt><dd>@(string.IsNullOrEmpty(Model.Course) ? "—" : Model.Course)</dd></div>
+                    <div><dt>Org</dt><dd>@Apilan.Value.OrganizationName</dd></div>
+                </dl>
+            </div>
+
+            <div class="ticket-who">
+                <span class="pass-how">First scan times you in. The next one times you out.</span>
+                @if (Model.IsActive)
+                {
+                    <span class="chip ok">Valid</span>
+                }
+                else
+                {
+                    <span class="chip risk">Deactivated</span>
+                }
+            </div>
         </div>
-        <div class="pass-stub">
+
+        <div class="ticket-stub">
             <svg class="qr" viewBox="-2 -2 @span @span" role="img"
                  aria-label="QR code for student number @Model.StudentNumber">
                 <path d="@qr.Path" />
             </svg>
-            <span class="sn">@Model.StudentNumber</span>
+            <span class="stub-code">@Model.StudentNumber</span>
+            <span class="stub-note">Show at<br />the door</span>
         </div>
     </article>
 
     @if (!string.IsNullOrEmpty(download))
     {
         <div class="pass-actions">
-            <a class="btn-a ghost sm" href="@download">Save as image</a>
-            <button type="button" class="btn-a quiet sm" onclick="window.print()">Print</button>
+            <a class="btn-a ghost sm" href="@download">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg>
+                Save as image
+            </a>
+            <button type="button" class="btn-a quiet sm" onclick="window.print()">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v5a1 1 0 0 1-1 1h-2M7 14h10v6H7z" /></svg>
+                Print
+            </button>
         </div>
     }
 </div>

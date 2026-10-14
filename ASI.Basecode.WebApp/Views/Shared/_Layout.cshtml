@@ -45,6 +45,8 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
+@await Html.PartialAsync("_CalendarBackdrop")
+
 <div class="console">
 
     <aside class="side" id="side-nav">
@@ -69,6 +71,11 @@
                 </svg>
                 <span class="visually-hidden">Collapse the sidebar</span>
             </button>
+        </div>
+
+        <div class="side-org" title="@Apilan.Value.SchoolName">
+            <span class="org">@Apilan.Value.OrganizationName</span>
+            <span class="school">@Apilan.Value.SchoolShortName</span>
         </div>
 
         <nav class="side-group">
@@ -172,6 +179,7 @@
 
 <script src="~/js/theme.js" asp-append-version="true"></script>
 <script src="~/js/console.js" asp-append-version="true"></script>
+<script src="~/js/app.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

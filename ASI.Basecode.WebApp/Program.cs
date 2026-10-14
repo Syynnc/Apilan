@@ -13,6 +13,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
+// One school per deployment: its name and the default member password.
+builder.Services.Configure<ApilanSettings>(builder.Configuration.GetSection(ApilanSettings.Section));
+
 builder.Services.AddDbContext<AllianceDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 

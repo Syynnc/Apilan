@@ -5,12 +5,15 @@
    ========================================================================== */
 
 .console {
+    position: relative;
+    z-index: 1;
     min-height: 100vh;
     display: grid;
     /* The rail sizes itself; the column follows it, so the collapse animates
        from one place rather than two. */
     grid-template-columns: auto minmax(0, 1fr);
-    background: var(--paper);
+    /* Transparent so the calendar backdrop shows through the work area. */
+    background: transparent;
 }
 
 /* ---- Sidebar ------------------------------------------------------------- */
@@ -29,6 +32,7 @@
     overflow-y: auto;
     transition: width var(--t-med) var(--ease-out),
                 padding var(--t-med) var(--ease-out);
+    view-transition-name: console-side;
 }
 
 /* Brand row, set to the height of the console bar so the wordmark and the
@@ -75,16 +79,34 @@
 }
 .side-toggle .caret { transition: transform var(--t-med) var(--ease-out); transform-origin: 14px 12px; }
 
+/* Which school and org this console speaks for — Apilan serves exactly one. */
 .side-org {
+    display: grid;
+    gap: 2px;
+    margin-top: calc(var(--s-2) * -1);
+    padding: var(--s-3);
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--r-sm);
+    background: var(--surface-sunken);
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity var(--t-fast) var(--ease-out);
+}
+.side-org .org {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.side-org .school {
     font-family: var(--font-mono);
     font-size: var(--fs-3xs);
     letter-spacing: var(--tracking-wide);
     text-transform: uppercase;
-    color: var(--ink-3);
-    padding-bottom: var(--s-4);
-    border-bottom: var(--border);
-    white-space: nowrap;
-    transition: opacity var(--t-fast) var(--ease-out);
+    color: var(--accent);
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .side-group { display: grid; gap: 2px; }
@@ -202,8 +224,12 @@
     gap: var(--s-4);
     flex-wrap: wrap;
     padding: var(--s-4) var(--s-6);
-    background: var(--paper);
+    min-height: var(--topbar-h);
+    background: color-mix(in srgb, var(--paper) 86%, transparent);
+    backdrop-filter: blur(10px) saturate(1.1);
+    -webkit-backdrop-filter: blur(10px) saturate(1.1);
     border-bottom: var(--border);
+    view-transition-name: console-bar;
 }
 .console-bar .titles { margin-right: auto; min-width: 0; }
 .console-bar .crumb {
@@ -256,8 +282,9 @@
 [data-side="collapsed"] .side-org {
     height: 0;
     padding: 0;
+    margin: 0;
     opacity: 0;
-    border-bottom-color: transparent;
+    border-color: transparent;
     overflow: hidden;
 }
 
