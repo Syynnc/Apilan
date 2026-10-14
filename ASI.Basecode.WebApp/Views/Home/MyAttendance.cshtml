@@ -11,37 +11,64 @@
         st.YearLevel.HasValue ? $"Year {st.YearLevel}" : null
     }.Where(x => !string.IsNullOrWhiteSpace(x)));
 
+    var onTime = Model.EventsAttended - Model.TimesLate;
+    var onTimePct = Model.EventsAttended > 0 ? (int)Math.Round(onTime * 100.0 / Model.EventsAttended) : 0;
+
     ViewData["PassDownload"] = Url.Action("MyPass", "Home");
 }
 
-<div class="member-head">
-    <div>
-        <span class="eyebrow">My record</span>
-        <h1>@st.FirstName @st.LastName</h1>
-        <p class="mono">@meta</p>
-    </div>
-    <a class="btn-a ghost sm" asp-controller="Account" asp-action="ChangePassword">Change password</a>
-</div>
+<section class="member-hero">
+    <div class="member-hero-copy">
+        <span class="tag-pill">
+            <b>My record</b>
+            @Apilan.Value.OrganizationName · @Apilan.Value.SchoolShortName
+        </span>
 
-<div class="member-grid">
-    <section aria-labelledby="pass-title">
-        <h2 class="member-label" id="pass-title">Your pass for the door</h2>
-        <partial name="_MemberPass" model="st" view-data="ViewData" />
-    </section>
+        <h1>Hi, <em>@st.FirstName</em>.</h1>
+        <p class="member-meta mono">@meta</p>
 
-    <section aria-labelledby="stats-title">
-        <h2 class="member-label" id="stats-title">This term</h2>
-        <div class="member-stats">
-            <div class="tile accent"><span class="l">Events attended</span><span class="n">@Model.EventsAttended</span></div>
-            <div class="tile"><span class="l">Times late</span><span class="n">@Model.TimesLate</span></div>
-            <div class="tile"><span class="l">Missing time-outs</span><span class="n">@Model.MissingTimeOuts</span>
-                @if (Model.MissingTimeOuts > 0)
-                {
-                    <span class="s">Scan your pass on the way out, too.</span>
-                }
+        <div class="member-stats stagger">
+            <div class="rstat accent">
+                <span class="n">@Model.EventsAttended</span>
+                <span class="l">Events attended</span>
+            </div>
+            <div class="rstat @(Model.TimesLate > 0 ? "warn" : "")">
+                <span class="n">@Model.TimesLate</span>
+                <span class="l">Times late</span>
+            </div>
+            <div class="rstat @(Model.MissingTimeOuts > 0 ? "risk" : "")">
+                <span class="n">@Model.MissingTimeOuts</span>
+                <span class="l">Missing time-outs</span>
             </div>
         </div>
-    </section>
-</div>
+
+        @if (Model.EventsAttended > 0)
+        {
+            <div class="punctuality" role="img" aria-label="@onTimePct percent of your arrivals were on time">
+                <div class="punctuality-head">
+                    <span>On-time arrivals</span>
+                    <span class="mono">@onTimePct%</span>
+                </div>
+                <div class="meter"><i style="width:@(onTimePct)%"></i></div>
+            </div>
+        }
+
+        @if (Model.MissingTimeOuts > 0)
+        {
+            <p class="member-nudge">Scan your pass on the way out too — a missing time-out leaves your attendance incomplete.</p>
+        }
+
+        <div class="member-actions">
+            <a class="btn-a ghost" asp-controller="Account" asp-action="ChangePassword">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
+                Change password
+            </a>
+        </div>
+    </div>
+
+    <div class="member-hero-pass">
+        <partial name="_MemberPass" model="st" view-data="ViewData" />
+    </div>
+</section>
 
 <partial name="_AttendanceHistory" model="Model.History" />

@@ -194,7 +194,15 @@
     border: var(--border);
     overflow: hidden;
 }
-.meter > i { display: block; height: 100%; background: var(--accent-bright); }
+.meter > i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--accent-bright);
+    transform-origin: left center;
+    animation: meter-grow 900ms var(--ease-out) 200ms both;
+}
+@keyframes meter-grow { from { transform: scaleX(0); } }
 .meter.full > i { background: var(--warn); }
 
 .bar-cell { display: flex; align-items: center; gap: var(--s-3); }
@@ -362,63 +370,49 @@
     .door-result { animation: none; }
 }
 
-/* ---- Member QR pass -------------------------------------------------- */
-.pass {
-    display: flex;
-    align-items: stretch;
-    max-width: 520px;
-    background: var(--surface);
-    border: var(--border-strong);
-    border-radius: var(--r-md);
-    box-shadow: var(--shadow-float);
-    overflow: hidden;
-}
-.pass-body {
-    flex: 1 1 auto;
-    min-width: 0;
-    padding: var(--s-5);
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-2);
-    border-left: 6px solid var(--accent);
-}
-.pass-kicker {
-    font-family: var(--font-mono);
-    font-size: var(--fs-3xs);
-    font-weight: 600;
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-    color: var(--accent);
-}
-.pass-name { font-size: var(--fs-lg); font-weight: 700; letter-spacing: var(--tracking-tight); margin: 0; }
-.pass-meta { font-size: var(--fs-2xs); color: var(--ink-3); }
-.pass-how { font-size: var(--fs-2xs); color: var(--ink-2); margin-top: auto; }
-.pass-stub {
-    flex: none;
-    width: 168px;
-    padding: var(--s-4);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--s-2);
-    background: var(--surface-sunken);
-    border-left: 1px dashed var(--line-strong);
-}
+/* ---- Member pass: the landing ticket, carrying a real QR ---------------- */
+.pass-wrap { display: grid; gap: var(--s-3); justify-items: start; }
+.ticket.pass { width: 100%; max-width: 560px; perspective: 1200px; }
+.ticket.pass .ticket-stub { width: 188px; }
 /* The symbol stays black on white in both themes: scanners need the contrast. */
-.pass-stub .qr { width: 132px; height: 132px; padding: 6px; background: #fff; border-radius: var(--r-sm); }
-.pass-stub .qr path { fill: #000; shape-rendering: crispEdges; }
-.pass-stub .sn { font-family: var(--font-mono); font-size: var(--fs-sm); font-weight: 600; letter-spacing: 0.06em; }
-.pass-actions { display: flex; gap: var(--s-2); margin-top: var(--s-3); }
+.ticket.pass .ticket-stub .qr {
+    width: 148px;
+    height: 148px;
+    padding: 7px;
+    background: #fff;
+    border-color: var(--line);
+}
+.ticket.pass .ticket-stub .qr path { fill: #000; }
+.ticket.pass .stub-code { font-size: var(--fs-sm); }
+.ticket.pass .datepad .w { font-size: 9px; letter-spacing: 0.04em; padding-inline: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pass-how { font-size: var(--fs-2xs); color: var(--ink-3); max-width: 30ch; }
+.pass-actions { display: flex; gap: var(--s-2); }
+.pass-actions svg, .member-actions svg, .btn-a > svg.i {
+    width: 15px; height: 15px; flex: none;
+    fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+}
 
-@media (max-width: 460px) {
-    .pass { flex-direction: column; }
-    .pass-stub { width: auto; border-left: 0; border-top: 1px dashed var(--line-strong); }
+/* In the narrow side rail the stub stacks under the name instead of beside it. */
+.rail .ticket.pass { flex-direction: column; }
+.rail .ticket.pass .ticket-stub { width: auto; border-left: 0; border-top: 1px dashed var(--line-strong); padding-block: var(--s-5); }
+.rail .ticket.pass .ticket-stub::before,
+.rail .ticket.pass .ticket-stub::after { top: -12px; bottom: auto; }
+.rail .ticket.pass .ticket-stub::before { left: -12px; }
+.rail .ticket.pass .ticket-stub::after { left: auto; right: -12px; }
+
+@media (max-width: 520px) {
+    .ticket.pass { flex-direction: column; }
+    .ticket.pass .ticket-stub { width: auto; border-left: 0; border-top: 1px dashed var(--line-strong); padding-block: var(--s-5); }
+    .ticket.pass .ticket-stub::before,
+    .ticket.pass .ticket-stub::after { top: -12px; bottom: auto; }
+    .ticket.pass .ticket-stub::before { left: -12px; }
+    .ticket.pass .ticket-stub::after { left: auto; right: -12px; }
+    .ticket.pass .ticket-stub .qr { width: 200px; height: 200px; }
 }
 
 @media print {
-    .pass { box-shadow: none; }
-    .pass-actions { display: none; }
+    .page-cal, .member-top, .member-hero-copy, .pass-actions, .panel, .side, .console-bar { display: none !important; }
+    .ticket.pass { box-shadow: none; transform: none !important; }
 }
 
 .big-count { display: flex; align-items: baseline; gap: var(--s-2); }
@@ -443,21 +437,31 @@ details.more > summary {
     .form-a .span-4 { grid-column: span 2; }
 }
 
-/* In the narrow side rail the stub stacks under the name instead of beside it. */
-.rail .pass { flex-direction: column; }
-.rail .pass-stub { width: auto; border-left: 0; border-top: 1px dashed var(--line-strong); }
-
 /* ---- Member area ------------------------------------------------------ */
 .member-top {
     position: sticky;
     top: 0;
     z-index: 10;
-    background: color-mix(in srgb, var(--paper) 88%, transparent);
-    backdrop-filter: blur(8px);
+    background: color-mix(in srgb, var(--paper) 86%, transparent);
+    backdrop-filter: blur(10px) saturate(1.1);
+    -webkit-backdrop-filter: blur(10px) saturate(1.1);
     border-bottom: var(--border);
+    view-transition-name: member-top;
 }
 .member-top .inner { display: flex; align-items: center; gap: var(--s-3); min-height: 64px; }
 .member-top .brand { margin-right: auto; }
+.brand-school {
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--accent);
+    padding: 3px var(--s-2);
+    border: 1px solid var(--accent-edge);
+    border-radius: var(--r-pill);
+    background: var(--accent-wash);
+}
 .member-who { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
 .member-who .av {
     display: grid;
@@ -473,44 +477,64 @@ details.more > summary {
 }
 .member-who .nm { font-size: var(--fs-sm); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.member-main { padding-block: var(--s-7) var(--s-8); }
+.member-main { position: relative; z-index: 1; padding-block: var(--s-7) var(--s-8); }
 
-.member-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--s-4); flex-wrap: wrap; }
-.member-head h1 { margin: var(--s-2) 0 var(--s-2); }
-.member-head p { margin: 0; color: var(--ink-3); }
-
-.member-grid {
+/* The member's landing: who they are on the left, their pass on the right. */
+.member-hero {
     display: grid;
-    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    gap: var(--s-6);
-    align-items: start;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 560px);
+    gap: var(--s-7);
+    align-items: center;
 }
-.member-label {
+.member-hero h1 {
+    font-size: clamp(2.4rem, 5vw, 3.6rem);
+    line-height: 1.02;
+    letter-spacing: -0.038em;
+    margin: 0 0 var(--s-2);
+}
+.member-hero h1 em,
+.display-em {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+}
+.member-meta { color: var(--ink-3); margin: 0 0 var(--s-5); letter-spacing: 0.04em; }
+
+.member-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-3); max-width: 520px; }
+
+.punctuality { max-width: 520px; margin-top: var(--s-5); }
+.punctuality-head {
+    display: flex;
+    justify-content: space-between;
     font-family: var(--font-mono);
     font-size: var(--fs-3xs);
-    font-weight: 600;
     letter-spacing: var(--tracking-wide);
     text-transform: uppercase;
     color: var(--ink-3);
-    margin: 0 0 var(--s-3);
+    margin-bottom: var(--s-2);
 }
-.member-grid .pass { max-width: none; }
-.member-grid .pass-stub { width: 220px; }
-.member-grid .pass-stub .qr { width: 184px; height: 184px; }
-.member-stats { display: grid; gap: var(--s-3); }
-.member-stats .tile { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--s-1) var(--s-3); }
-.member-stats .tile .l { margin: 0; }
-.member-stats .tile .s { flex-basis: 100%; margin: 0; }
+.member-nudge {
+    max-width: 520px;
+    margin: var(--s-4) 0 0;
+    padding: var(--s-3) var(--s-4);
+    font-size: var(--fs-2xs);
+    color: var(--warn);
+    background: var(--warn-wash);
+    border: 1px solid color-mix(in srgb, var(--warn) 26%, transparent);
+    border-radius: var(--r-sm);
+}
+.member-actions { display: flex; gap: var(--s-3); margin-top: var(--s-5); }
 
-@media (max-width: 900px) {
-    .member-grid { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 980px) {
+    .member-hero { grid-template-columns: minmax(0, 1fr); gap: var(--s-6); }
+    .member-hero-pass { order: -1; }
 }
 @media (max-width: 560px) {
-    .member-who .nm { display: none; }
+    .member-who .nm, .brand-school { display: none; }
     .member-main { padding-block: var(--s-5) var(--s-7); }
-    .member-grid .pass { flex-direction: column; }
-    .member-grid .pass-stub { width: auto; border-left: 0; border-top: 1px dashed var(--line-strong); padding-block: var(--s-5); }
-    .member-grid .pass-stub .qr { width: 220px; height: 220px; }
+    .member-stats { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ---- Tables that become cards on a phone ------------------------------ */
@@ -538,3 +562,43 @@ details.more > summary {
         margin-bottom: 2px;
     }
 }
+
+/* ==========================================================================
+   MOTION — the console and member pages arrive the way the landing does:
+   each block rises into place, a beat after the one above it. Nothing
+   loops; motion only marks a page or a state arriving.
+   ========================================================================== */
+@keyframes rise-in {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.console-body > *,
+.member-main > *,
+.stagger > * {
+    animation: rise-in 560ms var(--ease-out) both;
+}
+.console-body > :nth-child(2), .member-main > :nth-child(2), .stagger > :nth-child(2) { animation-delay: 70ms; }
+.console-body > :nth-child(3), .member-main > :nth-child(3), .stagger > :nth-child(3) { animation-delay: 140ms; }
+.console-body > :nth-child(4), .member-main > :nth-child(4), .stagger > :nth-child(4) { animation-delay: 210ms; }
+.console-body > :nth-child(5), .member-main > :nth-child(5), .stagger > :nth-child(5) { animation-delay: 280ms; }
+.console-body > :nth-child(n+6), .member-main > :nth-child(n+6), .stagger > :nth-child(n+6) { animation-delay: 340ms; }
+
+/* Surfaces answer the pointer the way the landing's steps do. */
+.tile,
+.rstat {
+    transition: transform var(--t-med) var(--ease-out),
+                border-color var(--t-med) var(--ease-out),
+                box-shadow var(--t-med) var(--ease-out);
+}
+.tile:hover,
+.rstat:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-edge);
+    box-shadow: var(--shadow-float);
+}
+
+.panel { box-shadow: 0 1px 0 0 var(--line); }
+
+/* The tilting ticket (wired in app.js), same as the landing hero. */
+.ticket[data-tilt] { transition: transform var(--t-slow) var(--ease-out), box-shadow var(--t-slow) var(--ease-out); }

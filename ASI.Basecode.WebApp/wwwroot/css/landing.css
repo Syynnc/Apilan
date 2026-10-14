@@ -7,32 +7,6 @@
 
 .landing { position: relative; overflow-x: clip; }
 
-/* ---- Site background: an endless month grid ----------------------------- */
-/* Markup: Views/Shared/_CalendarBackdrop.cshtml                             */
-.page-cal {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    pointer-events: none;
-    user-select: none;
-    mask-image: linear-gradient(180deg, #000 0%, #000 45%, transparent 92%);
-}
-.page-cal .rule {
-    fill: none;
-    stroke: var(--ink);
-    stroke-width: 1;
-    opacity: 0.055;
-    vector-effect: non-scaling-stroke;
-}
-.page-cal text {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-variant-numeric: tabular-nums;
-    fill: var(--ink);
-    opacity: 0.05;
-}
 .landing > *:not(.page-cal) { position: relative; z-index: 1; }
 
 /* ==========================================================================
@@ -88,31 +62,6 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 0.94fr);
     gap: var(--s-7);
     align-items: center;
-}
-
-.hero-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--s-3);
-    padding: 5px var(--s-3);
-    background: var(--surface);
-    border: var(--border-strong);
-    border-radius: var(--r-pill);
-    font-size: var(--fs-2xs);
-    font-weight: 500;
-    color: var(--ink-2);
-    box-shadow: var(--shadow-pop);
-    margin-bottom: var(--s-5);
-}
-.hero-tag b {
-    font-family: var(--font-mono);
-    font-size: var(--fs-3xs);
-    font-weight: 500;
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-    color: var(--accent);
-    padding-right: var(--s-3);
-    border-right: var(--border);
 }
 
 .hero h1 {
@@ -176,232 +125,6 @@
    ========================================================================== */
 .hero-visual { position: relative; perspective: 1200px; min-height: 400px; }
 
-.ticket {
-    /* Per-type accent. --tt-ink is the text that sits ON that accent. */
-    --tt: var(--accent);
-    --tt-ink: var(--accent-ink);
-
-    position: relative;
-    display: flex;
-    align-items: stretch;
-    background: var(--surface);
-    border: var(--border-strong);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-lift);
-    overflow: hidden;
-    transform-style: preserve-3d;
-    transition: transform var(--t-slow) var(--ease-out);
-}
-.ticket[data-tilt] { will-change: transform; }
-
-.ticket[data-type="workshop"] { --tt: var(--mango);   --tt-ink: #FFFFFF; }
-.ticket[data-type="assembly"] { --tt: var(--gold);    --tt-ink: #241A00; }
-.ticket[data-type="service"]  { --tt: var(--rose);   --tt-ink: #FFFFFF; }
-.ticket[data-type="training"] { --tt: var(--teal);  --tt-ink: #FFFFFF; }
-
-/* ---- Body ---------------------------------------------------------------- */
-.ticket-body {
-    position: relative;
-    flex: 1 1 auto;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-4);
-    padding: var(--s-5);
-}
-
-.ticket-kicker {
-    display: flex;
-    align-items: center;
-    gap: var(--s-3);
-    flex-wrap: wrap;
-    font-family: var(--font-mono);
-    font-size: var(--fs-3xs);
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-}
-.ticket-type {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--tt);
-    font-weight: 500;
-}
-.ticket-type::before {
-    content: "";
-    width: 6px; height: 6px;
-    border-radius: 1px;
-    background: currentColor;
-}
-.ticket-org {
-    color: var(--ink-3);
-    padding-left: var(--s-3);
-    border-left: var(--border);
-}
-
-.ticket-title {
-    font-family: var(--font-display);
-    font-size: 1.4rem;
-    font-weight: 600;
-    letter-spacing: -0.015em;
-    line-height: 1.15;
-    margin: calc(var(--s-4) * -1 + var(--s-1)) 0 0;
-}
-
-.ticket-main { display: flex; gap: var(--s-4); align-items: flex-start; }
-
-/* Tear-off calendar block */
-.datepad {
-    flex: none;
-    width: 62px;
-    text-align: center;
-    background: var(--surface);
-    border: var(--border-strong);
-    border-radius: var(--r-sm);
-    overflow: hidden;
-    line-height: 1;
-}
-.datepad .m {
-    display: block;
-    background: var(--tt);
-    color: var(--tt-ink);
-    font-family: var(--font-mono);
-    font-size: var(--fs-3xs);
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    padding: 4px 0;
-}
-.datepad .d {
-    display: block;
-    font-family: var(--font-mono);
-    font-variant-numeric: tabular-nums;
-    font-size: 1.7rem;
-    font-weight: 600;
-    color: var(--ink);
-    padding: 6px 0 2px;
-}
-.datepad .w {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: var(--fs-3xs);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-    padding-bottom: 6px;
-}
-
-.ticket-meta { display: grid; gap: var(--s-3); margin: 0; min-width: 0; }
-.ticket-meta > div {
-    display: grid;
-    grid-template-columns: 46px minmax(0, 1fr);
-    gap: var(--s-3);
-    align-items: baseline;
-}
-.ticket-meta dt {
-    font-family: var(--font-mono);
-    font-size: var(--fs-3xs);
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-    color: var(--ink-3);
-}
-.ticket-meta dd {
-    margin: 0;
-    font-size: var(--fs-xs);
-    font-weight: 600;
-    line-height: 1.35;
-    color: var(--ink);
-    min-width: 0;
-    overflow-wrap: break-word;
-    hyphens: none;
-}
-
-.ticket-who {
-    margin-top: auto;
-    padding-top: var(--s-4);
-    border-top: 1px dashed var(--line-strong);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--s-3);
-    flex-wrap: wrap;
-}
-.ticket-who .nm { display: block; font-size: var(--fs-sm); font-weight: 600; color: var(--ink); }
-.ticket-who .sn {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: var(--fs-2xs);
-    color: var(--ink-3);
-    margin-top: 1px;
-}
-
-/* ---- Tear-off stub -------------------------------------------------------- */
-.ticket-stub {
-    position: relative;
-    flex: none;
-    width: 108px;
-    background: var(--surface-sunken);
-    border-left: 1px dashed var(--line-strong);
-    padding: var(--s-4) var(--s-3);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--s-3);
-    text-align: center;
-}
-/* Punched notches at both ends of the perforation */
-.ticket-stub::before,
-.ticket-stub::after {
-    content: "";
-    position: absolute;
-    left: -11px;
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    background: var(--paper);
-    border: var(--border-strong);
-}
-.ticket-stub::before { top: -12px; }
-.ticket-stub::after  { bottom: -12px; }
-
-.ticket-stub .qr {
-    width: 62px; height: 62px;
-    padding: 5px;
-    background: var(--surface);
-    border: var(--border);
-    border-radius: var(--r-sm);
-}
-.ticket-stub .qr path {
-    fill: var(--ink);
-    shape-rendering: crispEdges;
-}
-
-.stub-code {
-    font-family: var(--font-mono);
-    font-size: var(--fs-2xs);
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    color: var(--ink);
-}
-.stub-note {
-    font-family: var(--font-mono);
-    font-size: var(--fs-3xs);
-    line-height: 1.45;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-}
-
-/* Void treatment for a cancelled stub */
-.ticket[data-type] .chip.risk ~ * { opacity: 1; }
-.ticket:has(.chip.risk) .ticket-stub .qr { opacity: 0.35; }
-.ticket:has(.chip.risk) .ticket-title { text-decoration: line-through; text-decoration-color: var(--line-strong); }
-
-@media (max-width: 420px) {
-    .ticket-stub { width: 88px; padding-inline: var(--s-2); }
-    .ticket-stub .qr { width: 52px; height: 52px; }
-    .ticket-main { flex-wrap: wrap; }
-}
 /* The door card, overlapping the stub */
 .door-card {
     position: absolute;
@@ -536,14 +259,6 @@
 .section-head h2 { font-size: clamp(1.9rem, 3.6vw, var(--fs-2xl)); }
 .section-head p { color: var(--ink-2); font-size: var(--fs-lg); margin-bottom: 0; }
 
-.reveal {
-    opacity: 0;
-    transform: translateY(18px);
-    transition: opacity 560ms var(--ease-out), transform 560ms var(--ease-out);
-    transition-delay: var(--d, 0ms);
-}
-.reveal.is-in { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } }
 
 /* ==========================================================================
    Steps
@@ -800,33 +515,6 @@
 
 /* Headline figures */
 .report-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-3); margin-top: var(--s-5); }
-.rstat {
-    border: var(--border);
-    border-radius: var(--r-sm);
-    padding: var(--s-3) var(--s-4);
-    background: var(--surface);
-}
-.rstat .n {
-    display: block;
-    font-family: var(--font-mono);
-    font-variant-numeric: tabular-nums;
-    font-size: 1.5rem;
-    font-weight: 600;
-    line-height: 1.15;
-    color: var(--ink);
-}
-.rstat .l {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: var(--fs-3xs);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-    margin-top: 2px;
-}
-.rstat.accent .n { color: var(--accent); }
-.rstat.ok .n { color: var(--ok); }
-
 /* Turnout bars */
 .bars { display: flex; align-items: flex-end; gap: 8px; height: 96px; margin-bottom: var(--s-3); }
 .bars i {
