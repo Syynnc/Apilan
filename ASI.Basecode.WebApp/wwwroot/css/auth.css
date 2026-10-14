@@ -151,3 +151,33 @@
     .auth-grid { grid-template-columns: 1fr; }
     .auth-card { padding: var(--s-6) var(--s-5) var(--s-5); }
 }
+
+/* ---- Sign-in hints --------------------------------------------------------- */
+.pw-hints {
+    list-style: none;
+    margin: var(--s-3) 0 0;
+    padding: var(--s-3) var(--s-4);
+    display: grid;
+    gap: var(--s-2);
+    font-size: var(--fs-2xs);
+    line-height: 1.5;
+    color: var(--ink-3);
+    background: var(--surface-sunken);
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--r-sm);
+}
+/* The text flows as one line; the dot hangs in the margin. */
+.pw-hints li { position: relative; padding-left: var(--s-4); }
+.pw-hints li::before { content: ""; position: absolute; left: 2px; top: 0.6em; width: 5px; height: 5px; border-radius: 50%; background: var(--accent-bright); }
+.pw-hints strong { color: var(--ink-2); font-weight: 600; }
+
+.caps-warn {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    margin: var(--s-2) 0 0;
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+    color: var(--warn);
+}
+.caps-warn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }

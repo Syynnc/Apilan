@@ -4,8 +4,10 @@ namespace ASI.Basecode.WebApp.Models
 {
     public class LoginViewModel
     {
-        [Required(ErrorMessage = "Enter your username, student number, or email.")]
-        [Display(Name = "Username, student number, or email")]
+        // Members sign in with their student ID. The same field still takes a
+        // username, for officers who have no student ID.
+        [Required(ErrorMessage = "Enter your student ID.")]
+        [Display(Name = "Student ID")]
         public string Identifier { get; set; }
 
         [Required(ErrorMessage = "Enter your password.")]

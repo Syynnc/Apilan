@@ -1329,26 +1329,6 @@ label.req::after { content: " *"; color: var(--risk); font-weight: 700; }
 }
 .pw-notice strong { color: var(--warn); }
 
-.pw-field { position: relative; }
-.pw-field .input-a { padding-right: 44px; }
-.pw-eye {
-    position: absolute;
-    top: 50%;
-    right: 6px;
-    width: 32px;
-    height: 32px;
-    transform: translateY(-50%);
-    display: grid;
-    place-items: center;
-    border: 0;
-    border-radius: var(--r-sm);
-    background: transparent;
-    color: var(--ink-3);
-    cursor: pointer;
-}
-.pw-eye:hover { background: var(--surface-sunken); color: var(--ink); }
-.pw-eye.is-on { color: var(--accent); }
-.pw-eye svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 /* Four bars that fill and change colour with the score. */
 .pw-meter { display: flex; align-items: center; gap: var(--s-3); margin-top: var(--s-3); }

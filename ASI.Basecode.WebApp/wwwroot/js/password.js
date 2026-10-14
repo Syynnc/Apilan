@@ -104,6 +104,18 @@
         field.focus();
     });
 
+    // A "Caps Lock is on" note under [data-caps] fields. Only a key event can
+    // tell, so it appears on the first key pressed and goes when the field does.
+    function caps(e) {
+        var field = e.target.closest && e.target.closest("[data-caps]");
+        var warn = field && field.closest(".field").querySelector("[data-caps-warn]");
+        if (!warn) { return; }
+        warn.hidden = e.type === "blur" || typeof e.getModifierState !== "function" || !e.getModifierState("CapsLock");
+    }
+    document.addEventListener("keydown", caps);
+    document.addEventListener("keyup", caps);
+    document.addEventListener("blur", caps, true);
+
     function wireAll(root) {
         Array.prototype.forEach.call((root || document).querySelectorAll("form"), wire);
     }

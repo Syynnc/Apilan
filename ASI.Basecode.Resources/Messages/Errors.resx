@@ -16,7 +16,7 @@
     <value>Something went wrong on the server. Please try again.</value>
   </data>
   <data name="InvalidLogin" xml:space="preserve">
-    <value>Incorrect username or password.</value>
+    <value>That student ID and password do not match.</value>
   </data>
   <data name="AccountInactive" xml:space="preserve">
     <value>This account has been deactivated. Ask an officer to enable it again.</value>

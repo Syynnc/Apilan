@@ -19,14 +19,28 @@
 
         <div class="field">
             <label asp-for="Identifier"></label>
-            <input asp-for="Identifier" class="input-a" autocomplete="username"
-                   placeholder="officer, 2022-00101, or you@school.edu" autofocus />
+            <input asp-for="Identifier" class="input-a mono" autocomplete="username" spellcheck="false"
+                   placeholder="2022-00101" aria-describedby="id-hint" autofocus />
+            <span class="hint" id="id-hint">The number on your school ID, with the dash.</span>
             <span asp-validation-for="Identifier" class="field-error"></span>
         </div>
 
         <div class="field">
             <label asp-for="Password"></label>
-            <input asp-for="Password" class="input-a" type="password" autocomplete="current-password" />
+            <div class="pw-field">
+                <input asp-for="Password" class="input-a" type="password" autocomplete="current-password"
+                       aria-describedby="pw-hints" data-caps />
+                <button type="button" class="pw-eye" data-reveal aria-label="Show password"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg></button>
+            </div>
+            <p class="caps-warn" data-caps-warn hidden role="status">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l7 8h-4v5H9v-5H5z" /><path d="M9 20h6" /></svg>
+                Caps Lock is on
+            </p>
+            <ul class="pw-hints" id="pw-hints">
+                <li><strong>First time here?</strong> Use the default password your officer gave you. You will choose your own right after.</li>
+                <li><strong>Forgot it?</strong> Ask an officer to reset it for you.</li>
+                <li>Passwords are case-sensitive.</li>
+            </ul>
             <span asp-validation-for="Password" class="field-error"></span>
         </div>
 
@@ -39,4 +53,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/password.js" asp-append-version="true"></script>
 }

@@ -595,3 +595,25 @@ textarea.input-a {
 
 .rstat.warn .n { color: var(--warn); }
 .rstat.risk .n { color: var(--risk); }
+
+/* ---- Password field with a show/hide toggle (console, member and sign-in) -- */
+.pw-field { position: relative; }
+.pw-field .input-a { padding-right: 44px; }
+.pw-eye {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    width: 32px;
+    height: 32px;
+    transform: translateY(-50%);
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--ink-3);
+    cursor: pointer;
+}
+.pw-eye:hover { background: var(--surface-sunken); color: var(--ink); }
+.pw-eye.is-on { color: var(--accent); }
+.pw-eye svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
