@@ -902,3 +902,19 @@ details.more > summary {
 .switch input:checked + .switch-track { background: var(--accent); }
 .switch input:checked + .switch-track::after { transform: translateX(14px); }
 .switch input:focus-visible + .switch-track { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* ---- Switched-off rows: deactivated members, disabled accounts ---------- */
+/* The row greys out so it reads as "not in play", but its status chip keeps
+   full colour, so the reason is the one thing still loud on the line. */
+.table-a tbody tr.is-off { background: repeating-linear-gradient(135deg, var(--surface-sunken) 0 10px, color-mix(in srgb, var(--surface-sunken) 70%, var(--line)) 10px 11px); }
+.table-a tbody tr.is-off:hover { background: var(--idle-wash); }
+.table-a tbody tr.is-off td { color: var(--ink-3); }
+.table-a tbody tr.is-off td strong,
+.table-a tbody tr.is-off td a { color: var(--ink-3); text-decoration-color: var(--line-strong); }
+.table-a tbody tr.is-off .av,
+.table-a tbody tr.is-off .mini-pad { filter: grayscale(1); opacity: 0.6; }
+.table-a tbody tr.is-off td:first-child { box-shadow: inset 3px 0 0 var(--risk); }
+.table-a tbody tr.is-off .chip.risk { filter: none; opacity: 1; }
+
+.off-banner { align-items: center; flex-wrap: wrap; }
+.off-banner form { margin-left: auto; }

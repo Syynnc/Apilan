@@ -9,6 +9,19 @@
     <a class="btn-a ghost" asp-action="Edit" asp-route-id="@st.Id">Edit</a>
 }
 
+@if (!st.IsActive)
+{
+    <div class="flash bad off-banner">
+        <strong>Deactivated.</strong> @st.FirstName cannot sign in or be checked in at the door until restored.
+        <form asp-action="SetActive" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@st.Id" />
+            <input type="hidden" name="isActive" value="true" />
+            <button type="submit" class="btn-a ghost sm">Restore member</button>
+        </form>
+    </div>
+}
+
 <div class="split">
     <div class="stack-lg">
         <div class="tiles">
@@ -30,7 +43,7 @@
                 }
                 else
                 {
-                    <span class="chip idle">Inactive</span>
+                    <span class="chip risk">Deactivated</span>
                 }
             </div>
             <div class="panel-body">
