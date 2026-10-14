@@ -46,7 +46,7 @@
                 <tbody>
                 @foreach (var m in Model.Students)
                 {
-                    <tr data-search="@m.FullName @m.StudentNumber @m.Course">
+                    <tr data-search="@m.FullName @m.StudentNumber @m.Course" class="@(m.IsActive ? null : "is-off")">
                         <td>
                             <div class="cell-person">
                                 <span class="av" aria-hidden="true">@Ui.Initials(m.FullName.Contains(',') ? m.FullName.Split(',')[1] + " " + m.FullName.Split(',')[0] : m.FullName)</span>
@@ -64,7 +64,7 @@
                             }
                             else
                             {
-                                <span class="chip idle">Inactive</span>
+                                <span class="chip risk">Deactivated</span>
                             }
                         </td>
                         <td>
