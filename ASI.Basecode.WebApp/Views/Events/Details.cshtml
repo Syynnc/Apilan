@@ -7,6 +7,22 @@
     var present = s.TotalPresent ?? 0;
     var pct = s.EventCapacity is int cap && cap > 0 ? Math.Min(100, present * 100 / cap) : 0;
     var isFinished = s.EventStatus == Const.StatusFinished;
+
+    // sp_Attendance_TimeIn accepts arrivals from an hour before the start.
+    var opensAt = s.EventStart.AddMinutes(-60);
+    var doorOpen = DateTime.Now >= opensAt && DateTime.Now <= s.EventEnd;
+
+    // The result of the last scan belongs next to the scanner, not at the top
+    // of the page; taking it out of TempData keeps the layout from repeating it.
+    string doorResult = null;
+    var doorResultOk = false;
+    if (TempData["Door"] != null && !isFinished)
+    {
+        doorResult = TempData["Success"] as string ?? TempData["Error"] as string;
+        doorResultOk = TempData["Success"] is string;
+        TempData.Remove("Success");
+        TempData.Remove("Error");
+    }
 }
 
 @section Actions {
@@ -14,7 +30,7 @@
     <a class="btn-a ghost" asp-action="Edit" asp-route-id="@s.EventId">Edit</a>
 }
 
-<div class="split">
+<div class="split @(isFinished ? "" : "door-first")">
     <div class="stack-lg">
         <div class="panel">
             <div class="panel-head">
@@ -74,6 +90,104 @@
     </div>
 
     <div class="rail">
+        @if (!isFinished)
+        {
+            <div class="panel door">
+                <div class="panel-head">
+                    <h3>Door</h3>
+                    @if (doorOpen)
+                    {
+                        <span class="chip ok">Open</span>
+                    }
+                    else
+                    {
+                        <span class="chip idle">Opens @opensAt.ToString("MMM d, h:mm tt")</span>
+                    }
+                </div>
+
+                @if (doorResult != null)
+                {
+                    <div class="door-result @(doorResultOk ? "ok" : "bad")" role="status" aria-live="polite">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            @if (doorResultOk)
+                            {
+                                <path d="M5 12.5l4.5 4.5L19 7.5" />
+                            }
+                            else
+                            {
+                                <path d="M7 7l10 10M17 7L7 17" />
+                            }
+                        </svg>
+                        <span>@doorResult</span>
+                    </div>
+                }
+
+                <form asp-controller="Attendance" asp-action="Record" method="post" autocomplete="off"
+                      id="scan-form" class="panel-body door-body">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="EventId" value="@s.EventId" />
+
+                    @*
+                        Auto is what a scan means: in if they are outside, out if
+                        they are inside. The explicit two are for fixing things.
+                    *@
+                    <div class="action-toggle three" role="radiogroup" aria-label="What to record">
+                        <input type="radio" name="Action" id="act-auto" value="Auto" checked />
+                        <label for="act-auto">Auto</label>
+                        <input type="radio" name="Action" id="act-in" value="TimeIn" />
+                        <label for="act-in">Time in</label>
+                        <input type="radio" name="Action" id="act-out" value="TimeOut" />
+                        <label for="act-out">Time out</label>
+                    </div>
+
+                    <div class="scan-cam" id="scan-cam" hidden>
+                        <div class="scan-view" id="scan-view" data-state="idle">
+                            <video id="scan-video" playsinline muted></video>
+                            <span class="scan-frame" aria-hidden="true"></span>
+                            <span class="scan-status" id="scan-status" aria-live="polite"></span>
+                        </div>
+                        <div class="scan-controls">
+                            <select class="input-a" id="scan-camera" aria-label="Camera" hidden></select>
+                            <button type="button" class="btn-a ghost sm" id="scan-stop">Stop camera</button>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn-a lg scan-start" id="scan-start">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2" />
+                            <path d="M8 8h3v3H8zM13 13h3v3h-3zM13 8h3M8 16h3" />
+                        </svg>
+                        Scan with the camera
+                    </button>
+
+                    <p class="scan-note" id="scan-cam-note" hidden></p>
+
+                    <div class="door-or"><span>or type the student number</span></div>
+
+                    <div class="door-entry">
+                        <input type="text" name="StudentNumber" id="scan-field" class="input-a mono"
+                               placeholder="2022-00101" aria-label="Student number" required />
+                        <button type="submit" class="btn-a">Record</button>
+                    </div>
+
+                    <label class="door-mode">
+                        <span>Mode</span>
+                        @* Manual by default; the camera switches it to QR Code before it submits. *@
+                        <select name="AttendanceModeId" id="mode" class="input-a">
+                            @foreach (var m in Model.Modes)
+                            {
+                                <option value="@m.Id" selected="@(m.Id == Const.ManualAttendanceMode)">@m.Name</option>
+                            }
+                        </select>
+                    </label>
+                </form>
+
+                <div class="panel-note">
+                    Recorded as now. A handheld scanner can type straight into the student-number field.
+                </div>
+            </div>
+        }
+
         <div class="panel">
             <div class="panel-head"><h3>Details</h3><span class="chip @(s.EventStatus == Const.StatusOngoing ? "info" : s.EventStatus == Const.StatusUpcoming ? "idle" : "ok")">@s.EventStatus</span></div>
             <div class="panel-body stack">
@@ -100,70 +214,6 @@
                 }
             </div>
         </div>
-
-        @if (!isFinished)
-        {
-            <div class="panel">
-                <div class="panel-head"><h3>Door</h3></div>
-                <div class="panel-body">
-                    <form asp-controller="Attendance" asp-action="Record" method="post" autocomplete="off" id="scan-form">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="EventId" value="@s.EventId" />
-
-                        @*
-                            Auto is what a scan means: in if they are outside, out if
-                            they are inside. The explicit two are for fixing things.
-                        *@
-                        <div class="action-toggle three">
-                            <input type="radio" name="Action" id="act-auto" value="Auto" checked />
-                            <label for="act-auto">Auto</label>
-                            <input type="radio" name="Action" id="act-in" value="TimeIn" />
-                            <label for="act-in">Time in</label>
-                            <input type="radio" name="Action" id="act-out" value="TimeOut" />
-                            <label for="act-out">Time out</label>
-                        </div>
-
-                        <div class="field">
-                            <input type="text" name="StudentNumber" id="scan-field" class="input-a scan-input mono"
-                                   placeholder="Student no." aria-label="Student number" autofocus required />
-                        </div>
-
-                        <div class="field">
-                            <label for="mode">Mode</label>
-                            @* Manual by default; the camera switches it to QR Code before it submits. *@
-                            <select name="AttendanceModeId" id="mode" class="input-a">
-                                @foreach (var m in Model.Modes)
-                                {
-                                    <option value="@m.Id" selected="@(m.Id == Const.ManualAttendanceMode)">@m.Name</option>
-                                }
-                            </select>
-                        </div>
-
-                        <div class="form-foot">
-                            <button type="submit" class="btn-a lg" style="width:100%">Record</button>
-                        </div>
-                    </form>
-
-                    <div class="scan-cam" id="scan-cam" hidden>
-                        <div class="scan-view">
-                            <video id="scan-video" playsinline muted></video>
-                            <span class="scan-frame" aria-hidden="true"></span>
-                        </div>
-                        <button type="button" class="btn-a quiet sm" id="scan-stop">Stop the camera</button>
-                    </div>
-
-                    <button type="button" class="btn-a ghost" id="scan-start"
-                            style="width:100%; margin-top:var(--s-3)" hidden>
-                        Scan with the camera
-                    </button>
-
-                    <span class="hint" id="scan-cam-note" hidden></span>
-                </div>
-                <div class="panel-note">
-                    Recorded as now. Scan a member's QR pass, use a handheld scanner, or type the student number.
-                </div>
-            </div>
-        }
 
         <div class="panel">
             <div class="panel-head"><h3>Danger zone</h3></div>
@@ -192,8 +242,13 @@
                 var field = document.getElementById("scan-field");
                 if (!field) { return; }
 
+                // Only where there is a real keyboard: on a phone, focusing pops
+                // the on-screen keyboard over the camera.
+                var keyboardFirst = window.matchMedia("(pointer: fine)").matches;
+                if (keyboardFirst) { field.focus(); }
+
                 document.addEventListener("click", function (e) {
-                    if (e.target.closest("form, a, button, input, select, textarea, label, video")) { return; }
+                    if (!keyboardFirst || e.target.closest("form, a, button, input, select, textarea, label, video")) { return; }
                     field.focus();
                 });
 
@@ -205,6 +260,9 @@
                     manualModeId: "@Const.ManualAttendanceMode",
                     video: document.getElementById("scan-video"),
                     shell: document.getElementById("scan-cam"),
+                    view: document.getElementById("scan-view"),
+                    status: document.getElementById("scan-status"),
+                    cameras: document.getElementById("scan-camera"),
                     start: document.getElementById("scan-start"),
                     stop: document.getElementById("scan-stop"),
                     note: document.getElementById("scan-cam-note")

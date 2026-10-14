@@ -8,20 +8,21 @@
     }
     else
     {
-        <table class="table-a">
+        @* table-stack: on a phone each row becomes a small card, labelled from data-label. *@
+        <table class="table-a table-stack">
             <thead>
-                <tr><th>Event</th><th>When</th><th>Mode</th><th>Time in</th><th>Time out</th><th>Late</th></tr>
+                <tr><th>Event</th><th>When</th><th>Mode</th><th>Time in</th><th>Time out</th><th>Arrival</th></tr>
             </thead>
             <tbody>
             @foreach (var a in Model)
             {
                 <tr>
-                    <td><strong>@a.EventName</strong><br /><span class="dim">@a.EventType</span></td>
-                    <td class="mono">@a.EventStart.ToString("yyyy-MM-dd")</td>
-                    <td>@a.AttendanceMode</td>
-                    <td class="mono">@a.TimeIn.ToString("HH:mm")</td>
-                    <td class="mono">@(a.TimeOut?.ToString("HH:mm") ?? "—")</td>
-                    <td>@if (a.IsLate == 1) { <span class="chip warn">Late</span> } else { <span class="dim">On time</span> }</td>
+                    <td class="cell-title"><strong>@a.EventName</strong><br /><span class="dim">@a.EventType</span></td>
+                    <td class="mono" data-label="When">@a.EventStart.ToString("yyyy-MM-dd")</td>
+                    <td data-label="Mode">@a.AttendanceMode</td>
+                    <td class="mono" data-label="Time in">@a.TimeIn.ToString("HH:mm")</td>
+                    <td class="mono" data-label="Time out">@(a.TimeOut?.ToString("HH:mm") ?? "—")</td>
+                    <td data-label="Arrival">@if (a.IsLate == 1) { <span class="chip warn">Late</span> } else { <span class="chip ok">On time</span> }</td>
                 </tr>
             }
             </tbody>

@@ -5,6 +5,10 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* The hidden attribute has to win over component display rules (.btn-a is
+   inline-flex, panels are grid), or scripts cannot hide anything. */
+[hidden] { display: none !important; }
+
 html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
