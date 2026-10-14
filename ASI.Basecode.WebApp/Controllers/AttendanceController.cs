@@ -29,6 +29,9 @@ namespace ASI.Basecode.WebApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Record(AttendanceEntryViewModel entry)
         {
+            // Marks the message as a door result, shown beside the scanner.
+            TempData["Door"] = true;
+
             if (!ModelState.IsValid)
             {
                 TempData["Error"] = Errors.StudentNumberRequired;

@@ -35,12 +35,12 @@ namespace ASI.Basecode.Services.Services
             {
                 var existing = _attendance.GetAttendanceDetails()
                     .Where(a => a.EventId == entry.EventId && a.StudentNumber == studentNumber)
-                    .Select(a => new { a.FullName, a.TimeOut })
+                    .Select(a => new { a.TimeOut })
                     .FirstOrDefault();
 
                 if (existing?.TimeOut != null)
                 {
-                    throw new InvalidDataException(string.Format(Errors.AlreadyTimedInAndOut, existing.FullName));
+                    throw new InvalidDataException(string.Format(Errors.AlreadyTimedInAndOut, StudentName(studentNumber)));
                 }
 
                 recorded = existing != null ? AttendanceAction.TimeOut : AttendanceAction.TimeIn;
@@ -56,6 +56,11 @@ namespace ASI.Basecode.Services.Services
                 Run(() => _attendance.TimeIn(entry.EventId, studentNumber, entry.AttendanceModeId, entry.RecordedAt, recordedBy));
             }
 
+            return StudentName(studentNumber);
+        }
+
+        private string StudentName(string studentNumber)
+        {
             return _users.GetUsers()
                 .Where(u => u.StudentNumber == studentNumber)
                 .Select(u => u.FirstName + " " + u.LastName)

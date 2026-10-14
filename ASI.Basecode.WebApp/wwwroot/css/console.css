@@ -341,8 +341,22 @@
     }
     .side-org, .side-group h6 { display: none; }
     .side-group { display: flex; flex-wrap: wrap; }
-    .side-foot { margin-top: 0; padding-top: 0; border-top: 0; margin-left: auto; }
+    .side-foot { margin-top: 0; padding-top: 0; border-top: 0; margin-left: auto; display: flex; align-items: center; gap: var(--s-2); }
+    .side-user { margin-bottom: 0; }
     .side-foot .btn-a { width: auto; }
     .console-body { padding: var(--s-5) var(--s-4); }
-    .console-bar { padding-inline: var(--s-4); }
+    .console-bar { padding-inline: var(--s-4); position: static; }
+
+    /* One scrolling row of links rather than three wrapped ones. */
+    .side { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+    .side::-webkit-scrollbar { display: none; }
+    .side-head, .side-group, .side-foot { flex: none; }
+    .side-group { flex-wrap: nowrap; }
+    .side-link { white-space: nowrap; }
+}
+@media (max-width: 560px) {
+    .side-link .lbl, .side-user .who, .side-out .lbl { display: none; }
+    .side-out svg { display: block; }
+    .side-link { padding-inline: var(--s-2); }
+    .side-head .brand .lbl { display: none; }
 }

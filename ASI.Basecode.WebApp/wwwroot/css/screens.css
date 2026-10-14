@@ -104,6 +104,7 @@
 }
 .panel-body { padding: var(--s-5); }
 .panel .table-a { border: 0; border-radius: 0; }
+.table-a td.mono { white-space: nowrap; }
 .panel-note {
     font-size: var(--fs-2xs);
     color: var(--ink-3);
@@ -227,29 +228,139 @@
 .action-toggle input:focus-visible + label { outline: 2px solid var(--focus); outline-offset: 2px; }
 .action-toggle.three { grid-template-columns: repeat(3, 1fr); }
 
-/* ---- Camera preview at the door -------------------------------------- */
-.scan-cam { display: grid; gap: var(--s-3); margin-top: var(--s-3); }
-.scan-view { position: relative; }
-.scan-view video {
-    display: block;
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
-    background: var(--ink);
-    border: var(--border-strong);
-    border-radius: var(--r-sm);
+/* ---- The door: camera, result, typed entry ---------------------------- */
+.door .panel-head .chip { margin-left: auto; }
+
+/* The last scan's outcome, right where the officer is looking. */
+.door-result {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-3) var(--s-5);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    border-bottom: var(--border);
+    animation: door-result-in var(--t-med) var(--ease-out);
 }
-/* Where to hold the pass. Decoding reads the whole frame; this is only a cue. */
+.door-result svg { flex: none; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.door-result.ok  { background: var(--ok-wash);   color: var(--ok); }
+.door-result.bad { background: var(--risk-wash); color: var(--risk); }
+@keyframes door-result-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+.door-body { display: grid; gap: var(--s-4); }
+.door-body .action-toggle { margin-bottom: 0; }
+
+.scan-start { width: 100%; justify-content: center; gap: var(--s-2); }
+.scan-start svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.scan-cam { display: grid; gap: var(--s-3); }
+.scan-view {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    background: #0d0f0d;
+    border-radius: var(--r-md);
+}
+.scan-view video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.scan-view.is-mirrored video { transform: scaleX(-1); }
+
+/* Where to hold the pass: corner brackets over a dimmed surround. Decoding
+   reads the whole frame — this is only a cue. */
 .scan-frame {
     position: absolute;
-    inset: 18% 24%;
-    border: 2px solid rgba(255, 255, 255, 0.85);
-    border-radius: var(--r-sm);
-    box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.28);
+    left: 50%;
+    top: 46%;
+    width: 58%;
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    border-radius: 14px;
+    box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.35);
     pointer-events: none;
+    --c: rgba(255, 255, 255, 0.92);
+    background:
+        linear-gradient(var(--c), var(--c)) top left / 26px 3px,
+        linear-gradient(var(--c), var(--c)) top left / 3px 26px,
+        linear-gradient(var(--c), var(--c)) top right / 26px 3px,
+        linear-gradient(var(--c), var(--c)) top right / 3px 26px,
+        linear-gradient(var(--c), var(--c)) bottom left / 26px 3px,
+        linear-gradient(var(--c), var(--c)) bottom left / 3px 26px,
+        linear-gradient(var(--c), var(--c)) bottom right / 26px 3px,
+        linear-gradient(var(--c), var(--c)) bottom right / 3px 26px;
+    background-repeat: no-repeat;
 }
-.panel-body > .hint { display: block; font-size: var(--fs-2xs); color: var(--ink-3); margin-top: var(--s-3); }
-.panel-body > .hint.is-bad { color: var(--risk); }
+/* A sweep line so a still picture never looks like a frozen one. */
+.scan-frame::after {
+    content: "";
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    height: 2px;
+    top: 10%;
+    background: var(--accent-bright);
+    box-shadow: 0 0 10px var(--accent-bright);
+    border-radius: 2px;
+    animation: scan-sweep 1.8s ease-in-out infinite alternate;
+}
+@keyframes scan-sweep { to { top: 88%; } }
+.scan-view[data-state="ok"] .scan-frame { --c: var(--accent-bright); }
+.scan-view[data-state="ok"] .scan-frame::after,
+.scan-view[data-state="hold"] .scan-frame::after,
+.scan-view[data-state="bad"] .scan-frame::after { display: none; }
+.scan-view[data-state="bad"] .scan-frame { --c: #ff8a7a; }
+
+.scan-status {
+    position: absolute;
+    left: 50%;
+    bottom: var(--s-3);
+    transform: translateX(-50%);
+    max-width: calc(100% - var(--s-5));
+    padding: 6px 12px;
+    border-radius: var(--r-pill);
+    background: rgba(0, 0, 0, 0.62);
+    color: #fff;
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+    line-height: 1.35;
+    text-align: center;
+    width: max-content;
+}
+.scan-status:empty { display: none; }
+.scan-view[data-state="ok"] .scan-status { background: var(--accent); color: var(--accent-ink); }
+.scan-view[data-state="bad"] .scan-status { background: var(--risk); }
+
+.scan-controls { display: flex; gap: var(--s-2); align-items: center; }
+.scan-controls select { flex: 1 1 auto; min-width: 0; font-size: var(--fs-2xs); padding-block: var(--s-2); }
+.scan-controls .btn-a { margin-left: auto; flex: none; }
+
+.scan-note { margin: 0; font-size: var(--fs-2xs); color: var(--ink-3); }
+.scan-note.is-bad {
+    color: var(--risk);
+    background: var(--risk-wash);
+    padding: var(--s-3);
+    border-radius: var(--r-sm);
+}
+
+.door-or {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    font-size: var(--fs-3xs);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+.door-or::before, .door-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+.door-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s-2); }
+.door-entry .input-a { font-size: var(--fs-md); letter-spacing: 0.06em; }
+
+.door-mode { display: flex; align-items: center; gap: var(--s-3); font-size: var(--fs-2xs); color: var(--ink-3); }
+.door-mode .input-a { flex: 1; font-size: var(--fs-2xs); padding-block: var(--s-2); }
+
+@media (prefers-reduced-motion: reduce) {
+    .scan-frame::after { animation: none; top: 50%; }
+    .door-result { animation: none; }
+}
 
 /* ---- Member QR pass -------------------------------------------------- */
 .pass {
@@ -324,6 +435,8 @@ details.more > summary {
 @media (max-width: 1100px) {
     .split { grid-template-columns: minmax(0, 1fr); }
     .split .rail { position: static; }
+    /* On a phone at the door, the scanner comes before the list it fills. */
+    .split.door-first .rail { order: -1; }
 }
 @media (max-width: 720px) {
     .form-a { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -333,3 +446,95 @@ details.more > summary {
 /* In the narrow side rail the stub stacks under the name instead of beside it. */
 .rail .pass { flex-direction: column; }
 .rail .pass-stub { width: auto; border-left: 0; border-top: 1px dashed var(--line-strong); }
+
+/* ---- Member area ------------------------------------------------------ */
+.member-top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: var(--border);
+}
+.member-top .inner { display: flex; align-items: center; gap: var(--s-3); min-height: 64px; }
+.member-top .brand { margin-right: auto; }
+.member-who { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
+.member-who .av {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-size: var(--fs-3xs);
+    font-weight: 700;
+}
+.member-who .nm { font-size: var(--fs-sm); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.member-main { padding-block: var(--s-7) var(--s-8); }
+
+.member-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--s-4); flex-wrap: wrap; }
+.member-head h1 { margin: var(--s-2) 0 var(--s-2); }
+.member-head p { margin: 0; color: var(--ink-3); }
+
+.member-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: var(--s-6);
+    align-items: start;
+}
+.member-label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 var(--s-3);
+}
+.member-grid .pass { max-width: none; }
+.member-grid .pass-stub { width: 220px; }
+.member-grid .pass-stub .qr { width: 184px; height: 184px; }
+.member-stats { display: grid; gap: var(--s-3); }
+.member-stats .tile { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--s-1) var(--s-3); }
+.member-stats .tile .l { margin: 0; }
+.member-stats .tile .s { flex-basis: 100%; margin: 0; }
+
+@media (max-width: 900px) {
+    .member-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+    .member-who .nm { display: none; }
+    .member-main { padding-block: var(--s-5) var(--s-7); }
+    .member-grid .pass { flex-direction: column; }
+    .member-grid .pass-stub { width: auto; border-left: 0; border-top: 1px dashed var(--line-strong); padding-block: var(--s-5); }
+    .member-grid .pass-stub .qr { width: 220px; height: 220px; }
+}
+
+/* ---- Tables that become cards on a phone ------------------------------ */
+@media (max-width: 640px) {
+    .table-stack thead { display: none; }
+    .table-stack, .table-stack tbody, .table-stack tr, .table-stack td { display: block; }
+    .table-stack tbody tr {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--s-2) var(--s-4);
+        padding: var(--s-4) var(--s-5);
+        border-bottom: var(--border);
+    }
+    .table-stack tbody tr:last-child { border-bottom: 0; }
+    .table-stack tbody td { padding: 0; border: 0; }
+    .table-stack td.cell-title { grid-column: 1 / -1; }
+    .table-stack td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        font-family: var(--font-mono);
+        font-size: var(--fs-3xs);
+        letter-spacing: var(--tracking-wide);
+        text-transform: uppercase;
+        color: var(--ink-3);
+        margin-bottom: 2px;
+    }
+}

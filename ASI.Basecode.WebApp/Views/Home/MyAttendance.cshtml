@@ -3,25 +3,45 @@
     var st = Model.Student;
     ViewData["Title"] = "My attendance";
     Layout = "_LayoutMember";
+
+    var meta = string.Join(" · ", new[]
+    {
+        st.StudentNumber,
+        st.Course,
+        st.YearLevel.HasValue ? $"Year {st.YearLevel}" : null
+    }.Where(x => !string.IsNullOrWhiteSpace(x)));
+
+    ViewData["PassDownload"] = Url.Action("MyPass", "Home");
 }
 
-<div class="stack-lg">
+<div class="member-head">
     <div>
         <span class="eyebrow">My record</span>
-        <h1 style="margin-bottom:var(--s-2)">@st.FirstName @st.LastName</h1>
-        <p class="muted mono" style="margin:0">@st.StudentNumber · @(string.IsNullOrEmpty(st.Course) ? "—" : st.Course)</p>
+        <h1>@st.FirstName @st.LastName</h1>
+        <p class="mono">@meta</p>
     </div>
-
-    @{ ViewData["PassDownload"] = Url.Action("MyPass", "Home"); }
-    <partial name="_MemberPass" model="st" view-data="ViewData" />
-
-    <div class="tiles">
-        <div class="tile accent"><span class="l">Events attended</span><span class="n">@Model.EventsAttended</span></div>
-        <div class="tile"><span class="l">Times late</span><span class="n">@Model.TimesLate</span></div>
-        <div class="tile"><span class="l">Missing time-outs</span><span class="n">@Model.MissingTimeOuts</span></div>
-    </div>
-
-    <partial name="_AttendanceHistory" model="Model.History" />
-
-    <p><a asp-controller="Account" asp-action="ChangePassword">Change my password</a></p>
+    <a class="btn-a ghost sm" asp-controller="Account" asp-action="ChangePassword">Change password</a>
 </div>
+
+<div class="member-grid">
+    <section aria-labelledby="pass-title">
+        <h2 class="member-label" id="pass-title">Your pass for the door</h2>
+        <partial name="_MemberPass" model="st" view-data="ViewData" />
+    </section>
+
+    <section aria-labelledby="stats-title">
+        <h2 class="member-label" id="stats-title">This term</h2>
+        <div class="member-stats">
+            <div class="tile accent"><span class="l">Events attended</span><span class="n">@Model.EventsAttended</span></div>
+            <div class="tile"><span class="l">Times late</span><span class="n">@Model.TimesLate</span></div>
+            <div class="tile"><span class="l">Missing time-outs</span><span class="n">@Model.MissingTimeOuts</span>
+                @if (Model.MissingTimeOuts > 0)
+                {
+                    <span class="s">Scan your pass on the way out, too.</span>
+                }
+            </div>
+        </div>
+    </section>
+</div>
+
+<partial name="_AttendanceHistory" model="Model.History" />
