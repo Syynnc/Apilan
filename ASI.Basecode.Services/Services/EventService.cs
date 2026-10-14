@@ -88,7 +88,7 @@ namespace ASI.Basecode.Services.Services
                 LateGraceMinutes = evt.LateGraceMinutes,
                 Attendance = _attendance.GetAttendanceDetails()
                     .Where(a => a.EventId == id)
-                    .OrderBy(a => a.TimeIn)
+                    .OrderByDescending(a => a.TimeIn)
                     .ToList(),
                 Absentees = _attendance.GetAbsentees()
                     .Where(a => a.EventId == id)
