@@ -100,5 +100,11 @@ namespace ASI.Basecode.Services.Interfaces
     {
         DashboardViewModel GetDashboard();
         ReportViewModel GetReport(ReportFilter filter);
+
+        /// <summary>
+        /// The same report as a CSV for Excel or Sheets: the filters, the
+        /// headline figures, then every breakdown and table, one section each.
+        /// </summary>
+        string ExportCsv(ReportFilter filter, string generatedBy, out string fileName);
     }
 }

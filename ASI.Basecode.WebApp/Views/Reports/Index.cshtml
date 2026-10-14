@@ -40,98 +40,185 @@
     Func<int, int> tickCount = max => max <= 5 ? max : max % 4 == 0 ? 4 : 5;
 
     var anyData = Model.CheckIns > 0;
+
+    // Sub-pages: the overview first, the detail one click away. Filters carry over.
+    var views = new[] { ("overview", "Overview"), ("events", "Events"), ("members", "Members"), ("punctuality", "Punctuality") };
+    string requested = ViewBag.View as string;
+    var view = views.Any(v => v.Item1 == requested) ? requested : "overview";
+    Func<string, object> route = v => new
+    {
+        view = v == "overview" ? null : v,
+        f.Course, f.YearLevel, f.EventTypeId, f.EventId,
+        From = f.From?.ToString("yyyy-MM-dd"), To = f.To?.ToString("yyyy-MM-dd"),
+    };
+
+    // The filters in force, as chips that each clear themselves.
+    var chips = new List<(string Label, string Url)>();
+    string without(string drop) => Url.Action("Index", new
+    {
+        view = view == "overview" ? null : view,
+        Course = drop == "Course" ? null : f.Course,
+        YearLevel = drop == "YearLevel" ? null : f.YearLevel,
+        EventTypeId = drop == "EventTypeId" ? null : f.EventTypeId,
+        EventId = drop == "EventId" ? null : f.EventId,
+        From = drop == "From" ? null : f.From?.ToString("yyyy-MM-dd"),
+        To = drop == "To" ? null : f.To?.ToString("yyyy-MM-dd"),
+    });
+    if (!string.IsNullOrWhiteSpace(f.Course)) chips.Add((f.Course, without("Course")));
+    if (f.YearLevel.HasValue) chips.Add((YearLevels.Label(f.YearLevel), without("YearLevel")));
+    if (f.EventTypeId.HasValue) chips.Add((Model.EventTypes.FirstOrDefault(t => t.Id == f.EventTypeId)?.Name ?? "Type", without("EventTypeId")));
+    if (f.EventId.HasValue) chips.Add((Model.Events.FirstOrDefault(e => e.Id == f.EventId)?.Name ?? "Event", without("EventId")));
+    if (f.From.HasValue) chips.Add(("From " + f.From.Value.ToString("MMM d, yyyy"), without("From")));
+    if (f.To.HasValue) chips.Add(("To " + f.To.Value.ToString("MMM d, yyyy"), without("To")));
+
+    var topMember = Model.Members.FirstOrDefault(m => m.Attended > 0);
+    var topEvent = Model.PerEvent.OrderByDescending(e => e.Total).FirstOrDefault();
+    var topGroup = Model.ByCourse.Where(g => g.Members > 0).OrderByDescending(g => g.Rate).ThenByDescending(g => g.Members).FirstOrDefault();
     var filterCount = new object[] { f.Course, f.YearLevel, f.EventTypeId, f.EventId, f.From, f.To }
         .Count(v => v != null && !(v is string s && string.IsNullOrWhiteSpace(s)));
 }
 
-@* ============================================================ FILTERS ===== *@
-<form method="get" class="report-filters toolbar" aria-label="Filter the report">
-    <div class="rf-group" role="group" aria-label="Members">
-        <span class="rf-legend">Members</span>
-        <div class="rf-row">
-        <label class="rf-field">
-            <span>Course</span>
-            <select name="Course" class="input-a" onchange="this.form.submit()">
-                <option value="">All courses</option>
-                @foreach (var c in Model.Courses)
-                {
-                    <option value="@c" selected="@(c == f.Course)">@c</option>
-                }
-            </select>
-        </label>
-        <label class="rf-field">
-            <span>Year</span>
-            <select name="YearLevel" class="input-a" onchange="this.form.submit()">
-                <option value="">All years</option>
-                @for (var y = 1; y <= 6; y++)
-                {
-                    <option value="@y" selected="@(f.YearLevel == y)">Year @y</option>
-                }
-            </select>
-        </label>
-        </div>
-    </div>
-
-    <div class="rf-group" role="group" aria-label="Events">
-        <span class="rf-legend">Events</span>
-        <div class="rf-row">
-        <label class="rf-field">
-            <span>Type</span>
-            <select name="EventTypeId" class="input-a" onchange="this.form.submit()">
-                <option value="">All types</option>
-                @foreach (var t in Model.EventTypes)
-                {
-                    <option value="@t.Id" selected="@(f.EventTypeId == t.Id)">@t.Name</option>
-                }
-            </select>
-        </label>
-        <label class="rf-field grow">
-            <span>Event</span>
-            <select name="EventId" class="input-a" onchange="this.form.submit()">
-                <option value="">All events</option>
-                @foreach (var e in Model.Events)
-                {
-                    <option value="@e.Id" selected="@(f.EventId == e.Id)">@e.Name</option>
-                }
-            </select>
-        </label>
-        <label class="rf-field">
-            <span>From</span>
-            <input type="date" name="From" class="input-a" value="@f.From?.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
-        </label>
-        <label class="rf-field">
-            <span>To</span>
-            <input type="date" name="To" class="input-a" value="@f.To?.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
-        </label>
-        </div>
-    </div>
-
-    <div class="rf-actions">
-        <noscript><button type="submit" class="btn-a sm">Apply</button></noscript>
-        @if (filterCount > 0)
+@* ============================================================ BAR ========= *@
+@* One slim bar: the sub-pages, the filters in force, and what to do with it. *@
+<div class="report-bar">
+    <nav class="report-tabs" aria-label="Report sections">
+        @foreach (var (key, label) in views)
         {
-            <a class="btn-a ghost sm" asp-action="Index">Clear @filterCount filter@(filterCount == 1 ? "" : "s")</a>
+            <a class="@(key == view ? "is-active" : null)" aria-current="@(key == view ? "page" : null)"
+               href="@Url.Action("Index", route(key))">@label</a>
         }
-    </div>
-</form>
+    </nav>
 
-@* ============================================================ FIGURES ===== *@
-<section class="report-figures stagger" aria-label="Headline figures">
-    <div class="rfig hero">
-        <span class="l">Participation rate</span>
-        <span class="n">@pct(Model.ParticipationRate)</span>
-        <span class="s">@Model.Participants of @Model.MembersInScope active members came to at least one event</span>
-        <div class="meter"><i style="width:@pct(Model.ParticipationRate)"></i></div>
+    <div class="report-actions">
+        <button type="button" class="btn-a ghost sm" data-dialog-open="#report-filters">
+            <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
+            Filters@(filterCount > 0 ? $" · {filterCount}" : "")
+        </button>
+        <details class="menu">
+            <summary class="btn-a sm">
+                <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14" /></svg>
+                Export
+            </summary>
+            <div class="menu-list" role="menu">
+                <a role="menuitem" href="@Url.Action("Export", route(view))">
+                    <b>Analytics (CSV)</b><span>Every figure, chart and table, for Excel or Sheets</span>
+                </a>
+                <button type="button" role="menuitem" onclick="window.print()">
+                    <b>Print / Save as PDF</b><span>This section as it looks here</span>
+                </button>
+            </div>
+        </details>
     </div>
+</div>
+
+@if (chips.Any())
+{
+    <div class="filter-chips" aria-label="Filters in force">
+        @foreach (var (label, url) in chips)
+        {
+            <a class="filter-chip" href="@url" title="Remove this filter">@label<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" /></svg></a>
+        }
+        <a class="filter-clear" asp-action="Index" asp-route-view="@(view == "overview" ? null : view)">Clear all</a>
+    </div>
+}
+
+@* ============================================================ FILTERS ===== *@
+<dialog class="modal" id="report-filters" aria-labelledby="rf-title">
+    <div class="modal-content">
+        <form method="get" class="sheet" aria-label="Filter the report"
+              onsubmit="this.querySelectorAll('select, input').forEach(function (f) { if (!f.value) { f.disabled = true; } })">
+            @if (view != "overview")
+            {
+                <input type="hidden" name="view" value="@view" />
+            }
+            <header class="sheet-head">
+                <h2 id="rf-title">Filter the report</h2>
+                <button type="button" class="tf-close" data-modal-close aria-label="Close">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                </button>
+            </header>
+
+            <fieldset class="sheet-group">
+                <legend>Members</legend>
+                <label class="field">
+                    <span>Course</span>
+                    <select name="Course" class="input-a">
+                        <option value="">All courses</option>
+                        @foreach (var c in Model.Courses)
+                        {
+                            <option value="@c" selected="@(c == f.Course)">@c</option>
+                        }
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Year</span>
+                    <select name="YearLevel" class="input-a">
+                        <option value="">All years</option>
+                        @for (var y = YearLevels.First; y <= YearLevels.Last; y++)
+                        {
+                            <option value="@y" selected="@(f.YearLevel == y)">Year @y</option>
+                        }
+                        <option value="@YearLevels.NonBlocked" selected="@(f.YearLevel == YearLevels.NonBlocked)">@YearLevels.NonBlockedName</option>
+                    </select>
+                </label>
+            </fieldset>
+
+            <fieldset class="sheet-group">
+                <legend>Events</legend>
+                <label class="field">
+                    <span>Type</span>
+                    <select name="EventTypeId" class="input-a">
+                        <option value="">All types</option>
+                        @foreach (var t in Model.EventTypes)
+                        {
+                            <option value="@t.Id" selected="@(f.EventTypeId == t.Id)">@t.Name</option>
+                        }
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Event</span>
+                    <select name="EventId" class="input-a">
+                        <option value="">All events</option>
+                        @foreach (var e in Model.Events)
+                        {
+                            <option value="@e.Id" selected="@(f.EventId == e.Id)">@e.Name</option>
+                        }
+                    </select>
+                </label>
+                <div class="sheet-row">
+                    <label class="field">
+                        <span>From</span>
+                        <input type="date" name="From" class="input-a" value="@f.From?.ToString("yyyy-MM-dd")" />
+                    </label>
+                    <label class="field">
+                        <span>To</span>
+                        <input type="date" name="To" class="input-a" value="@f.To?.ToString("yyyy-MM-dd")" />
+                    </label>
+                </div>
+            </fieldset>
+
+            <footer class="sheet-foot">
+                <a class="btn-a ghost" asp-action="Index" asp-route-view="@(view == "overview" ? null : view)">Clear all</a>
+                <button type="submit" class="btn-a">Show results</button>
+            </footer>
+        </form>
+    </div>
+</dialog>
+
+@if (view == "overview")
+{
+    @* ======================================================== OVERVIEW ===== *@
+    <section class="report-figures four stagger" aria-label="Headline figures">
+        <div class="rfig hero">
+            <span class="l">Participation rate</span>
+            <span class="n">@pct(Model.ParticipationRate)</span>
+            <span class="s">@Model.Participants of @Model.MembersInScope active members came to at least one event</span>
+            <div class="meter"><i style="width:@pct(Model.ParticipationRate)"></i></div>
+        </div>
     <div class="rfig">
         <span class="l">Check-ins</span>
         <span class="n">@Model.CheckIns</span>
         <span class="s">across @Model.EventsInScope event@(Model.EventsInScope == 1 ? "" : "s")</span>
-    </div>
-    <div class="rfig">
-        <span class="l">Average per event</span>
-        <span class="n">@Model.AveragePerEvent.ToString("0.#", inv)</span>
-        <span class="s">members checked in</span>
     </div>
     <div class="rfig">
         <span class="l">On time</span>
@@ -143,35 +230,30 @@
         <span class="n">@Model.MissingTimeOuts</span>
         <span class="s">left without scanning out</span>
     </div>
-    <div class="rfig">
-        <span class="l">Average stay</span>
-        <span class="n">@(Model.AverageMinutesAttended.HasValue ? $"{(int)Model.AverageMinutesAttended / 60}h {(int)Model.AverageMinutesAttended % 60}m" : "—")</span>
-        <span class="s">from time-in to time-out</span>
-    </div>
-</section>
+    </section>
 
-@if (!anyData)
-{
-    <div class="panel">
-        <div class="panel-body">
-            <div class="empty-a">
-                <div class="glyph">▥</div>
-                <h4>No check-ins match these filters</h4>
-                <p>@(Model.EventsInScope == 0 ? "No event that has started falls inside them." : "Nobody in this group checked in to these events.") Widen the filters to see more.</p>
-                @if (filterCount > 0)
-                {
-                    <a class="btn-a ghost sm" asp-action="Index">Clear filters</a>
-                }
+    if (!anyData)
+    {
+        <div class="panel">
+            <div class="panel-body">
+                <div class="empty-a">
+                    <div class="glyph">▥</div>
+                    <h4>No check-ins match these filters</h4>
+                    <p>@(Model.EventsInScope == 0 ? "No event that has started falls inside them." : "Nobody in this group checked in to these events.") Widen the filters to see more.</p>
+                    @if (filterCount > 0)
+                    {
+                        <a class="btn-a ghost sm" asp-action="Index" asp-route-view="@(view == "overview" ? null : view)">Clear filters</a>
+                    }
+                </div>
             </div>
         </div>
-    </div>
-}
-else
-{
-    <div class="report-grid">
 
+    }
+    else
+    {
+        <div class="report-grid overview">
         @* ---------------------------------------- Attendance per event *@
-        <section class="chart-card c-wide" aria-labelledby="ch-events">
+        <section class="chart-card span-2" aria-labelledby="ch-events">
             <header class="chart-head">
                 <div>
                     <h2 id="ch-events">Attendance per event</h2>
@@ -230,12 +312,382 @@ else
             </svg>
         </section>
 
+
+            @* ---------------------------------------------- Highlights *@
+            <section class="chart-card highlights" aria-label="Highlights">
+                <header class="chart-head"><div><h2>Highlights</h2><p>The standouts. Each opens its section.</p></div></header>
+                <ul class="hl-list">
+                    @if (topEvent != null)
+                    {
+                        <li>
+                            <span class="hl-k">Best-attended event</span>
+                            <a class="hl-v" href="@Url.Action("Index", route("events"))">@topEvent.Name</a>
+                            <span class="hl-s">@topEvent.Total check-in@(topEvent.Total == 1 ? "" : "s") · @topEvent.Start.ToString("MMM d")</span>
+                        </li>
+                    }
+                    @if (topMember != null)
+                    {
+                        <li>
+                            <span class="hl-k">Most active member</span>
+                            <a class="hl-v" href="@Url.Action("Index", route("members"))">@topMember.FullName</a>
+                            <span class="hl-s">@topMember.Attended of @Model.EventsInScope events</span>
+                        </li>
+                    }
+                    @if (topGroup != null)
+                    {
+                        <li>
+                            <span class="hl-k">Most engaged course</span>
+                            <a class="hl-v" href="@Url.Action("Index", route("members"))">@topGroup.Label</a>
+                            <span class="hl-s">@pct(topGroup.Rate) took part · @topGroup.Participants of @topGroup.Members</span>
+                        </li>
+                    }
+                    <li>
+                        <span class="hl-k">Punctuality</span>
+                        <a class="hl-v" href="@Url.Action("Index", route("punctuality"))">@pct(Model.OnTimeRate) on time</a>
+                        <span class="hl-s">@Model.Late late · @Model.MissingTimeOuts without a time-out</span>
+                    </li>
+                </ul>
+            </section>
+        </div>
+    }
+}
+else if (view == "events")
+{
+    @* ========================================================== EVENTS ===== *@
+    <section class="report-figures four stagger" aria-label="Event figures">
+    <div class="rfig accent">
+        <span class="l">Events</span>
+        <span class="n">@Model.EventsInScope</span>
+        <span class="s">that have started, in scope</span>
+    </div>
+    <div class="rfig">
+        <span class="l">Check-ins</span>
+        <span class="n">@Model.CheckIns</span>
+        <span class="s">members checked in, in all</span>
+    </div>
+    <div class="rfig">
+        <span class="l">Average per event</span>
+        <span class="n">@Model.AveragePerEvent.ToString("0.#", inv)</span>
+        <span class="s">members checked in</span>
+    </div>
+    <div class="rfig">
+        <span class="l">Best turnout</span>
+        <span class="n">@(topEvent?.Total.ToString() ?? "—")</span>
+        <span class="s">@(topEvent?.Name ?? "no events yet")</span>
+    </div>
+    </section>
+
+    if (anyData)
+    {
+        <div class="report-grid two">
+        @* ---------------------------------------- Attendance per event *@
+        <section class="chart-card" aria-labelledby="ch-events">
+            <header class="chart-head">
+                <div>
+                    <h2 id="ch-events">Attendance per event</h2>
+                    <p>Check-ins at each event, split by arrival. Hover a column for the numbers.</p>
+                </div>
+                <ul class="legend" aria-label="Legend">
+                    <li><i class="sw ontime"></i>On time</li>
+                    <li><i class="sw late"></i>Late</li>
+                </ul>
+            </header>
+            @{
+                const double W = 760, H = 280, padL = 40, padR = 12, padT = 14, padB = 44;
+                var plotW = W - padL - padR;
+                var plotH = H - padT - padB;
+                var evs = Model.PerEvent;
+                var yMax = niceMax(Math.Max(1, evs.Select(e => e.Total).DefaultIfEmpty(0).Max()));
+                var band = plotW / Math.Max(1, evs.Count);
+                var bw = Math.Min(24, band * 0.56);
+                var labelEvery = Math.Max(1, (int)Math.Ceiling(evs.Count / 10.0));
+                Func<double, double> yOf = v => padT + plotH - (v / yMax * plotH);
+            }
+            <svg class="chart" viewBox="0 0 @n(W) @n(H)" role="img" aria-label="Column chart of check-ins per event, on time and late">
+                @for (var t = 0; t <= tickCount(yMax); t++)
+                {
+                    var v = yMax * t / (double)tickCount(yMax);
+                    var y = yOf(v);
+                    <line class="grid" x1="@n(padL)" x2="@n(W - padR)" y1="@n(y)" y2="@n(y)" />
+                    @svgText("tick", padL - 8, y + 4, "end", n(Math.Round(v)))
+                }
+                @for (var i = 0; i < evs.Count; i++)
+                {
+                    var e = evs[i];
+                    var cx = padL + band * i + band / 2;
+                    var x = cx - bw / 2;
+                    var hOn = e.OnTime / (double)yMax * plotH;
+                    var hLate = e.Late / (double)yMax * plotH;
+                    var gap = hOn > 0 && hLate > 0 ? 2 : 0;
+                    var tip = $"{e.Name}|{e.Start:ddd, MMM d, yyyy}|On time: {e.OnTime}|Late: {e.Late}|Total: {e.Total}{(e.Capacity.HasValue ? $" of {e.Capacity}" : "")}";
+                    <g class="col" style="--i:@i">
+                        <path class="ontime" d="@column(x, padT + plotH - hOn, bw, hOn, hLate == 0)" />
+                        <path class="late" d="@column(x, padT + plotH - hOn - gap - hLate, bw, hLate, true)" />
+                        @if (e.Total > 0)
+                        {
+                            @svgText("cap", cx, padT + plotH - hOn - gap - hLate - 6, "middle", e.Total.ToString())
+                        }
+                        <rect class="hit" x="@n(padL + band * i)" y="@n(padT)" width="@n(band)" height="@n(plotH + padB)" data-tip="@tip" tabindex="0">
+                            <title>@tip.Replace("|", " · ")</title>
+                        </rect>
+                    </g>
+                    @if (i % labelEvery == 0)
+                    {
+                        @svgText("tick", cx, padT + plotH + 18, "middle", e.Start.ToString("MMM d"))
+                    }
+                }
+                <line class="axis" x1="@n(padL)" x2="@n(W - padR)" y1="@n(padT + plotH)" y2="@n(padT + plotH)" />
+            </svg>
+        </section>
+
+        @* ------------------------------------------ By event type *@
+        <section class="chart-card" aria-labelledby="ch-type">
+            <header class="chart-head">
+                <div>
+                    <h2 id="ch-type">By event type</h2>
+                    <p>Average check-ins per event.</p>
+                </div>
+            </header>
+            @{ var typeMax = Model.ByType.Select(t => t.Average).DefaultIfEmpty(0).Max(); }
+            <ol class="hbars">
+                @foreach (var t in Model.ByType)
+                {
+                    <li data-tip="@t.Label|@t.Events event@(t.Events == 1 ? "" : "s")|@t.CheckIns check-ins in all" class="cell-event" data-type="@Ui.TicketType(t.Label)">
+                        <span class="hb-label"><span class="type-dot" aria-hidden="true"></span>@t.Label</span>
+                        <span class="hb-track"><i style="width:@(typeMax > 0 ? n(t.Average / typeMax * 100) : "0")%"></i></span>
+                        <span class="hb-value"><b>@t.Average.ToString("0.#", inv)</b> / event</span>
+                    </li>
+                }
+            </ol>
+        </section>
+
+        </div>
+    }
+
+<div class="panel">
+    <div class="panel-head"><h2>Events</h2><span class="count">@Model.PerEvent.Count in scope</span></div>
+    @if (!Model.PerEvent.Any())
+    {
+        <div class="panel-body"><p class="muted" style="margin:0">No events that have started match these filters.</p></div>
+    }
+    else
+    {
+        <table class="table-a" id="report-events" data-paginate="5">
+            <thead>
+                <tr><th>Event</th><th>When</th><th class="num">On time</th><th class="num">Late</th><th class="num">No time-out</th><th>Turnout</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var e in Model.PerEvent.OrderByDescending(e => e.Start))
+            {
+                var of = e.Capacity is int cap && cap > 0 ? cap : Model.MembersInScope;
+                var share = of > 0 ? Math.Min(1.0, e.Total / (double)of) : 0;
+                <tr>
+                    <td>
+                        <div class="cell-event" data-type="@Ui.TicketType(e.Type)">
+                            <span class="mini-pad" aria-hidden="true"><b>@e.Start.ToString("MMM")</b>@e.Start.ToString("dd")</span>
+                            <span><a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId"><strong>@e.Name</strong></a><span class="dim">@e.Type</span></span>
+                        </div>
+                    </td>
+                    <td class="mono">@e.Start.ToString("MMM d, yyyy")</td>
+                    <td class="num">@e.OnTime</td>
+                    <td class="num">@e.Late</td>
+                    <td class="num">@e.MissingTimeOut</td>
+                    <td>
+                        <div class="bar-cell" title="@e.Total of @of @(e.Capacity.HasValue ? "seats" : "members in scope")">
+                            <div class="meter"><i style="width:@pct(share)"></i></div>
+                            <span class="pct">@pct(share)</span>
+                        </div>
+                    </td>
+                    <td><span class="@Ui.StatusChip(e.Status)">@e.Status</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</div>
+
+}
+else if (view == "members")
+{
+    @* ========================================================= MEMBERS ===== *@
+    <section class="report-figures four stagger" aria-label="Member figures">
+        <div class="rfig hero">
+            <span class="l">Participation rate</span>
+            <span class="n">@pct(Model.ParticipationRate)</span>
+            <span class="s">@Model.Participants of @Model.MembersInScope active members came to at least one event</span>
+            <div class="meter"><i style="width:@pct(Model.ParticipationRate)"></i></div>
+        </div>
+    <div class="rfig">
+        <span class="l">Members in scope</span>
+        <span class="n">@Model.MembersInScope</span>
+        <span class="s">active, matching the filters</span>
+    </div>
+    <div class="rfig">
+        <span class="l">Took part</span>
+        <span class="n">@Model.Participants</span>
+        <span class="s">came to at least one event</span>
+    </div>
+    <div class="rfig @(Model.MembersInScope - Model.Participants > 0 ? "warn" : null)">
+        <span class="l">Never attended</span>
+        <span class="n">@(Model.MembersInScope - Model.Participants)</span>
+        <span class="s">no check-ins in scope</span>
+    </div>
+    </section>
+
+    if (anyData)
+    {
+        <div class="report-grid two">
+        @* ------------------------------------------ By course / by year *@
+        <section class="chart-card" aria-labelledby="ch-course">
+            <header class="chart-head">
+                <div>
+                    <h2 id="ch-course">Who takes part</h2>
+                    <p>Share of each group's active members who attended at least one event.</p>
+                </div>
+                <div class="seg-tabs" role="tablist" aria-label="Group by">
+                    <button type="button" role="tab" aria-selected="true" data-tab="by-course">Course</button>
+                    <button type="button" role="tab" aria-selected="false" data-tab="by-year">Year</button>
+                </div>
+            </header>
+            @foreach (var (key, groups) in new[] { ("by-course", Model.ByCourse), ("by-year", Model.ByYear) })
+            {
+                <ol class="hbars" id="@key" role="tabpanel" hidden="@(key != "by-course")">
+                    @foreach (var g in groups)
+                    {
+                        <li data-tip="@g.Label|@g.Participants of @g.Members members took part|@g.CheckIns check-ins">
+                            <span class="hb-label">@g.Label</span>
+                            <span class="hb-track"><i style="width:@pct(g.Rate)"></i></span>
+                            <span class="hb-value"><b>@pct(g.Rate)</b> @g.Participants/@g.Members</span>
+                        </li>
+                    }
+                </ol>
+            }
+        </section>
+
+        @* ------------------------------------------ Most active *@
+        <section class="chart-card" aria-labelledby="ch-top">
+            <header class="chart-head">
+                <div>
+                    <h2 id="ch-top">Most active members</h2>
+                    <p>Ranked by events attended, then fewest late arrivals.</p>
+                </div>
+            </header>
+            <ol class="leaders">
+                @foreach (var (m, i) in Model.Members.Where(m => m.Attended > 0).Take(5).Select((m, i) => (m, i)))
+                {
+                    <li>
+                        <span class="rank">@(i + 1)</span>
+                        <span class="cell-person">
+                            <span class="av" aria-hidden="true">@Ui.Initials(m.FullName.Split(',').Last() + " " + m.FullName.Split(',').First())</span>
+                            <a asp-controller="Members" asp-action="Details" asp-route-id="@m.UserId"><strong>@m.FullName</strong></a>
+                        </span>
+                        <span class="dim">@m.Course@(m.YearLevel.HasValue ? $" · {YearLevels.Label(m.YearLevel)}" : "")</span>
+                        <span class="hb-track"><i style="width:@pct(m.Rate)"></i></span>
+                        <span class="lead-n"><b>@m.Attended</b>/@Model.EventsInScope</span>
+                    </li>
+                }
+            </ol>
+        </section>
+        </div>
+    }
+
+<div class="panel">
+    <div class="panel-head">
+        <h2>Members</h2>
+        <span class="count">@Model.Members.Count in scope · @Model.Members.Count(m => m.Attended == 0) never attended</span>
+        <div class="searchbar compact">
+            <svg class="s-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /></svg>
+            <input type="search" id="report-member-search" class="input-a" placeholder="Filter members…" aria-label="Filter members"
+                   data-live-search data-target="#report-members" />
+        </div>
+    </div>
+    @if (!Model.Members.Any())
+    {
+        <div class="panel-body"><p class="muted" style="margin:0">No active members match these filters.</p></div>
+    }
+    else
+    {
+        <table class="table-a" id="report-members" data-paginate="5">
+            <thead>
+                <tr><th>Name</th><th>Student no.</th><th>Course</th><th class="num">Year</th><th>Attendance</th><th class="num">Late</th><th class="num">No time-out</th><th>Last attended</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var m in Model.Members)
+            {
+                <tr data-search="@m.FullName @m.StudentNumber @m.Course">
+                    <td><a asp-controller="Members" asp-action="Details" asp-route-id="@m.UserId"><strong>@m.FullName</strong></a></td>
+                    <td class="mono">@m.StudentNumber</td>
+                    <td>@(m.Course ?? "—")</td>
+                    <td class="num">@YearLevels.Short(m.YearLevel)</td>
+                    <td>
+                        <div class="bar-cell">
+                            <div class="meter"><i style="width:@pct(m.Rate)"></i></div>
+                            <span class="pct">@m.Attended/@Model.EventsInScope</span>
+                        </div>
+                    </td>
+                    <td class="num">@m.Late</td>
+                    <td class="num">@m.MissingTimeOuts</td>
+                    <td class="mono">@(m.LastAttended?.ToString("MMM d, yyyy") ?? "Never")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</div>
+
+}
+else
+{
+    @* ===================================================== PUNCTUALITY ===== *@
+    <section class="report-figures four stagger" aria-label="Punctuality figures">
+    <div class="rfig accent">
+        <span class="l">On time</span>
+        <span class="n">@pct(Model.OnTimeRate)</span>
+        <span class="s">@Model.OnTime of @Model.CheckIns arrivals</span>
+    </div>
+    <div class="rfig @(Model.Late > 0 ? "warn" : null)">
+        <span class="l">Late</span>
+        <span class="n">@Model.Late</span>
+        <span class="s">after the time-in window</span>
+    </div>
+    <div class="rfig @(Model.MissingTimeOuts > 0 ? "warn" : null)">
+        <span class="l">Missing time-outs</span>
+        <span class="n">@Model.MissingTimeOuts</span>
+        <span class="s">left without scanning out</span>
+    </div>
+    <div class="rfig">
+        <span class="l">Average stay</span>
+        <span class="n">@(Model.AverageMinutesAttended.HasValue ? $"{(int)Model.AverageMinutesAttended / 60}h {(int)Model.AverageMinutesAttended % 60}m" : "—")</span>
+        <span class="s">from time-in to time-out</span>
+    </div>
+    </section>
+
+    if (!anyData)
+    {
+        <div class="panel">
+            <div class="panel-body">
+                <div class="empty-a">
+                    <div class="glyph">▥</div>
+                    <h4>No check-ins match these filters</h4>
+                    <p>@(Model.EventsInScope == 0 ? "No event that has started falls inside them." : "Nobody in this group checked in to these events.") Widen the filters to see more.</p>
+                    @if (filterCount > 0)
+                    {
+                        <a class="btn-a ghost sm" asp-action="Index" asp-route-view="@(view == "overview" ? null : view)">Clear filters</a>
+                    }
+                </div>
+            </div>
+        </div>
+
+    }
+    else
+    {
+        <div class="report-grid two">
         @* ---------------------------------------------- Punctuality *@
-        <section class="chart-card c-narrow" aria-labelledby="ch-punct">
+        <section class="chart-card" aria-labelledby="ch-punct">
             <header class="chart-head">
                 <div>
                     <h2 id="ch-punct">Punctuality</h2>
-                    <p>Arrivals inside each event's grace period.</p>
+                    <p>On time is inside each event's time-in window; late is after it.</p>
                 </div>
             </header>
             @{
@@ -273,35 +725,8 @@ else
             </div>
         </section>
 
-        @* ------------------------------------------ By course / by year *@
-        <section class="chart-card c-half" aria-labelledby="ch-course">
-            <header class="chart-head">
-                <div>
-                    <h2 id="ch-course">Who takes part</h2>
-                    <p>Share of each group's active members who attended at least one event.</p>
-                </div>
-                <div class="seg-tabs" role="tablist" aria-label="Group by">
-                    <button type="button" role="tab" aria-selected="true" data-tab="by-course">Course</button>
-                    <button type="button" role="tab" aria-selected="false" data-tab="by-year">Year</button>
-                </div>
-            </header>
-            @foreach (var (key, groups) in new[] { ("by-course", Model.ByCourse), ("by-year", Model.ByYear) })
-            {
-                <ol class="hbars" id="@key" role="tabpanel" hidden="@(key != "by-course")">
-                    @foreach (var g in groups)
-                    {
-                        <li data-tip="@g.Label|@g.Participants of @g.Members members took part|@g.CheckIns check-ins">
-                            <span class="hb-label">@g.Label</span>
-                            <span class="hb-track"><i style="width:@pct(g.Rate)"></i></span>
-                            <span class="hb-value"><b>@pct(g.Rate)</b> @g.Participants/@g.Members</span>
-                        </li>
-                    }
-                </ol>
-            }
-        </section>
-
         @* ------------------------------------------ Arrival timing *@
-        <section class="chart-card c-half" aria-labelledby="ch-arrive">
+        <section class="chart-card" aria-labelledby="ch-arrive">
             <header class="chart-head">
                 <div>
                     <h2 id="ch-arrive">When people arrive</h2>
@@ -351,140 +776,9 @@ else
             </svg>
         </section>
 
-        @* ------------------------------------------ By event type *@
-        <section class="chart-card c-third" aria-labelledby="ch-type">
-            <header class="chart-head">
-                <div>
-                    <h2 id="ch-type">By event type</h2>
-                    <p>Average check-ins per event.</p>
-                </div>
-            </header>
-            @{ var typeMax = Model.ByType.Select(t => t.Average).DefaultIfEmpty(0).Max(); }
-            <ol class="hbars">
-                @foreach (var t in Model.ByType)
-                {
-                    <li data-tip="@t.Label|@t.Events event@(t.Events == 1 ? "" : "s")|@t.CheckIns check-ins in all" class="cell-event" data-type="@Ui.TicketType(t.Label)">
-                        <span class="hb-label"><span class="type-dot" aria-hidden="true"></span>@t.Label</span>
-                        <span class="hb-track"><i style="width:@(typeMax > 0 ? n(t.Average / typeMax * 100) : "0")%"></i></span>
-                        <span class="hb-value"><b>@t.Average.ToString("0.#", inv)</b> / event</span>
-                    </li>
-                }
-            </ol>
-        </section>
-
-        @* ------------------------------------------ Most active *@
-        <section class="chart-card c-two-thirds" aria-labelledby="ch-top">
-            <header class="chart-head">
-                <div>
-                    <h2 id="ch-top">Most active members</h2>
-                    <p>Ranked by events attended, then fewest late arrivals.</p>
-                </div>
-            </header>
-            <ol class="leaders">
-                @foreach (var (m, i) in Model.Members.Where(m => m.Attended > 0).Take(5).Select((m, i) => (m, i)))
-                {
-                    <li>
-                        <span class="rank">@(i + 1)</span>
-                        <span class="cell-person">
-                            <span class="av" aria-hidden="true">@Ui.Initials(m.FullName.Split(',').Last() + " " + m.FullName.Split(',').First())</span>
-                            <a asp-controller="Members" asp-action="Details" asp-route-id="@m.UserId"><strong>@m.FullName</strong></a>
-                        </span>
-                        <span class="dim">@m.Course@(m.YearLevel.HasValue ? $" · Y{m.YearLevel}" : "")</span>
-                        <span class="hb-track"><i style="width:@pct(m.Rate)"></i></span>
-                        <span class="lead-n"><b>@m.Attended</b>/@Model.EventsInScope</span>
-                    </li>
-                }
-            </ol>
-        </section>
-    </div>
-}
-
-@* ============================================================ TABLES ====== *@
-<div class="panel">
-    <div class="panel-head">
-        <h2>Members</h2>
-        <span class="count">@Model.Members.Count in scope · @Model.Members.Count(m => m.Attended == 0) never attended</span>
-        <div class="searchbar compact">
-            <svg class="s-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /></svg>
-            <input type="search" id="report-member-search" class="input-a" placeholder="Filter members…" aria-label="Filter members"
-                   data-live-search data-target="#report-members" />
         </div>
-    </div>
-    @if (!Model.Members.Any())
-    {
-        <div class="panel-body"><p class="muted" style="margin:0">No active members match these filters.</p></div>
     }
-    else
-    {
-        <table class="table-a" id="report-members" data-paginate="10">
-            <thead>
-                <tr><th>Name</th><th>Student no.</th><th>Course</th><th class="num">Year</th><th>Attendance</th><th class="num">Late</th><th class="num">No time-out</th><th>Last attended</th></tr>
-            </thead>
-            <tbody>
-            @foreach (var m in Model.Members)
-            {
-                <tr data-search="@m.FullName @m.StudentNumber @m.Course">
-                    <td><a asp-controller="Members" asp-action="Details" asp-route-id="@m.UserId"><strong>@m.FullName</strong></a></td>
-                    <td class="mono">@m.StudentNumber</td>
-                    <td>@(m.Course ?? "—")</td>
-                    <td class="num">@(m.YearLevel?.ToString() ?? "—")</td>
-                    <td>
-                        <div class="bar-cell">
-                            <div class="meter"><i style="width:@pct(m.Rate)"></i></div>
-                            <span class="pct">@m.Attended/@Model.EventsInScope</span>
-                        </div>
-                    </td>
-                    <td class="num">@m.Late</td>
-                    <td class="num">@m.MissingTimeOuts</td>
-                    <td class="mono">@(m.LastAttended?.ToString("MMM d, yyyy") ?? "Never")</td>
-                </tr>
-            }
-            </tbody>
-        </table>
-    }
-</div>
-
-<div class="panel">
-    <div class="panel-head"><h2>Events</h2><span class="count">@Model.PerEvent.Count in scope</span></div>
-    @if (!Model.PerEvent.Any())
-    {
-        <div class="panel-body"><p class="muted" style="margin:0">No events that have started match these filters.</p></div>
-    }
-    else
-    {
-        <table class="table-a" id="report-events" data-paginate="10">
-            <thead>
-                <tr><th>Event</th><th>When</th><th class="num">On time</th><th class="num">Late</th><th class="num">No time-out</th><th>Turnout</th><th>Status</th></tr>
-            </thead>
-            <tbody>
-            @foreach (var e in Model.PerEvent.OrderByDescending(e => e.Start))
-            {
-                var of = e.Capacity is int cap && cap > 0 ? cap : Model.MembersInScope;
-                var share = of > 0 ? Math.Min(1.0, e.Total / (double)of) : 0;
-                <tr>
-                    <td>
-                        <div class="cell-event" data-type="@Ui.TicketType(e.Type)">
-                            <span class="mini-pad" aria-hidden="true"><b>@e.Start.ToString("MMM")</b>@e.Start.ToString("dd")</span>
-                            <span><a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId"><strong>@e.Name</strong></a><span class="dim">@e.Type</span></span>
-                        </div>
-                    </td>
-                    <td class="mono">@e.Start.ToString("MMM d, yyyy")</td>
-                    <td class="num">@e.OnTime</td>
-                    <td class="num">@e.Late</td>
-                    <td class="num">@e.MissingTimeOut</td>
-                    <td>
-                        <div class="bar-cell" title="@e.Total of @of @(e.Capacity.HasValue ? "seats" : "members in scope")">
-                            <div class="meter"><i style="width:@pct(share)"></i></div>
-                            <span class="pct">@pct(share)</span>
-                        </div>
-                    </td>
-                    <td><span class="@Ui.StatusChip(e.Status)">@e.Status</span></td>
-                </tr>
-            }
-            </tbody>
-        </table>
-    }
-</div>
+}
 
 <div class="chart-tip" id="chart-tip" role="tooltip" hidden></div>
 

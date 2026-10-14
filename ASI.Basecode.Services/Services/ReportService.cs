@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using ASI.Basecode.Data.Interfaces;
 using ASI.Basecode.Resources.Constants;
 using ASI.Basecode.Services.Interfaces;
@@ -22,6 +24,90 @@ namespace ASI.Basecode.Services.Services
             _eventTypes = eventTypes;
             _users = users;
             _attendance = attendance;
+        }
+
+        public string ExportCsv(ReportFilter filter, string generatedBy, out string fileName)
+        {
+            var r = GetReport(filter);
+            var f = r.Filter;
+            var inv = CultureInfo.InvariantCulture;
+            var csv = new StringBuilder();
+
+            void Row(params object[] cells) =>
+                csv.AppendLine(string.Join(",", cells.Select(c => Cell(c switch
+                {
+                    null => string.Empty,
+                    double d => d.ToString("0.##", inv),
+                    DateTime t => t.ToString("yyyy-MM-dd HH:mm", inv),
+                    _ => Convert.ToString(c, inv),
+                }))));
+            void Section(string title, params string[] headers)
+            {
+                csv.AppendLine();
+                Row(title);
+                if (headers.Length > 0) { Row(headers); }
+            }
+            string Pct(double v) => Math.Round(v * 100).ToString("0", inv) + "%";
+
+            Row("Apilan participation report");
+            Row("Generated", DateTime.Now, "by", generatedBy);
+
+            Section("Filters", "Filter", "Value");
+            Row("Course", string.IsNullOrWhiteSpace(f.Course) ? "All courses" : f.Course);
+            Row("Year", YearLevels.Label(f.YearLevel) ?? "All years");
+            Row("Event type", r.EventTypes.FirstOrDefault(t => t.Id == f.EventTypeId)?.Name ?? "All types");
+            Row("Event", r.Events.FirstOrDefault(e => e.Id == f.EventId)?.Name ?? "All events");
+            Row("From", f.From?.ToString("yyyy-MM-dd", inv) ?? "Any");
+            Row("To", f.To?.ToString("yyyy-MM-dd", inv) ?? "Any");
+
+            Section("Summary", "Measure", "Value", "Note");
+            Row("Participation rate", Pct(r.ParticipationRate), $"{r.Participants} of {r.MembersInScope} active members came to at least one event");
+            Row("Events in scope", r.EventsInScope, "events that have started");
+            Row("Check-ins", r.CheckIns);
+            Row("Average check-ins per event", r.AveragePerEvent);
+            Row("On time", Pct(r.OnTimeRate), $"{r.OnTime} arrivals inside the time-in window");
+            Row("Late", r.Late, "arrivals after the time-in window");
+            Row("Missing time-outs", r.MissingTimeOuts);
+            Row("Average stay (minutes)", r.AverageMinutesAttended.HasValue ? Math.Round(r.AverageMinutesAttended.Value) : null);
+
+            Section("Attendance per event", "Event", "Type", "Start", "Status", "Capacity", "On time", "Late", "Total", "No time-out");
+            foreach (var e in r.PerEvent.OrderBy(e => e.Start))
+            {
+                Row(e.Name, e.Type, e.Start, e.Status, e.Capacity, e.OnTime, e.Late, e.Total, e.MissingTimeOut);
+            }
+
+            Section("By event type", "Type", "Events", "Check-ins", "Average per event");
+            foreach (var t in r.ByType) { Row(t.Label, t.Events, t.CheckIns, t.Average); }
+
+            Section("Participation by course", "Course", "Members", "Took part", "Rate", "Check-ins");
+            foreach (var g in r.ByCourse) { Row(g.Label, g.Members, g.Participants, Pct(g.Rate), g.CheckIns); }
+
+            Section("Participation by year", "Year", "Members", "Took part", "Rate", "Check-ins");
+            foreach (var g in r.ByYear) { Row(g.Label, g.Members, g.Participants, Pct(g.Rate), g.CheckIns); }
+
+            Section("Arrival times (minutes after the start)", "Arrived", "On time", "Late", "Total");
+            foreach (var a in r.Arrivals) { Row(a.Label, a.OnTime, a.Late, a.Total); }
+
+            Section("Members", "Name", "Student no.", "Course", "Year", "Events attended", "Of events", "Rate", "Late", "No time-out", "Last attended");
+            foreach (var m in r.Members)
+            {
+                Row(m.FullName, m.StudentNumber, m.Course, YearLevels.Label(m.YearLevel), m.Attended, r.EventsInScope,
+                    Pct(m.Rate), m.Late, m.MissingTimeOuts, m.LastAttended?.ToString("yyyy-MM-dd", inv) ?? "Never");
+            }
+
+            fileName = $"participation-{DateTime.Now:yyyy-MM-dd-HHmm}.csv";
+            return csv.ToString();
+        }
+
+        /// <summary>A CSV cell: quoted when it has to be, and never read as a formula.</summary>
+        private static string Cell(string value)
+        {
+            if (string.IsNullOrEmpty(value)) { return string.Empty; }
+            if ("=+-@".IndexOf(value[0]) >= 0 && !double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
+            {
+                value = "'" + value;
+            }
+            return value.IndexOfAny(new[] { ',', '"', '\n', '\r' }) >= 0 ? "\"" + value.Replace("\"", "\"\"") + "\"" : value;
         }
 
         public DashboardViewModel GetDashboard()
