@@ -920,3 +920,58 @@
     .foot-grid { grid-template-columns: 1fr; }
 }
 
+
+/* ==========================================================================
+   One school — the band under the hero that says who this is for.
+   ========================================================================== */
+.campus { padding: 0 0 var(--s-7); }
+.campus-inner {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--s-6);
+    align-items: center;
+    padding: var(--s-6) var(--s-6) var(--s-6) var(--s-7);
+    background: var(--surface);
+    border: var(--border-strong);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-float);
+    overflow: hidden;
+}
+/* A coloured spine down the left edge, like a school ID card. */
+.campus-inner::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 6px;
+    background: linear-gradient(180deg, var(--accent-bright), var(--teal));
+}
+.campus-seal svg {
+    display: block;
+    width: 76px; height: 76px;
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.campus-seal .inner { stroke-dasharray: 3 4; opacity: 0.6; }
+.campus-copy .eyebrow { margin-bottom: var(--s-2); }
+.campus-copy h2 { font-size: clamp(1.45rem, 2.6vw, 1.9rem); margin-bottom: var(--s-2); }
+.campus-copy h2 em { font-family: var(--font-display); font-style: italic; color: var(--accent); letter-spacing: -0.02em; }
+.campus-copy p { color: var(--ink-2); margin: 0; font-size: var(--fs-sm); }
+.campus-facts {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 var(--s-6);
+    border-left: 1px dashed var(--line-strong);
+    display: grid;
+    gap: var(--s-3);
+}
+.campus-facts li { display: grid; }
+.campus-facts b { font-family: var(--font-mono); font-size: var(--fs-lg); font-weight: 600; line-height: 1.15; color: var(--ink); }
+.campus-facts span { font-family: var(--font-mono); font-size: var(--fs-3xs); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--ink-3); }
+@media (max-width: 900px) {
+    .campus-inner { grid-template-columns: minmax(0, 1fr); gap: var(--s-4); padding: var(--s-5) var(--s-5) var(--s-5) var(--s-6); }
+    .campus-facts { padding: var(--s-4) 0 0; border-left: 0; border-top: 1px dashed var(--line-strong); grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
