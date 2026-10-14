@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace ASI.Basecode.Resources.Constants
 {
     /// <summary>
@@ -22,5 +24,17 @@ namespace ASI.Basecode.Resources.Constants
         /// reset puts it back. Signing in with it forces a change first.
         /// </summary>
         public string DefaultPassword { get; set; } = "Apilan@2026";
+
+        /// <summary>
+        /// The courses offered in the member form's course picker. Officers can
+        /// still type one that is not listed.
+        /// </summary>
+        public List<CourseOption> Courses { get; set; } = new();
+    }
+
+    public class CourseOption
+    {
+        public string Code { get; set; }
+        public string Name { get; set; }
     }
 }

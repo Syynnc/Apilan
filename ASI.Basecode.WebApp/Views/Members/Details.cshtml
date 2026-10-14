@@ -50,7 +50,7 @@
                 <dl class="detail-list">
                     <div><dt>Student no.</dt><dd class="mono">@st.StudentNumber</dd></div>
                     <div><dt>Course</dt><dd>@(string.IsNullOrEmpty(st.Course) ? "—" : st.Course)</dd></div>
-                    <div><dt>Year</dt><dd>@(st.YearLevel?.ToString() ?? "—")</dd></div>
+                    <div><dt>Year</dt><dd>@(YearLevels.Label(st.YearLevel) ?? "—")</dd></div>
                     <div><dt>Gender</dt><dd>@(string.IsNullOrEmpty(st.Gender) ? "—" : st.Gender)</dd></div>
                     <div><dt>Email</dt><dd>@(string.IsNullOrEmpty(st.Email) ? "—" : st.Email)</dd></div>
                     <div><dt>Contact</dt><dd class="mono">@(string.IsNullOrEmpty(st.ContactNumber) ? "—" : st.ContactNumber)</dd></div>

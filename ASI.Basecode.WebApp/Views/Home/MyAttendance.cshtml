@@ -8,7 +8,7 @@
     {
         st.StudentNumber,
         st.Course,
-        st.YearLevel.HasValue ? $"Year {st.YearLevel}" : null
+        YearLevels.Label(st.YearLevel)
     }.Where(x => !string.IsNullOrWhiteSpace(x)));
 
     var onTime = Model.EventsAttended - Model.TimesLate;

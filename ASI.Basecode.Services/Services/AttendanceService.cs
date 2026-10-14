@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using ASI.Basecode.Data.Interfaces;
+using ASI.Basecode.Resources.Constants;
 using ASI.Basecode.Resources.Messages;
 using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.Services.ServiceModels;
@@ -111,7 +112,7 @@ namespace ASI.Basecode.Services.Services
             foreach (var r in rows)
             {
                 csv.AppendLine(string.Join(",",
-                    Cell(r.StudentNumber), Cell(r.FullName), Cell(r.Course), r.YearLevel?.ToString(),
+                    Cell(r.StudentNumber), Cell(r.FullName), Cell(r.Course), YearLevels.Label(r.YearLevel),
                     Cell(r.AttendanceMode),
                     r.TimeIn.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
                     r.TimeOut?.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),

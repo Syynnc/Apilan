@@ -157,7 +157,7 @@ namespace ASI.Basecode.Services.Services
                 .OrderBy(g => g.Key ?? 99)
                 .Select(g => new GroupParticipation
                 {
-                    Label = g.Key.HasValue ? $"Year {g.Key}" : "No year",
+                    Label = YearLevels.Label(g.Key) ?? "No year",
                     Members = g.Count(),
                     Participants = g.Count(m => byUser[m.Id].Any()),
                     CheckIns = g.Sum(m => byUser[m.Id].Count()),
