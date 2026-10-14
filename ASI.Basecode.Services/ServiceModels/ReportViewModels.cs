@@ -13,6 +13,9 @@ namespace ASI.Basecode.Services.ServiceModels
         public List<EventSummary> Ongoing { get; set; } = new();
         public List<EventSummary> Upcoming { get; set; } = new();
         public List<EventSummary> RecentlyFinished { get; set; } = new();
+        public int UpcomingTotal { get; set; }
+        public int FinishedTotal { get; set; }
+        public int LateArrivals { get; set; }
     }
 
     public class ReportViewModel

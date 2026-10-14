@@ -33,9 +33,13 @@ namespace ASI.Basecode.Services.Services
                 Ongoing = events.Where(e => e.EventStatus == Const.StatusOngoing)
                                 .OrderBy(e => e.EventStart).ToList(),
                 Upcoming = events.Where(e => e.EventStatus == Const.StatusUpcoming)
-                                 .OrderBy(e => e.EventStart).Take(5).ToList(),
+                                 .OrderBy(e => e.EventStart).Take(4).ToList(),
+                UpcomingTotal = events.Count(e => e.EventStatus == Const.StatusUpcoming),
+                // The dashboard shows the last three; the rest are a click away in Events.
                 RecentlyFinished = events.Where(e => e.EventStatus == Const.StatusFinished)
-                                         .OrderByDescending(e => e.EventEnd).Take(5).ToList(),
+                                         .OrderByDescending(e => e.EventEnd).Take(3).ToList(),
+                FinishedTotal = events.Count(e => e.EventStatus == Const.StatusFinished),
+                LateArrivals = events.Sum(e => e.LateCount ?? 0),
             };
         }
 
