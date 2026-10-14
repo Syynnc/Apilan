@@ -602,3 +602,303 @@ details.more > summary {
 
 /* The tilting ticket (wired in app.js), same as the landing hero. */
 .ticket[data-tilt] { transition: transform var(--t-slow) var(--ease-out), box-shadow var(--t-slow) var(--ease-out); }
+
+/* ==========================================================================
+   SEARCH BAR — the search button lives inside the field, on the right,
+   where a search button belongs. Enter submits; typing filters live.
+   ========================================================================== */
+.toolbar { position: relative; z-index: 6; }
+
+.searchbar { position: relative; flex: 1 1 320px; min-width: 220px; }
+.searchbar .input-a {
+    height: 44px;
+    padding-left: 42px;
+    padding-right: 104px;
+    font-size: var(--fs-sm);
+    background: var(--surface);
+}
+.searchbar .input-a::-webkit-search-cancel-button { display: none; }
+.searchbar .s-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    width: 17px;
+    height: 17px;
+    transform: translateY(-50%);
+    fill: none;
+    stroke: var(--ink-3);
+    stroke-width: 2;
+    stroke-linecap: round;
+    pointer-events: none;
+    transition: stroke var(--t-fast) var(--ease-out);
+}
+.searchbar:focus-within .s-icon { stroke: var(--accent); }
+.searchbar .s-go {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    bottom: 5px;
+    padding: 0 var(--s-4);
+    border-radius: calc(var(--r-sm) - 2px);
+    font-size: var(--fs-2xs);
+}
+.searchbar .s-go kbd {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    opacity: 0.7;
+}
+.searchbar .s-clear {
+    position: absolute;
+    top: 50%;
+    right: 92px;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--ink-3);
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 18px;
+    line-height: 1;
+}
+.searchbar .s-clear:hover { background: var(--surface-sunken); color: var(--ink); }
+
+/* Suggestions under the box */
+.suggest {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 40;
+    margin: 0;
+    padding: var(--s-2);
+    list-style: none;
+    max-height: min(420px, 60vh);
+    overflow-y: auto;
+    background: var(--surface-raised);
+    border: var(--border-strong);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-lift);
+    animation: suggest-in 180ms var(--ease-out);
+}
+@keyframes suggest-in { from { opacity: 0; transform: translateY(-4px); } }
+.suggest li a {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-2) var(--s-3);
+    border-radius: var(--r-sm);
+    color: var(--ink);
+    text-decoration: none;
+}
+.suggest li.is-active a,
+.suggest li a:hover { background: var(--accent-wash); }
+.suggest .sg-badge {
+    --tt: var(--accent);
+    display: grid;
+    place-items: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 6px;
+    border-radius: var(--r-sm);
+    border: 1px solid color-mix(in srgb, var(--tt) 40%, transparent);
+    background: color-mix(in srgb, var(--tt) 12%, var(--surface));
+    color: var(--tt);
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.suggest .sg-badge[data-tone="workshop"] { --tt: var(--mango); }
+.suggest .sg-badge[data-tone="assembly"] { --tt: var(--gold); }
+.suggest .sg-badge[data-tone="service"]  { --tt: var(--rose); }
+.suggest .sg-badge[data-tone="training"] { --tt: var(--teal); }
+.suggest .sg-badge[data-tone="off"]      { --tt: var(--risk); }
+.suggest .sg-main { display: grid; min-width: 0; }
+.suggest .sg-title { font-size: var(--fs-sm); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.suggest .sg-sub { font-size: var(--fs-2xs); color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.suggest .sg-meta { font-family: var(--font-mono); font-size: var(--fs-3xs); color: var(--ink-3); white-space: nowrap; }
+.suggest mark { background: var(--accent-wash); color: var(--accent); padding: 0 1px; border-radius: 2px; font-weight: 700; }
+.suggest li.is-active mark, .suggest li a:hover mark { background: transparent; }
+.suggest-none { padding: var(--s-3); font-size: var(--fs-2xs); color: var(--ink-3); }
+.suggest-foot {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: var(--s-2);
+    padding: var(--s-2) var(--s-3) var(--s-1);
+    border-top: 1px dashed var(--line);
+    font-size: var(--fs-3xs);
+    color: var(--ink-3);
+}
+.suggest-foot kbd {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 1px 5px;
+    border: var(--border);
+    border-bottom-width: 2px;
+    border-radius: var(--r-xs);
+    background: var(--surface);
+    color: var(--ink-2);
+}
+
+/* ==========================================================================
+   PAGER — sits flush under a table, inside its panel.
+   ========================================================================== */
+.pager {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3) var(--s-5);
+    flex-wrap: wrap;
+    padding: var(--s-3) var(--s-5);
+    border-top: var(--border);
+    background: var(--surface-sunken);
+    font-size: var(--fs-2xs);
+    color: var(--ink-3);
+}
+.pager-size { display: inline-flex; align-items: center; gap: var(--s-2); margin: 0; }
+.pager-size span {
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+}
+.pager-size .input-a { width: auto; padding: 5px 26px 5px 10px; font-size: var(--fs-2xs); font-family: var(--font-mono); }
+.pager-info { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.pager-pages { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.pager-btn {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border: var(--border);
+    border-radius: var(--r-sm);
+    background: var(--surface);
+    color: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--t-fast) var(--ease-out),
+                color var(--t-fast) var(--ease-out),
+                border-color var(--t-fast) var(--ease-out),
+                transform var(--t-fast) var(--ease-spring);
+}
+.pager-btn:hover:not(:disabled) { border-color: var(--accent-edge); color: var(--accent); transform: translateY(-1px); }
+.pager-btn.nav { font-size: var(--fs-md); line-height: 1; }
+.pager-btn.is-current { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.pager-btn:disabled { opacity: 0.4; cursor: default; }
+.pager-gap { padding: 0 4px; font-family: var(--font-mono); }
+
+.pager-empty td { padding: 0 !important; }
+.pager-empty-text {
+    padding: var(--s-6) var(--s-5);
+    text-align: center;
+    font-size: var(--fs-sm);
+    color: var(--ink-3);
+    background: var(--surface-sunken);
+}
+
+@keyframes row-in { from { opacity: 0; transform: translateY(6px); } }
+.table-a tbody tr.row-in { animation: row-in 320ms var(--ease-out) both; }
+
+@media (max-width: 640px) {
+    .pager { padding-inline: var(--s-4); }
+    .pager-pages { margin-left: 0; width: 100%; justify-content: center; }
+}
+
+/* ---- Table cells shared by the lists ----------------------------------- */
+/* An event row leads with a small tear-off date in its type colour. */
+.cell-event { --tt: var(--accent); display: flex; align-items: center; gap: var(--s-3); min-width: 0; }
+.cell-event[data-type="workshop"] { --tt: var(--mango); }
+.cell-event[data-type="assembly"] { --tt: var(--gold); }
+.cell-event[data-type="service"]  { --tt: var(--rose); }
+.cell-event[data-type="training"] { --tt: var(--teal); }
+.cell-event > span:last-child { display: grid; min-width: 0; }
+.cell-event .dim { font-size: var(--fs-2xs); }
+.mini-pad {
+    flex: none;
+    display: grid;
+    width: 40px;
+    text-align: center;
+    border: var(--border-strong);
+    border-radius: var(--r-xs);
+    overflow: hidden;
+    background: var(--surface);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--ink);
+}
+.mini-pad b {
+    display: block;
+    background: var(--tt);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    line-height: 1.6;
+}
+.cell-event[data-type="assembly"] .mini-pad b { color: #241A00; }
+
+.cell-person { display: flex; align-items: center; gap: var(--s-3); }
+.cell-person .av {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--accent-wash);
+    border: 1px solid var(--accent-edge);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.segmented a .n {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 0 6px;
+    border-radius: var(--r-pill);
+    background: var(--surface-sunken);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-3);
+}
+.segmented a.is-active .n { background: color-mix(in srgb, var(--accent-ink) 22%, transparent); color: var(--accent-ink); }
+
+/* A toggle switch for list options like "Show deactivated". */
+.switch { display: inline-flex; align-items: center; gap: var(--s-2); font-size: var(--fs-xs); color: var(--ink-2); cursor: pointer; user-select: none; }
+.switch input { position: absolute; opacity: 0; pointer-events: none; }
+.switch-track {
+    position: relative;
+    width: 34px;
+    height: 20px;
+    border-radius: var(--r-pill);
+    background: var(--line-strong);
+    transition: background-color var(--t-fast) var(--ease-out);
+}
+.switch-track::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--surface);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    transition: transform var(--t-med) var(--ease-spring);
+}
+.switch input:checked + .switch-track { background: var(--accent); }
+.switch input:checked + .switch-track::after { transform: translateX(14px); }
+.switch input:focus-visible + .switch-track { outline: 2px solid var(--focus); outline-offset: 2px; }

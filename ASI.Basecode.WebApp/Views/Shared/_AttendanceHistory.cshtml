@@ -1,15 +1,19 @@
 @model List<ASI.Basecode.Data.Models.AttendanceDetail>
+@* Most recent first (the service orders by time-in), paginated in the browser. *@
 
 <div class="panel">
-    <div class="panel-head"><h3>Attendance history</h3><span class="count">@Model.Count</span></div>
+    <div class="panel-head">
+        <h3>Attendance history</h3>
+        <span class="count">@Model.Count event@(Model.Count == 1 ? "" : "s") · newest first</span>
+    </div>
     @if (!Model.Any())
     {
-        <div class="panel-body"><div class="empty-a"><h4>No attendance yet</h4><p>Events attended will appear here.</p></div></div>
+        <div class="panel-body"><div class="empty-a"><div class="glyph">◎</div><h4>No attendance yet</h4><p>Events attended will appear here.</p></div></div>
     }
     else
     {
         @* table-stack: on a phone each row becomes a small card, labelled from data-label. *@
-        <table class="table-a table-stack">
+        <table class="table-a table-stack" id="history-table" data-paginate="5" data-page-sizes="5,10,20,50" data-pager-always>
             <thead>
                 <tr><th>Event</th><th>When</th><th>Mode</th><th>Time in</th><th>Time out</th><th>Arrival</th></tr>
             </thead>
@@ -17,12 +21,26 @@
             @foreach (var a in Model)
             {
                 <tr>
-                    <td class="cell-title"><strong>@a.EventName</strong><br /><span class="dim">@a.EventType</span></td>
-                    <td class="mono" data-label="When">@a.EventStart.ToString("yyyy-MM-dd")</td>
+                    <td class="cell-title">
+                        <div class="cell-event" data-type="@Ui.TicketType(a.EventType)">
+                            <span class="mini-pad" aria-hidden="true"><b>@a.EventStart.ToString("MMM")</b>@a.EventStart.ToString("dd")</span>
+                            <span><strong>@a.EventName</strong><span class="dim">@a.EventType@(string.IsNullOrEmpty(a.Venue) ? "" : $" · {a.Venue}")</span></span>
+                        </div>
+                    </td>
+                    <td class="mono" data-label="When">@a.EventStart.ToString("ddd, MMM d, yyyy")</td>
                     <td data-label="Mode">@a.AttendanceMode</td>
-                    <td class="mono" data-label="Time in">@a.TimeIn.ToString("HH:mm")</td>
-                    <td class="mono" data-label="Time out">@(a.TimeOut?.ToString("HH:mm") ?? "—")</td>
-                    <td data-label="Arrival">@if (a.IsLate == 1) { <span class="chip warn">Late</span> } else { <span class="chip ok">On time</span> }</td>
+                    <td class="mono" data-label="Time in">@a.TimeIn.ToString("h:mm tt")</td>
+                    <td class="mono" data-label="Time out">@(a.TimeOut?.ToString("h:mm tt") ?? "—")</td>
+                    <td data-label="Arrival">
+                        @if (a.IsLate == 1)
+                        {
+                            <span class="chip warn">Late@(a.MinutesAfterStart > 0 ? $" · {a.MinutesAfterStart}m" : "")</span>
+                        }
+                        else
+                        {
+                            <span class="chip ok">On time</span>
+                        }
+                    </td>
                 </tr>
             }
             </tbody>

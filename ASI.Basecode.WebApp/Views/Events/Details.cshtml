@@ -43,7 +43,7 @@
             }
             else
             {
-                <table class="table-a">
+                <table class="table-a" id="checked-in-table" data-paginate="10">
                     <thead>
                         <tr><th>Name</th><th>Student no.</th><th>Mode</th><th>Time in</th><th>Time out</th><th></th></tr>
                     </thead>
@@ -76,7 +76,7 @@
         {
             <div class="panel">
                 <div class="panel-head"><h3>Absentees</h3><span class="count">@Model.Absentees.Count</span></div>
-                <table class="table-a">
+                <table class="table-a" id="absentees-table" data-paginate="10">
                     <thead><tr><th>Name</th><th>Student no.</th><th>Course</th></tr></thead>
                     <tbody>
                     @foreach (var a in Model.Absentees)
