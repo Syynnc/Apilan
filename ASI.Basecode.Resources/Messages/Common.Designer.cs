@@ -161,5 +161,14 @@ namespace ASI.Basecode.Resources.Messages {
                 return ResourceManager.GetString("PasswordReset", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} can now sign in with their student number and the default password..
+        /// </summary>
+        public static string MemberAccountCreated {
+            get {
+                return ResourceManager.GetString("MemberAccountCreated", resourceCulture);
+            }
+        }
     }
 }

@@ -1170,3 +1170,58 @@ label.req::after { content: " *"; color: var(--risk); font-weight: 700; }
 }
 
 .type-dot { flex: none; width: 12px; height: 12px; border-radius: 3px; background: var(--tt); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tt) 18%, transparent); }
+
+/* ---- Accounts ------------------------------------------------------------ */
+.searchbar.compact { flex: 0 1 300px; min-width: 200px; }
+.searchbar.compact .input-a { height: 36px; padding-right: var(--s-3); font-size: var(--fs-xs); }
+.searchbar.compact .s-icon { width: 15px; height: 15px; left: 12px; }
+.panel-head .searchbar.compact { margin-left: auto; }
+
+.account-note { display: flex; gap: var(--s-2); align-items: flex-start; border-top: 0; border-bottom: var(--border); }
+.account-note svg { flex: none; width: 15px; height: 15px; margin-top: 1px; fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; }
+
+.stack-tight { display: grid; line-height: 1.3; }
+.stack-tight .dim { font-size: var(--fs-3xs); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-wide); }
+
+.cell-person .av.officer { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.role-tag {
+    display: inline-block;
+    padding: 2px var(--s-2);
+    border: var(--border);
+    border-radius: var(--r-xs);
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--surface-sunken);
+}
+.role-tag.officer { color: var(--accent); border-color: var(--accent-edge); background: var(--accent-wash); }
+
+.btn-a.quiet.danger-text { color: var(--risk); }
+.btn-a.quiet.danger-text:hover { background: var(--risk-wash); color: var(--risk); }
+.btn-a.is-done { color: var(--ok); }
+
+/* Confirmation tickets (reset password) */
+.confirm-ticket .ticket-title { font-size: 1.5rem; }
+.confirm-copy { margin: 0; font-size: var(--fs-sm); color: var(--ink-2); }
+.default-pass {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-3) var(--s-4);
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--r-sm);
+    background: var(--surface-sunken);
+}
+.default-pass .l {
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+.default-pass code { font-size: var(--fs-md); font-weight: 600; color: var(--ink); }
+.default-pass .btn-a { margin-left: auto; }
+.tf-key { width: 64px; height: 64px; fill: none; stroke: var(--tt); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.tf-signin .dim { font-size: 10px; }

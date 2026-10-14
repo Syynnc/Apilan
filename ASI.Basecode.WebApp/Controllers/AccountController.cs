@@ -129,31 +129,6 @@ namespace ASI.Basecode.WebApp.Controllers
         [Authorize(Policy = Const.OfficerOnlyPolicy)]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(AccountViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                var page = _accountService.GetAccountsPage();
-                page.NewAccount = model;
-                return View(nameof(Index), page);
-            }
-
-            try
-            {
-                _accountService.AddAccount(model, CurrentUserName);
-                TempData["Success"] = string.Format(Common.AccountCreated, model.Username);
-            }
-            catch (InvalidDataException ex)
-            {
-                TempData["Error"] = ex.Message;
-            }
-
-            return RedirectToAction(nameof(Index));
-        }
-
-        [Authorize(Policy = Const.OfficerOnlyPolicy)]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
         public IActionResult SetActive(int id, bool isActive)
         {
             try
@@ -172,17 +147,13 @@ namespace ASI.Basecode.WebApp.Controllers
         [Authorize(Policy = Const.OfficerOnlyPolicy)]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult ResetPassword(int id, string newPassword)
+        public IActionResult ResetPassword(int id)
         {
-            if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 8)
-            {
-                TempData["Error"] = "The new password must be at least 8 characters.";
-                return RedirectToAction(nameof(Index));
-            }
-
+            // Back to the default, never to a password the officer chose: the
+            // member is then made to pick their own at the next sign-in.
             try
             {
-                var username = _accountService.ResetPassword(id, newPassword, CurrentUserName);
+                var username = _accountService.ResetPassword(id, CurrentUserName);
                 TempData["Success"] = string.Format(Common.PasswordReset, username);
             }
             catch (InvalidDataException ex)

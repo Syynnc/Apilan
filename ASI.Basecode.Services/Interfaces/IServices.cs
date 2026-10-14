@@ -10,9 +10,17 @@ namespace ASI.Basecode.Services.Interfaces
         LoginResult AuthenticateUser(string username, string password, out SignedInAccount account);
         void ChangePassword(int accountId, ChangePasswordViewModel model, string updatedBy);
         AccountsPageViewModel GetAccountsPage();
-        void AddAccount(AccountViewModel model, string createdBy);
+
+        /// <summary>
+        /// Gives a member a sign-in: username = student number, password = the
+        /// configured default. Returns the member's name.
+        /// </summary>
+        string CreateMemberAccount(int userId, string createdBy);
+
         string SetActive(int id, bool isActive, int currentAccountId, string updatedBy);
-        string ResetPassword(int id, string newPassword, string updatedBy);
+
+        /// <summary>Puts an account back on the default password. Returns the username.</summary>
+        string ResetPassword(int id, string updatedBy);
     }
 
     public interface IStudentService

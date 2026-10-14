@@ -19,7 +19,7 @@
     <value>Incorrect username or password.</value>
   </data>
   <data name="AccountInactive" xml:space="preserve">
-    <value>This account has been deactivated. Ask an administrator to restore it.</value>
+    <value>This account has been deactivated. Ask an officer to enable it again.</value>
   </data>
   <data name="RecordNotFound" xml:space="preserve">
     <value>That record no longer exists.</value>
@@ -41,5 +41,14 @@
   </data>
   <data name="MemberDeactivated" xml:space="preserve">
     <value>Your member record has been deactivated. Ask an officer to restore it.</value>
+  </data>
+  <data name="AccountAlreadyExists" xml:space="preserve">
+    <value>This member already has a sign-in account.</value>
+  </data>
+  <data name="MemberRoleMissing" xml:space="preserve">
+    <value>The Member role is missing from dbo.roles.</value>
+  </data>
+  <data name="NewPasswordIsDefault" xml:space="preserve">
+    <value>Pick a password other than the default one.</value>
   </data>
 </root>
