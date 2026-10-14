@@ -175,11 +175,6 @@
             submitting = true;
             els.field.value = code;
 
-            // Say how it was read, so the record is honest about the method.
-            if (els.mode && els.qrModeId) {
-                els.mode.value = els.qrModeId;
-            }
-
             status("Read " + code + " — recording…", "ok");
             beep(true);
 
@@ -245,8 +240,13 @@
             });
         }
 
+        /* The page decides whether the camera belongs on screen at all. */
+        function wanted() {
+            return !els.enabled || els.enabled();
+        }
+
         function start() {
-            if (stream || submitting) { return; }
+            if (stream || submitting || !wanted()) { return; }
 
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.isSecureContext) {
                 say("The camera only works on the https:// address of this site (or on localhost). " +
@@ -254,6 +254,7 @@
                 return;
             }
 
+            var label = els.start.innerHTML;
             els.start.disabled = true;
             els.start.textContent = "Starting the camera…";
 
@@ -281,7 +282,7 @@
                 els.view.classList.toggle("is-mirrored", facing !== "environment");
 
                 els.shell.hidden = false;
-                els.start.hidden = true;
+                (els.idle || els.start).hidden = true;
                 say("");
                 status("Looking for a QR code…", "scanning");
                 store(KEY_CAMERA, "on");
@@ -308,7 +309,7 @@
                     true);
             }).then(function () {
                 els.start.disabled = false;
-                els.start.textContent = "Scan with the camera";
+                els.start.innerHTML = label;
             });
         }
 
@@ -323,17 +324,19 @@
 
             els.video.srcObject = null;
             els.shell.hidden = true;
-            els.start.hidden = false;
+            (els.idle || els.start).hidden = false;
             status("", "idle");
         }
 
         els.start.addEventListener("click", start);
 
-        els.stop.addEventListener("click", function () {
+        /* Off until the officer starts it again. */
+        function stop() {
             store(KEY_CAMERA, null);
             halt();
-            els.field.focus();
-        });
+        }
+
+        els.stop.addEventListener("click", stop);
 
         if (els.cameras) {
             els.cameras.addEventListener("change", function () {
@@ -342,13 +345,6 @@
                 start();
             });
         }
-
-        // Typing means the officer has taken over from the camera.
-        els.field.addEventListener("input", function () {
-            if (els.mode && els.manualModeId && els.mode.value === String(els.qrModeId)) {
-                els.mode.value = els.manualModeId;
-            }
-        });
 
         // Leaving the page with the camera running keeps the light on.
         window.addEventListener("pagehide", function () {
@@ -370,6 +366,8 @@
 
         // For checking a misbehaving door from the console: ApilanScanner.stats()
         window.ApilanScanner.stats = function () { return JSON.parse(JSON.stringify(stats)); };
+
+        return { start: start, stop: stop };
     }
 
     window.ApilanScanner = { attach: attach };

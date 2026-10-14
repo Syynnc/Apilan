@@ -209,54 +209,109 @@
 .bar-cell .meter { flex: 1 1 90px; }
 .bar-cell .pct { font-family: var(--font-mono); font-size: var(--fs-2xs); min-width: 46px; text-align: right; }
 
-/* ---- Attendance pad (event screen) -------------------------------------- */
-.scan-input {
-    font-family: var(--font-mono);
-    font-size: var(--fs-lg);
-    letter-spacing: 0.1em;
-    text-align: center;
-    padding: var(--s-4);
-}
-.action-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-2); margin-bottom: var(--s-4); }
-.action-toggle input { position: absolute; opacity: 0; pointer-events: none; }
-.action-toggle label {
-    display: block;
-    text-align: center;
-    padding: var(--s-3);
-    font-size: var(--fs-sm);
-    font-weight: 600;
-    border: var(--border-strong);
-    border-radius: var(--r-sm);
-    color: var(--ink-2);
-    background: var(--surface);
-    cursor: pointer;
-    transition: background-color var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out);
-}
-.action-toggle input:checked + label { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.action-toggle input:focus-visible + label { outline: 2px solid var(--focus); outline-offset: 2px; }
-.action-toggle.three { grid-template-columns: repeat(3, 1fr); }
+/* ---- The door station: full width while the door is open -------------- */
+.door-station { margin-bottom: var(--s-5); }
+.door-station .panel-head h2 { margin-right: 0; }
+.door-until { margin-left: auto; font-family: var(--font-mono); font-size: var(--fs-2xs); color: var(--ink-3); }
 
-/* ---- The door: camera, result, typed entry ---------------------------- */
-.door .panel-head .chip { margin-left: auto; }
+.door-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr); }
+.door-main,
+.door-side { padding: var(--s-5); display: grid; gap: var(--s-4); align-content: start; min-width: 0; }
+.door-main { border-right: var(--border); }
+
+.door-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); }
+
+/* How people are recorded: the main switch, one segment per mode. */
+.door-modes,
+.door-actions {
+    display: inline-flex;
+    padding: 4px;
+    gap: 2px;
+    border: var(--border);
+    border-radius: var(--r-pill);
+    background: var(--surface-sunken);
+}
+.door-modes input,
+.door-actions input { position: absolute; opacity: 0; pointer-events: none; }
+.door-modes label,
+.door-actions label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    border-radius: var(--r-pill);
+    color: var(--ink-2);
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out), box-shadow var(--t-fast) var(--ease-out);
+}
+.door-modes label { padding: var(--s-2) var(--s-4); font-size: var(--fs-sm); }
+.door-modes svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.door-modes label:hover,
+.door-actions label:hover { color: var(--ink); }
+.door-modes input:checked + label { background: var(--accent); color: var(--accent-ink); }
+.door-modes input:focus-visible + label,
+.door-actions input:focus-visible + label { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* What to record: secondary, so quieter. */
+.door-actions label { padding: 6px var(--s-3); font-size: var(--fs-2xs); }
+.door-actions input:checked + label { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 0 0 1px var(--line); }
+
+.door-pane { display: grid; gap: var(--s-3); }
+.door-pane[hidden] { display: none; }
+
+/* Before the camera runs: a placeholder the size of the picture it becomes. */
+.scan-idle {
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--s-3);
+    aspect-ratio: 16 / 9;
+    padding: var(--s-5);
+    text-align: center;
+    border: 1.5px dashed var(--line-strong);
+    border-radius: var(--r-md);
+    background: var(--surface-sunken);
+}
+.scan-idle[hidden] { display: none; }
+.scan-idle p { margin: 0; max-width: 36ch; font-size: var(--fs-2xs); color: var(--ink-3); }
+.door-station .scan-view { aspect-ratio: 16 / 9; }
+/* In the wide picture the square cue is sized by height, so it stays whole. */
+.door-station .scan-frame { top: 50%; width: auto; height: 76%; }
+
+.door-label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+.door-hint { margin: 0; font-size: var(--fs-2xs); color: var(--ink-3); }
+
+.door-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-2); }
+
+/* Shown in place of the station until an hour before the start. */
+.door-opens { margin: 0 0 var(--s-2); font-size: var(--fs-md); }
 
 /* The last scan's outcome, right where the officer is looking. */
 .door-result {
     display: flex;
     align-items: center;
     gap: var(--s-3);
-    padding: var(--s-3) var(--s-5);
-    font-size: var(--fs-sm);
+    min-height: 72px;
+    padding: var(--s-4);
+    font-size: var(--fs-md);
     font-weight: 600;
-    border-bottom: var(--border);
+    line-height: 1.35;
+    border-radius: var(--r-md);
     animation: door-result-in var(--t-med) var(--ease-out);
 }
-.door-result svg { flex: none; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.door-result svg { flex: none; width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .door-result.ok  { background: var(--ok-wash);   color: var(--ok); }
 .door-result.bad { background: var(--risk-wash); color: var(--risk); }
+.door-result.idle { background: var(--surface-sunken); color: var(--ink-3); font-weight: 500; animation: none; }
+.door-result.idle svg { stroke-width: 1.9; }
 @keyframes door-result-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
-
-.door-body { display: grid; gap: var(--s-4); }
-.door-body .action-toggle { margin-bottom: 0; }
 
 .scan-start { width: 100%; justify-content: center; gap: var(--s-2); }
 .scan-start svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
@@ -348,22 +403,8 @@
     border-radius: var(--r-sm);
 }
 
-.door-or {
-    display: flex;
-    align-items: center;
-    gap: var(--s-3);
-    font-size: var(--fs-3xs);
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-    color: var(--ink-3);
-}
-.door-or::before, .door-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-
 .door-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s-2); }
-.door-entry .input-a { font-size: var(--fs-md); letter-spacing: 0.06em; }
-
-.door-mode { display: flex; align-items: center; gap: var(--s-3); font-size: var(--fs-2xs); color: var(--ink-3); }
-.door-mode .input-a { flex: 1; font-size: var(--fs-2xs); padding-block: var(--s-2); }
+.door-entry .input-a { font-size: var(--fs-xl); letter-spacing: 0.08em; padding-block: var(--s-3); }
 
 @media (prefers-reduced-motion: reduce) {
     .scan-frame::after { animation: none; top: 50%; }
@@ -429,8 +470,14 @@ details.more > summary {
 @media (max-width: 1100px) {
     .split { grid-template-columns: minmax(0, 1fr); }
     .split .rail { position: static; }
-    /* On a phone at the door, the scanner comes before the list it fills. */
-    .split.door-first .rail { order: -1; }
+}
+@media (max-width: 900px) {
+    .door-grid { grid-template-columns: minmax(0, 1fr); }
+    .door-main { border-right: 0; border-bottom: var(--border); }
+    .door-controls { flex-direction: column; align-items: stretch; }
+    .door-modes, .door-actions { display: flex; }
+    .door-modes label, .door-actions label { flex: 1; justify-content: center; }
+    .door-station .scan-view, .scan-idle { aspect-ratio: 4 / 3; }
 }
 @media (max-width: 720px) {
     .form-a { grid-template-columns: repeat(2, minmax(0, 1fr)); }
