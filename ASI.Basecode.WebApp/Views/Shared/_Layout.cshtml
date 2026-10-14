@@ -171,14 +171,6 @@
         </header>
 
         <main class="console-body">
-            @if (TempData["Success"] is string ok)
-            {
-                <div class="flash ok"><strong>Done.</strong> @ok</div>
-            }
-            @if (TempData["Error"] is string bad)
-            {
-                <div class="flash bad"><strong>Not done.</strong> @bad</div>
-            }
 
             @RenderBody()
         </main>
@@ -214,10 +206,12 @@
     </div>
 </div>
 
+<partial name="_Toasts" />
 <partial name="_FirstPasswordPrompt" />
 
 <partial name="_ValidationScriptsPartial" />
 <script src="~/js/theme.js" asp-append-version="true"></script>
+<script src="~/js/toast.js" asp-append-version="true"></script>
 <script src="~/js/console.js" asp-append-version="true"></script>
 <script src="~/js/app.js" asp-append-version="true"></script>
 <script src="~/js/tables.js" asp-append-version="true"></script>

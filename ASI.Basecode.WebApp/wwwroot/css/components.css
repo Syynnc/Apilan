@@ -617,3 +617,140 @@ textarea.input-a {
 .pw-eye:hover { background: var(--surface-sunken); color: var(--ink); }
 .pw-eye.is-on { color: var(--accent); }
 .pw-eye svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---- Toasts: notices across the top of the page ---------------------------- */
+.toasts {
+    position: fixed;
+    top: var(--s-4);
+    left: 50%;
+    z-index: 90;
+    width: min(440px, calc(100vw - 2rem));
+    transform: translateX(-50%);
+    display: grid;
+    gap: var(--s-2);
+    pointer-events: none;
+}
+.toast {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--s-3);
+    padding: var(--s-3) var(--s-3) calc(var(--s-3) + 3px) var(--s-4);
+    border: var(--border);
+    border-radius: var(--r-md);
+    background: var(--surface-raised);
+    color: var(--ink);
+    box-shadow: var(--shadow-lift), var(--shadow-float);
+    overflow: hidden;
+    pointer-events: auto;
+}
+/* Only once script runs do they start hidden and slide in. */
+.toasts[data-js] .toast {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.98);
+    transition: opacity 200ms var(--ease-out), transform 320ms var(--ease-glide);
+}
+.toasts[data-js] .toast.is-in { opacity: 1; transform: none; }
+.toasts[data-js] .toast.is-leaving {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+    transition: opacity 180ms var(--ease-exit), transform 220ms var(--ease-exit);
+}
+
+.toast-icon { flex: none; width: 22px; height: 22px; margin-top: 1px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.toast.ok .toast-icon { color: var(--ok); }
+.toast.bad .toast-icon { color: var(--risk); }
+.toast-text { flex: 1; min-width: 0; display: grid; gap: 2px; font-size: var(--fs-sm); line-height: 1.45; }
+.toast-text strong { font-weight: 600; }
+.toast-text span { color: var(--ink-2); overflow-wrap: anywhere; }
+
+.toast-close {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    margin: -2px -2px 0 0;
+    border: 0;
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--ink-3);
+    cursor: pointer;
+    transition: background-color var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out);
+}
+.toast-close:hover { background: var(--surface-sunken); color: var(--ink); }
+.toast-close:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.toast-close svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+
+/* The timer: a bar that runs down to nothing, then the toast leaves. It
+   holds while the pointer or focus is on the toast. */
+.toast-timer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    transform-origin: left center;
+    background: currentColor;
+}
+.toast.ok .toast-timer { color: var(--ok); }
+.toast.bad .toast-timer { color: var(--risk); }
+.toasts[data-js] .toast.is-in .toast-timer { animation: toast-timer var(--toast-life, 5000ms) linear forwards; }
+/* As specific as the rule that starts it, or its shorthand would win. */
+.toasts[data-js] .toast.is-in:hover .toast-timer,
+.toasts[data-js] .toast.is-in:focus-within .toast-timer { animation-play-state: paused; }
+.toasts:not([data-js]) .toast-timer, .toasts:not([data-js]) .toast-close { display: none; }
+@keyframes toast-timer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .toasts[data-js] .toast, .toasts[data-js] .toast.is-leaving { transition-duration: 1ms; transform: none; }
+}
+
+/* ---- Pick-or-type field (combo.js) ------------------------------------------ */
+.combo { position: relative; }
+.combo .input-a { padding-right: 36px; }
+.combo-caret {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    transform: translateY(-50%);
+    fill: none;
+    stroke: var(--ink-3);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    cursor: pointer;
+}
+.combo-list {
+    position: absolute;
+    z-index: 5;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    max-height: 240px;
+    margin: 0;
+    padding: 4px;
+    overflow-y: auto;
+    list-style: none;
+    border: var(--border);
+    border-radius: var(--r-sm);
+    background: var(--surface-raised);
+    box-shadow: var(--shadow-float);
+}
+.combo-list.is-empty { display: none; }
+.combo-list [role=option] {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-3);
+    padding: 7px var(--s-3);
+    border-radius: var(--r-xs);
+    font-size: var(--fs-sm);
+    cursor: pointer;
+}
+.combo-list [role=option] b { flex: none; min-width: 72px; font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--ink); }
+.combo-list [role=option] span { color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.combo-list [role=option]:hover,
+.combo-list [role=option].is-active { background: var(--accent-wash); }
+.combo-list [role=option].is-active b { color: var(--accent); }
