@@ -35,7 +35,8 @@ namespace ASI.Basecode.Services.ServiceModels
         [StringLength(100)]
         public string Course { get; set; }
 
-        [Range(1, 6, ErrorMessage = "Year level is 1 to 6.")]
+        // 1 to 5, or 0 for a non-blocked (irregular) student; see YearLevels.
+        [Range(0, 5, ErrorMessage = "Year level is 1 to 5, or Non-blocked.")]
         [Display(Name = "Year level")]
         public int? YearLevel { get; set; }
 

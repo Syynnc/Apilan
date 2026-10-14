@@ -55,17 +55,29 @@
 
             <div class="field span-2">
                 <label asp-for="Course"></label>
-                <input asp-for="Course" class="input-a" placeholder="BSIT" />
+                @* Pick from the school's courses, or type one that is not listed. *@
+                <div class="combo" data-combo>
+                    <input asp-for="Course" class="input-a" placeholder="Search or type a course" autocomplete="off"
+                           role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="course-list" data-combo-input />
+                    <svg class="combo-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5" /></svg>
+                    <ul class="combo-list" id="course-list" role="listbox" hidden data-combo-list>
+                        @foreach (var c in Apilan.Value.Courses)
+                        {
+                            <li role="option" data-value="@c.Code" data-search="@c.Code @c.Name"><b>@c.Code</b><span>@c.Name</span></li>
+                        }
+                    </ul>
+                </div>
                 <span asp-validation-for="Course" class="field-error"></span>
             </div>
             <div class="field">
                 <label asp-for="YearLevel"></label>
                 <select asp-for="YearLevel" class="input-a">
                     <option value="">—</option>
-                    @for (var y = 1; y <= 6; y++)
+                    @for (var y = YearLevels.First; y <= YearLevels.Last; y++)
                     {
                         <option value="@y">Year @y</option>
                     }
+                    <option value="@YearLevels.NonBlocked">@YearLevels.NonBlockedName</option>
                 </select>
                 <span asp-validation-for="YearLevel" class="field-error"></span>
             </div>

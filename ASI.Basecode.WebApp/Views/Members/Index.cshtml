@@ -55,7 +55,7 @@
                         </td>
                         <td class="mono">@m.StudentNumber</td>
                         <td>@(string.IsNullOrEmpty(m.Course) ? "—" : m.Course)</td>
-                        <td class="num">@(m.YearLevel?.ToString() ?? "—")</td>
+                        <td class="num">@YearLevels.Short(m.YearLevel)</td>
                         <td class="num">@m.EventsAttended</td>
                         <td>
                             @if (m.IsActive)

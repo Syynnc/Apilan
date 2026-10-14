@@ -36,7 +36,7 @@ namespace ASI.Basecode.WebApp.Controllers
             {
                 url = Url.Action(nameof(Details), new { id = m.Id }),
                 title = m.FullName,
-                subtitle = string.Join(" · ", new[] { m.StudentNumber, m.Course, m.YearLevel.HasValue ? $"Year {m.YearLevel}" : null }
+                subtitle = string.Join(" · ", new[] { m.StudentNumber, m.Course, YearLevels.Label(m.YearLevel) }
                     .Where(x => !string.IsNullOrWhiteSpace(x))),
                 meta = m.IsActive ? null : "Deactivated",
                 badge = Ui.Initials(m.FullName.Contains(',') ? m.FullName.Split(',')[1] + " " + m.FullName.Split(',')[0] : m.FullName),

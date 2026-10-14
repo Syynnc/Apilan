@@ -25,7 +25,7 @@
             <div class="ticket-main">
                 <div class="datepad" aria-hidden="true">
                     <span class="m">Year</span>
-                    <span class="d">@(Model.YearLevel?.ToString() ?? "—")</span>
+                    <span class="d">@YearLevels.Short(Model.YearLevel)</span>
                     <span class="w">@(string.IsNullOrEmpty(Model.Course) ? "Level" : Model.Course)</span>
                 </div>
 
