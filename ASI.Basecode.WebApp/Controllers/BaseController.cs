@@ -28,6 +28,9 @@ namespace ASI.Basecode.WebApp.Controllers
 
         protected bool IsOfficer => User.IsInRole(Const.RoleOfficer);
 
+        /// <summary>Still on the default password: the prompt to change it is showing.</summary>
+        protected bool MustChangePassword => User.HasClaim(c => c.Type == Const.ClaimMustChangePassword);
+
         /// <summary>
         /// True when the request came from the modal script rather than a full
         /// page load. The add/edit forms open in a modal, but every one of them

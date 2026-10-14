@@ -1225,3 +1225,176 @@ label.req::after { content: " *"; color: var(--risk); font-weight: 700; }
 .default-pass .btn-a { margin-left: auto; }
 .tf-key { width: 64px; height: 64px; fill: none; stroke: var(--tt); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 .tf-signin .dim { font-size: 10px; }
+
+/* ==========================================================================
+   PASSWORD — the change-password page and the first-sign-in prompt.
+   ========================================================================== */
+.pw-notice {
+    margin: 0;
+    padding: var(--s-3) var(--s-4);
+    border-left: 3px solid var(--warn);
+    border-radius: 0 var(--r-sm) var(--r-sm) 0;
+    background: var(--warn-wash);
+    color: var(--ink-2);
+    font-size: var(--fs-sm);
+}
+.pw-notice strong { color: var(--warn); }
+
+.pw-field { position: relative; }
+.pw-field .input-a { padding-right: 44px; }
+.pw-eye {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    width: 32px;
+    height: 32px;
+    transform: translateY(-50%);
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--ink-3);
+    cursor: pointer;
+}
+.pw-eye:hover { background: var(--surface-sunken); color: var(--ink); }
+.pw-eye.is-on { color: var(--accent); }
+.pw-eye svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Four bars that fill and change colour with the score. */
+.pw-meter { display: flex; align-items: center; gap: var(--s-3); margin-top: var(--s-3); }
+.pw-bars { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.pw-bars i {
+    height: 6px;
+    border-radius: var(--r-pill);
+    background: var(--surface-sunken);
+    border: var(--border);
+    transition: background-color var(--t-med) var(--ease-out), border-color var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-spring);
+}
+.pw-label {
+    min-width: 72px;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    transition: color var(--t-med) var(--ease-out);
+}
+.pw-meter { --pw: var(--risk); }
+.pw-meter[data-score="1"] { --pw: var(--risk); }
+.pw-meter[data-score="2"] { --pw: var(--gold); }
+.pw-meter[data-score="3"] { --pw: var(--teal); }
+.pw-meter[data-score="4"] { --pw: var(--ok); }
+.pw-meter:not(.is-empty) .pw-label { color: var(--pw); }
+.pw-meter:not(.is-empty) .pw-bars i:nth-child(1),
+.pw-meter[data-score="2"] .pw-bars i:nth-child(-n+2),
+.pw-meter[data-score="3"] .pw-bars i:nth-child(-n+3),
+.pw-meter[data-score="4"] .pw-bars i {
+    background: var(--pw);
+    border-color: var(--pw);
+    transform: scaleY(1.15);
+}
+
+.pw-rules {
+    list-style: none;
+    margin: var(--s-3) 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px var(--s-4);
+    font-size: var(--fs-2xs);
+    color: var(--ink-3);
+}
+.pw-rules li { display: flex; align-items: center; gap: var(--s-2); transition: color var(--t-fast) var(--ease-out); }
+.pw-rules li::before {
+    content: "";
+    flex: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line-strong);
+    background: var(--surface) center / 9px no-repeat;
+    transition: background-color var(--t-med) var(--ease-spring), border-color var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-spring);
+}
+.pw-rules li.is-ok { color: var(--ink); }
+.pw-rules li.is-ok::before {
+    border-color: var(--ok);
+    background-color: var(--ok);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.3l2.2 2.2L9.5 3.7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    transform: scale(1.1);
+}
+
+.pw-match {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    width: 18px;
+    height: 18px;
+    transform: translateY(-50%) scale(0.6);
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity var(--t-fast) var(--ease-out), transform var(--t-med) var(--ease-spring);
+}
+.pw-field.is-match .pw-match,
+.pw-field.is-mismatch .pw-match { opacity: 1; transform: translateY(-50%) scale(1); }
+.pw-field.is-match .pw-match {
+    background: var(--ok) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.3l2.2 2.2L9.5 3.7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 11px no-repeat;
+}
+.pw-field.is-mismatch .pw-match {
+    background: var(--risk) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3.5 3.5l5 5M8.5 3.5l-5 5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / 10px no-repeat;
+}
+.pw-field.is-match .input-a { border-color: color-mix(in srgb, var(--ok) 60%, var(--line-strong)); }
+.pw-field.is-mismatch .input-a { border-color: color-mix(in srgb, var(--risk) 60%, var(--line-strong)); }
+
+/* The stub's lock: open while the password is weak, shut once it is good. */
+.pw-lock { width: 84px; height: 84px; overflow: visible; }
+.pw-lock .shackle,
+.pw-lock .body,
+.pw-lock .key { fill: none; stroke: var(--ink-3); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; transition: stroke var(--t-med) var(--ease-out), transform var(--t-slow) var(--ease-spring); }
+.pw-lock .body { fill: var(--surface); }
+.pw-lock .shackle { transform: translate(0, -7px) rotate(-14deg); transform-origin: 20px 30px; }
+.pw-ticket[data-strength-score="1"] .pw-lock .body,
+.pw-ticket[data-strength-score="1"] .pw-lock .shackle,
+.pw-ticket[data-strength-score="0"] .pw-lock .body { stroke: var(--risk); }
+.pw-ticket[data-strength-score="2"] .pw-lock * { stroke: var(--gold); }
+.pw-ticket[data-strength-score="3"] .pw-lock *,
+.pw-ticket[data-strength-score="4"] .pw-lock * { stroke: var(--ok); }
+.pw-ticket[data-strength-score="3"] .pw-lock .shackle,
+.pw-ticket[data-strength-score="4"] .pw-lock .shackle { transform: none; }
+.pw-word { font-size: var(--fs-sm) !important; text-transform: uppercase; letter-spacing: 0.08em; }
+.pw-ticket[data-strength-score="1"] .pw-word { color: var(--risk); }
+.pw-ticket[data-strength-score="2"] .pw-word { color: var(--gold); }
+.pw-ticket[data-strength-score="3"] .pw-word,
+.pw-ticket[data-strength-score="4"] .pw-word { color: var(--ok); }
+
+.btn-a[data-strength-submit]:disabled { opacity: 0.45; pointer-events: auto; cursor: not-allowed; transform: none; }
+
+/* The first-sign-in prompt sits a little higher and cannot be dismissed. */
+#first-password::backdrop { background: color-mix(in srgb, var(--scrim) 100%, transparent); backdrop-filter: blur(8px) saturate(0.8); -webkit-backdrop-filter: blur(8px) saturate(0.8); }
+
+/* ---- The change-password page ---------------------------------------- */
+.pw-page {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) auto;
+    gap: var(--s-7);
+    align-items: center;
+    max-width: 1180px;
+    margin-inline: auto;
+}
+.pw-page-title { font-size: clamp(2rem, 4vw, 3rem); line-height: 1.05; letter-spacing: -0.035em; margin-bottom: var(--s-4); }
+.pw-page-copy p { color: var(--ink-2); font-size: var(--fs-md); }
+.pw-tips { list-style: none; margin: var(--s-5) 0 0; padding: 0; display: grid; gap: var(--s-3); }
+.pw-tips li { display: flex; gap: var(--s-3); font-size: var(--fs-sm); color: var(--ink-2); }
+.pw-tips li::before { content: ""; flex: none; width: 6px; height: 6px; margin-top: 0.55em; border-radius: 2px; background: var(--accent-bright); }
+.pw-tips li:nth-child(2)::before { background: var(--mango); }
+.pw-tips li:nth-child(3)::before { background: var(--gold); }
+.pw-page .form-page { padding: 0; }
+
+@media (max-width: 1100px) {
+    .pw-page { grid-template-columns: minmax(0, 1fr); gap: var(--s-5); }
+}
+@media (max-width: 560px) {
+    .pw-rules { grid-template-columns: minmax(0, 1fr); }
+}
