@@ -159,8 +159,9 @@ code, kbd, samp,
 
 /* ---- Page transitions ---------------------------------------------------- */
 /* Same-origin navigations cross-fade instead of flashing white. The chrome
-   that does not change between pages (sidebar, top bars) is named so it
-   stays put while only the page underneath moves. */
+   that does not change between pages (sidebar, top bars) is named in
+   console.css / screens.css so it holds still while the page underneath
+   changes. The theme toggle uses the same root cross-fade (theme.js). */
 @view-transition { navigation: auto; }
 
 ::view-transition-old(root),

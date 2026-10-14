@@ -87,9 +87,11 @@
         @RenderBody()
     </main>
 
+    <partial name="_ValidationScriptsPartial" />
     <script src="~/js/theme.js" asp-append-version="true"></script>
     <script src="~/js/app.js" asp-append-version="true"></script>
     <script src="~/js/tables.js" asp-append-version="true"></script>
+    <script src="~/js/modal.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -19,6 +19,7 @@ namespace ASI.Basecode.WebApp.Helpers
         public static string TicketType(string eventType)
         {
             var name = (eventType ?? string.Empty).Trim().ToLowerInvariant();
+            if (name.Length == 0) return "talk";
 
             if (name.Contains("assembly")) return "assembly";
             if (name.Contains("workshop") || name.Contains("training")) return "workshop";
