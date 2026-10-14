@@ -45,3 +45,20 @@
         });
     }
 }());
+
+/* ---- Copy buttons: <button data-copy="#element"> ------------------------ */
+(function () {
+    "use strict";
+    document.addEventListener("click", function (e) {
+        var btn = e.target.closest("[data-copy]");
+        if (!btn) { return; }
+        var source = document.querySelector(btn.getAttribute("data-copy"));
+        if (!source || !navigator.clipboard) { return; }
+        navigator.clipboard.writeText(source.textContent.trim()).then(function () {
+            var was = btn.textContent;
+            btn.textContent = "Copied";
+            btn.classList.add("is-done");
+            setTimeout(function () { btn.textContent = was; btn.classList.remove("is-done"); }, 1400);
+        });
+    });
+}());

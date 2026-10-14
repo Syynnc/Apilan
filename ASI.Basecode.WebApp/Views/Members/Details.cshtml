@@ -58,6 +58,43 @@
             </div>
         </div>
 
+        <div class="panel">
+            <div class="panel-head">
+                <h3>Sign-in</h3>
+                @if (Model.AccountId == null)
+                {
+                    <span class="chip idle">None</span>
+                }
+                else if (Model.AccountActive)
+                {
+                    <span class="chip ok">Active</span>
+                }
+                else
+                {
+                    <span class="chip risk">Disabled</span>
+                }
+            </div>
+            <div class="panel-body">
+                @if (Model.AccountId == null)
+                {
+                    <p class="muted" style="font-size:var(--fs-sm)">@st.FirstName has no account yet, so they cannot see their own attendance or pass.</p>
+                    <form asp-action="CreateAccount" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@st.Id" />
+                        <button type="submit" class="btn-a sm" @(st.IsActive ? null : "disabled")>Give sign-in access</button>
+                    </form>
+                }
+                else
+                {
+                    <dl class="detail-list">
+                        <div><dt>Username</dt><dd class="mono">@Model.AccountUsername</dd></div>
+                        <div><dt>Last sign-in</dt><dd class="mono">@(Model.LastLogin?.ToString("MMM d, yyyy · h:mm tt") ?? "Never")</dd></div>
+                    </dl>
+                    <p style="margin:var(--s-4) 0 0"><a asp-controller="Account" asp-action="Index">Manage in Accounts →</a></p>
+                }
+            </div>
+        </div>
+
         @{ ViewData["PassDownload"] = Url.Action("Pass", new { id = st.Id }); }
         <partial name="_MemberPass" model="st" view-data="ViewData" />
 

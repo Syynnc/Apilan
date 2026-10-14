@@ -104,5 +104,15 @@
         <span class="tf-avatar" data-preview="FirstName LastName" data-format="initials" data-empty="?">@Ui.Initials($"{Model.FirstName} {Model.LastName}")</span>
         <span class="stub-code" data-preview="StudentNumber" data-empty="0000-00000">@(Model.StudentNumber ?? "0000-00000")</span>
         <span class="stub-note">Member<br />pass</span>
+        @if (isNew)
+        {
+            @* Saving also creates the sign-in (StudentService.AddStudent). *@
+            <span class="tf-signin">
+                <b>Sign-in</b>
+                <span>User: <span data-preview="StudentNumber" data-empty="student no.">student no.</span></span>
+                <span>Pass: <code>@Apilan.Value.DefaultPassword</code></span>
+                <span class="dim">Changed at first sign-in</span>
+            </span>
+        }
     </aside>
 </form>

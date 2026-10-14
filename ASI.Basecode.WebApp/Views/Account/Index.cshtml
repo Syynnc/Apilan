@@ -2,108 +2,175 @@
 @{
     ViewData["Title"] = "Accounts";
     ViewData["Module"] = "Administration";
+
+    var officers = Model.Accounts.Count(a => a.RoleName == Const.RoleOfficer);
+    var disabled = Model.Accounts.Count(a => !a.IsActive);
+    var neverSignedIn = Model.Accounts.Count(a => a.LastLogin == null);
 }
 
-<div class="split">
-    <div class="panel">
-        <div class="panel-head"><h2>Accounts</h2><span class="count">@Model.Accounts.Count total</span></div>
-        <table class="table-a">
-            <thead>
-                <tr>
-                    <th>Username</th><th>Role</th><th>Linked student</th><th>Last login</th><th>Status</th><th></th>
-                </tr>
-            </thead>
-            <tbody>
-            @if (!Model.Accounts.Any())
-            {
-                <tr><td colspan="6"><div class="empty-a"><h4>No accounts</h4><p>Create the first one on the right.</p></div></td></tr>
-            }
-            @foreach (var a in Model.Accounts)
-            {
-                <tr>
-                    <td><strong>@a.Username</strong></td>
-                    <td>@a.RoleName</td>
-                    <td>@(a.StudentName ?? "—")</td>
-                    <td class="mono">@(a.LastLogin?.ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
-                    <td>
-                        @if (a.IsActive)
-                        {
-                            <span class="chip ok">Active</span>
-                        }
-                        else
-                        {
-                            <span class="chip idle">Disabled</span>
-                        }
-                    </td>
-                    <td>
-                        <div class="row-actions">
-                            <form asp-action="SetActive" method="post">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@a.Id" />
-                                <input type="hidden" name="isActive" value="@((!a.IsActive).ToString().ToLower())" />
-                                <button type="submit" class="btn-a quiet sm">@(a.IsActive ? "Disable" : "Enable")</button>
-                            </form>
-                            <form asp-action="ResetPassword" method="post"
-                                  onsubmit="return confirm('Reset the password for @a.Username?');">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@a.Id" />
-                                <input type="password" name="newPassword" class="input-a sm" placeholder="New password"
-                                       style="width:140px;display:inline-block" minlength="8" required />
-                                <button type="submit" class="btn-a quiet sm">Reset</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
+@section Actions {
+    <a class="btn-a ghost" asp-controller="Members" asp-action="Create" data-modal>
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        New member
+    </a>
+}
+
+<div class="stack-lg">
+    <div class="tiles stagger">
+        <div class="tile accent"><span class="l">Accounts</span><span class="n">@Model.Accounts.Count</span><span class="s">@officers officer@(officers == 1 ? "" : "s")</span></div>
+        <div class="tile"><span class="l">Never signed in</span><span class="n">@neverSignedIn</span><span class="s">since their account was made</span></div>
+        <div class="tile"><span class="l">Disabled</span><span class="n">@disabled</span></div>
+        <div class="tile"><span class="l">Members without a sign-in</span><span class="n">@Model.MembersWithoutAccount</span><span class="s">give access from the member's page</span></div>
     </div>
 
-    <div class="rail">
-        <div class="panel">
-            <div class="panel-head"><h3>New account</h3></div>
-            <div class="panel-body">
-                <form asp-action="Create" method="post" class="stack" novalidate>
-                    <div asp-validation-summary="ModelOnly" class="field-error"></div>
-
-                    <div class="field">
-                        <label asp-for="NewAccount.Username"></label>
-                        <input asp-for="NewAccount.Username" class="input-a" />
-                        <span asp-validation-for="NewAccount.Username" class="field-error"></span>
-                    </div>
-                    <div class="field">
-                        <label asp-for="NewAccount.Password"></label>
-                        <input asp-for="NewAccount.Password" class="input-a" type="password" />
-                        <span asp-validation-for="NewAccount.Password" class="field-error"></span>
-                    </div>
-                    <div class="field">
-                        <label asp-for="NewAccount.ConfirmPassword"></label>
-                        <input asp-for="NewAccount.ConfirmPassword" class="input-a" type="password" />
-                        <span asp-validation-for="NewAccount.ConfirmPassword" class="field-error"></span>
-                    </div>
-                    <div class="field">
-                        <label asp-for="NewAccount.RoleId"></label>
-                        <select asp-for="NewAccount.RoleId" class="input-a"
-                                asp-items="@(new SelectList(Model.Roles, nameof(LookupItem.Id), nameof(LookupItem.Name)))">
-                            <option value="">Choose a role…</option>
-                        </select>
-                        <span asp-validation-for="NewAccount.RoleId" class="field-error"></span>
-                    </div>
-                    <div class="field">
-                        <label asp-for="NewAccount.UserId"></label>
-                        <select asp-for="NewAccount.UserId" class="input-a"
-                                asp-items="@(new SelectList(Model.Students, nameof(LookupItem.Id), nameof(LookupItem.Name)))">
-                            <option value="">No linked student</option>
-                        </select>
-                        <span class="hint">Link a student to make this a member account.</span>
-                    </div>
-
-                    <div class="form-foot">
-                        <button type="submit" class="btn-a">Create account</button>
-                    </div>
-                </form>
+    <div class="panel">
+        <div class="panel-head">
+            <h2>Sign-in accounts</h2>
+            <div class="searchbar compact">
+                <svg class="s-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /></svg>
+                <input type="search" id="account-search" class="input-a" placeholder="Filter by username or name…"
+                       aria-label="Filter accounts" data-live-search data-target="#accounts-table" />
             </div>
         </div>
+        <div class="panel-note account-note">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 8v.01M12 11v5" /></svg>
+            Accounts are made with <a asp-controller="Members" asp-action="Create" data-modal>New member</a>: the student number
+            is the username and the first password is the default. Members are asked to change it the first time they sign in.
+        </div>
+
+        @if (!Model.Accounts.Any())
+        {
+            <div class="panel-body"><div class="empty-a"><h4>No accounts</h4><p>Add a member to create the first one.</p></div></div>
+        }
+        else
+        {
+            <table class="table-a" id="accounts-table" data-paginate="10">
+                <thead>
+                    <tr><th>Account</th><th>Role</th><th>Member</th><th>Last sign-in</th><th>Status</th><th></th></tr>
+                </thead>
+                <tbody>
+                @foreach (var a in Model.Accounts)
+                {
+                    var isMe = User.Identity?.Name == a.Username;
+                    <tr class="@(a.IsActive ? null : "is-off")" data-search="@a.Username @a.StudentName @a.StudentNumber @a.RoleName">
+                        <td>
+                            <div class="cell-person">
+                                <span class="av @(a.RoleName == Const.RoleOfficer ? "officer" : null)" aria-hidden="true">@Ui.Initials(a.StudentName != null ? a.StudentName.Split(',').Last() + " " + a.StudentName.Split(',').First() : a.Username)</span>
+                                <span class="stack-tight">
+                                    <strong class="mono">@a.Username</strong>
+                                    @if (isMe)
+                                    {
+                                        <span class="dim">You</span>
+                                    }
+                                </span>
+                            </div>
+                        </td>
+                        <td><span class="role-tag @(a.RoleName == Const.RoleOfficer ? "officer" : null)">@a.RoleName</span></td>
+                        <td>
+                            @if (a.UserId.HasValue)
+                            {
+                                <a asp-controller="Members" asp-action="Details" asp-route-id="@a.UserId">@a.StudentName</a>
+                                @if (!a.StudentActive)
+                                {
+                                    <span class="chip risk">Member deactivated</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="dim">—</span>
+                            }
+                        </td>
+                        <td class="mono">@(a.LastLogin?.ToString("MMM d, yyyy · h:mm tt") ?? "Never")</td>
+                        <td>
+                            @if (a.IsActive)
+                            {
+                                <span class="chip ok">Active</span>
+                            }
+                            else
+                            {
+                                <span class="chip risk">Disabled</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="row-actions">
+                                <button type="button" class="btn-a quiet sm" data-dialog-open="#reset-dialog"
+                                        data-account-id="@a.Id" data-account-name="@a.Username"
+                                        data-account-who="@(a.StudentName ?? a.Username)">
+                                    Change password
+                                </button>
+                                @if (!isMe)
+                                {
+                                    <form asp-action="SetActive" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@a.Id" />
+                                        <input type="hidden" name="isActive" value="@((!a.IsActive).ToString().ToLower())" />
+                                        <button type="submit" class="btn-a quiet sm @(a.IsActive ? "danger-text" : null)">@(a.IsActive ? "Disable" : "Enable")</button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
     </div>
 </div>
 
+@* The reset prompt: one dialog, filled in by whichever row opened it. *@
+<dialog class="modal" id="reset-dialog" aria-labelledby="reset-title">
+    <div class="modal-content">
+        <form asp-action="ResetPassword" method="post" class="ticket ticket-form narrow confirm-ticket" data-type="service">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="" data-bind="id" />
+
+            <div class="ticket-body">
+                <header class="tf-head">
+                    <div class="ticket-kicker">
+                        <span class="ticket-type">Change password</span>
+                        <span class="ticket-org">Administration</span>
+                    </div>
+                    <h2 class="ticket-title" id="reset-title">Reset <span data-bind="who">this account</span>?</h2>
+                    <button type="button" class="tf-close" data-modal-close aria-label="Close">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                    </button>
+                </header>
+
+                <p class="confirm-copy">
+                    The password for <strong class="mono" data-bind="name"></strong> goes back to the default.
+                    Their current password stops working right away, and they will be asked to choose a new
+                    one the next time they sign in.
+                </p>
+
+                <div class="default-pass">
+                    <span class="l">Default password</span>
+                    <code id="default-pass-value">@Model.DefaultPassword</code>
+                    <button type="button" class="btn-a quiet sm" data-copy="#default-pass-value">Copy</button>
+                </div>
+
+                <footer class="tf-foot">
+                    <button type="button" class="btn-a ghost" data-modal-close>Cancel</button>
+                    <button type="submit" class="btn-a">Reset to default</button>
+                </footer>
+            </div>
+
+            <aside class="ticket-stub tf-stub" aria-hidden="true">
+                <svg class="tf-key" viewBox="0 0 48 48"><circle cx="17" cy="24" r="9" /><path d="M26 24h16M36 24v6M41 24v4" /></svg>
+                <span class="stub-code" data-bind="name"></span>
+                <span class="stub-note">Back to<br />default</span>
+            </aside>
+        </form>
+    </div>
+</dialog>
+
+@section Scripts {
+    <script>
+        // Fill the reset prompt from the row that opened it.
+        window.Apilan.onDialogOpen = function (dialog, opener) {
+            if (dialog.id !== "reset-dialog") { return; }
+            dialog.querySelector("[data-bind=id]").value = opener.getAttribute("data-account-id");
+            dialog.querySelectorAll("[data-bind=name]").forEach(function (el) { el.textContent = opener.getAttribute("data-account-name"); });
+            dialog.querySelector("[data-bind=who]").textContent = opener.getAttribute("data-account-who");
+        };
+    </script>
+}

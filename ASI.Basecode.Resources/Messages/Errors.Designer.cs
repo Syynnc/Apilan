@@ -64,7 +64,7 @@ namespace ASI.Basecode.Resources.Messages {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to This account has been deactivated. Ask an administrator to restore it..
+        ///   Looks up a localized string similar to This account has been deactivated. Ask an officer to enable it again..
         /// </summary>
         public static string AccountInactive {
             get {
@@ -132,6 +132,33 @@ namespace ASI.Basecode.Resources.Messages {
         public static string MemberDeactivated {
             get {
                 return ResourceManager.GetString("MemberDeactivated", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to This member already has a sign-in account..
+        /// </summary>
+        public static string AccountAlreadyExists {
+            get {
+                return ResourceManager.GetString("AccountAlreadyExists", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The Member role is missing from dbo.roles..
+        /// </summary>
+        public static string MemberRoleMissing {
+            get {
+                return ResourceManager.GetString("MemberRoleMissing", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Pick a password other than the default one..
+        /// </summary>
+        public static string NewPasswordIsDefault {
+            get {
+                return ResourceManager.GetString("NewPasswordIsDefault", resourceCulture);
             }
         }
     }

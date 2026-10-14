@@ -15,10 +15,12 @@ namespace ASI.Basecode.WebApp.Controllers
     public class MembersController : BaseController
     {
         private readonly IStudentService _students;
+        private readonly IAccountService _accounts;
 
-        public MembersController(IStudentService students)
+        public MembersController(IStudentService students, IAccountService accounts)
         {
             _students = students;
+            _accounts = accounts;
         }
 
         public IActionResult Index(string search, bool showInactive = false)
@@ -99,13 +101,15 @@ namespace ASI.Basecode.WebApp.Controllers
                 if (model.Id == 0)
                 {
                     _students.AddStudent(model, CurrentUserName);
+                    TempData["Success"] = string.Format(Common.StudentSaved, model.StudentNumber) + " "
+                        + string.Format(Common.MemberAccountCreated, $"{model.FirstName} {model.LastName}");
                 }
                 else
                 {
                     _students.UpdateStudent(model, CurrentUserName);
+                    TempData["Success"] = string.Format(Common.StudentSaved, model.StudentNumber);
                 }
 
-                TempData["Success"] = string.Format(Common.StudentSaved, model.StudentNumber);
                 return SavedRedirect(Url.Action(nameof(Index)));
             }
             catch (InvalidDataException ex)
@@ -115,9 +119,30 @@ namespace ASI.Basecode.WebApp.Controllers
             }
         }
 
+        /// <summary>
+        /// Gives an existing member a sign-in. New members get one when they are
+        /// created; this is for records that predate that.
+        /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult SetActive(int id, bool isActive)
+        public IActionResult CreateAccount(int id)
+        {
+            try
+            {
+                var name = _accounts.CreateMemberAccount(id, CurrentUserName);
+                TempData["Success"] = string.Format(Common.MemberAccountCreated, name);
+            }
+            catch (InvalidDataException ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SetActive(int id, bool isActive, string returnUrl = null)
         {
             try
             {
@@ -130,7 +155,9 @@ namespace ASI.Basecode.WebApp.Controllers
                 TempData["Error"] = ex.Message;
             }
 
-            return RedirectToAction(nameof(Index));
+            return !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)
+                ? Redirect(returnUrl)
+                : RedirectToAction(nameof(Index));
         }
     }
 }

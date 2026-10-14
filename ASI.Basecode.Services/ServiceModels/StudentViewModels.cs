@@ -72,5 +72,11 @@ namespace ASI.Basecode.Services.ServiceModels
         public int TimesLate { get; set; }
         public int MissingTimeOuts { get; set; }
         public List<AttendanceDetail> History { get; set; } = new();
+
+        /// <summary>The member's sign-in, if they have one.</summary>
+        public int? AccountId { get; set; }
+        public string AccountUsername { get; set; }
+        public bool AccountActive { get; set; }
+        public System.DateTime? LastLogin { get; set; }
     }
 }

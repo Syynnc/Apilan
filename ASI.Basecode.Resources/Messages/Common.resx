@@ -13,7 +13,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="StudentSaved" xml:space="preserve">
-    <value>Student {0} saved.</value>
+    <value>Member {0} saved.</value>
   </data>
   <data name="StudentDeactivated" xml:space="preserve">
     <value>Student {0} deactivated.</value>
@@ -49,6 +49,9 @@
     <value>Password changed.</value>
   </data>
   <data name="PasswordReset" xml:space="preserve">
-    <value>Password for {0} has been reset.</value>
+    <value>Password for {0} was reset to the default. They will be asked to change it at their next sign-in.</value>
+  </data>
+  <data name="MemberAccountCreated" xml:space="preserve">
+    <value>{0} can now sign in with their student number and the default password.</value>
   </data>
 </root>

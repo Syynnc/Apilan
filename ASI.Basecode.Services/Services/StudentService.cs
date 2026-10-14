@@ -5,6 +5,7 @@ using ASI.Basecode.Data.Models;
 using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.Services.ServiceModels;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace ASI.Basecode.Services.Services
 {
@@ -12,12 +13,17 @@ namespace ASI.Basecode.Services.Services
     {
         private readonly IUserRepository _users;
         private readonly IAttendanceRepository _attendance;
+        private readonly IAccountService _accounts;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public StudentService(IUserRepository users, IAttendanceRepository attendance, IMapper mapper)
+        public StudentService(IUserRepository users, IAttendanceRepository attendance, IAccountService accounts,
+                              IUnitOfWork unitOfWork, IMapper mapper)
         {
             _users = users;
             _attendance = attendance;
+            _accounts = accounts;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
 
@@ -103,10 +109,19 @@ namespace ASI.Basecode.Services.Services
                 .OrderByDescending(a => a.TimeIn)
                 .ToList();
 
+            var account = _users.GetUsers()
+                .Where(u => u.Id == id && u.Account != null)
+                .Select(u => new { u.Account.Id, u.Account.Username, u.Account.IsActive, u.Account.LastLogin })
+                .FirstOrDefault();
+
             return new StudentDetailViewModel
             {
                 Student = student,
                 History = history,
+                AccountId = account?.Id,
+                AccountUsername = account?.Username,
+                AccountActive = account?.IsActive ?? false,
+                LastLogin = account?.LastLogin,
                 EventsAttended = history.Count,
                 TimesLate = history.Count(a => a.IsLate == 1),
                 MissingTimeOuts = history.Count(a => a.TimeOut == null),
@@ -122,7 +137,18 @@ namespace ASI.Basecode.Services.Services
         public void AddStudent(StudentViewModel model, string createdBy)
         {
             var user = _mapper.Map<User>(model);
+
+            // A new member and their sign-in are one step: both rows, or neither.
+            using var transaction = _unitOfWork.Database.Database.BeginTransaction();
+
             Run(() => _users.AddUser(user, createdBy));
+            var id = _users.GetUsers()
+                .Where(u => u.StudentNumber == user.StudentNumber)
+                .Select(u => u.Id)
+                .First();
+            _accounts.CreateMemberAccount(id, createdBy);
+
+            transaction.Commit();
         }
 
         public void UpdateStudent(StudentViewModel model, string updatedBy)
