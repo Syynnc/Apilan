@@ -6,17 +6,25 @@
 
     var present = s.TotalPresent ?? 0;
     var pct = s.EventCapacity is int cap && cap > 0 ? Math.Min(100, present * 100 / cap) : 0;
-    var isFinished = s.EventStatus == Const.StatusFinished;
 
-    // sp_Attendance_TimeIn accepts arrivals from an hour before the start.
-    var opensAt = s.EventStart.AddMinutes(-60);
-    var doorOpen = DateTime.Now >= opensAt && DateTime.Now <= s.EventEnd;
+    // The door opens by itself: time-in from the start, time-out from the end,
+    // each for the event's window. Attendance is final once time-out closes.
+    var w = Model.Window;
+    var now = DateTime.Now;
+    var phase = w.At(now);
+    var doorOpen = phase == AttendanceWindow.Phase.TimeIn || phase == AttendanceWindow.Phase.TimeOut;
+    var isFinished = phase == AttendanceWindow.Phase.Closed;
+    var timeIn = phase == AttendanceWindow.Phase.TimeIn;
+    var closesAt = timeIn ? w.TimeInCloses : w.TimeOutCloses;
+    var opensAt = timeIn ? w.TimeInOpens : w.TimeOutOpens;
+    var nextChange = w.NextChange(now);
 
     // The result of the last scan belongs next to the scanner, not at the top
     // of the page; taking it out of TempData keeps the layout from repeating it.
+    // With no scanner on screen (a window just closed) it stays a page flash.
     string doorResult = null;
     var doorResultOk = false;
-    if (TempData["Door"] != null && !isFinished)
+    if (TempData["Door"] != null && doorOpen)
     {
         doorResult = TempData["Success"] as string ?? TempData["Error"] as string;
         doorResultOk = TempData["Success"] is string;
@@ -36,15 +44,34 @@
 @if (doorOpen && !isFinished)
 {
     @*
-        While the door is open it is the page: a full-width station on top, the
-        list it fills underneath. How people are recorded (camera, typed, card)
-        is one switch, and only that way's controls are on screen.
+        While a window is open the door is the page: a full-width station on
+        top, the list it fills underneath. The clock says whether a scan is a
+        time-in or a time-out; how people are recorded (camera, typed, card) is
+        the one switch, and only that way's controls are on screen.
     *@
-    <section class="panel door-station" aria-label="Door">
+    <section class="panel door-station @(timeIn ? "is-in" : "is-out")" aria-label="Door">
         <div class="panel-head">
             <h2>Door</h2>
-            <span class="chip ok">Open</span>
-            <span class="door-until">until @s.EventEnd.ToString("h:mm tt")</span>
+            <span class="door-phase">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    @if (timeIn)
+                    {
+                        <path d="M10 17l5-5-5-5M15 12H3M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" />
+                    }
+                    else
+                    {
+                        <path d="M14 17l5-5-5-5M19 12H7M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4" />
+                    }
+                </svg>
+                @(timeIn ? "Time-in" : "Time-out") window
+            </span>
+            <span class="door-until" data-window-left data-closes="@closesAt.ToString("yyyy-MM-ddTHH:mm:ss")">
+                closes @closesAt.ToString("h:mm tt")
+            </span>
+        </div>
+        <div class="door-window" role="presentation"
+             data-window-bar data-opens="@opensAt.ToString("yyyy-MM-ddTHH:mm:ss")" data-closes="@closesAt.ToString("yyyy-MM-ddTHH:mm:ss")">
+            <i style="width:@(Math.Clamp((now - opensAt).TotalSeconds / (w.Minutes * 60.0) * 100, 0, 100).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))%"></i>
         </div>
 
         <form asp-controller="Attendance" asp-action="Record" method="post" autocomplete="off"
@@ -86,18 +113,7 @@
                         }
                     </div>
 
-                    @*
-                        Auto is what a scan means: in if they are outside, out if
-                        they are inside. The explicit two are for fixing things.
-                    *@
-                    <div class="door-actions" role="radiogroup" aria-label="What to record">
-                        <input type="radio" name="Action" id="act-auto" value="Auto" checked />
-                        <label for="act-auto">Auto</label>
-                        <input type="radio" name="Action" id="act-in" value="TimeIn" />
-                        <label for="act-in">Time in</label>
-                        <input type="radio" name="Action" id="act-out" value="TimeOut" />
-                        <label for="act-out">Time out</label>
-                    </div>
+                    <span class="door-records">Every scan records a <strong>@(timeIn ? "time-in" : "time-out")</strong></span>
                 </div>
 
                 <div class="door-pane" data-pane="camera">
@@ -174,7 +190,16 @@
                     <div class="meter @(pct >= 100 ? "full" : "")" aria-label="@pct% of capacity"><i style="width:@(pct)%"></i></div>
                 }
 
-                <p class="door-hint">Late after @s.EventStart.AddMinutes(Model.LateGraceMinutes).ToString("h:mm tt") · Auto records a time-out for anyone already inside.</p>
+                <p class="door-hint">
+                    @if (timeIn)
+                    {
+                        @:Late after @s.EventStart.AddMinutes(Model.LateGraceMinutes).ToString("h:mm tt"). Time-out opens at @w.TimeOutOpens.ToString("h:mm tt"), when the event ends.
+                    }
+                    else
+                    {
+                        @:Anyone not timed out by @w.TimeOutCloses.ToString("h:mm tt") stays marked as missing a time-out.
+                    }
+                </p>
             </aside>
         </form>
     </section>
@@ -189,7 +214,7 @@
             </div>
             @if (!Model.Attendance.Any())
             {
-                <div class="panel-body"><div class="empty-a"><h4>No one yet</h4><p>@(doorOpen ? "The first arrival will show up here." : $"The door opens {opensAt:MMM d, h:mm tt}.")</p></div></div>
+                <div class="panel-body"><div class="empty-a"><h4>No one yet</h4><p>@(doorOpen || isFinished ? "The first arrival will show up here." : $"Time-in opens {w.TimeInOpens:MMM d, h:mm tt}.")</p></div></div>
             }
             else
             {
@@ -240,17 +265,30 @@
     </div>
 
     <div class="rail">
-        @if (!isFinished && !doorOpen)
+        @if (!doorOpen)
         {
-            @* The pad would only be refused before then, so it is not offered. *@
-            <div class="panel door-closed" data-opens-at="@opensAt.ToString("yyyy-MM-ddTHH:mm:ss")">
+            @* Between windows the pad would only be refused, so it is not offered. *@
+            <div class="panel door-closed">
                 <div class="panel-head">
                     <h3>Door</h3>
-                    <span class="chip idle">Closed</span>
+                    <span class="chip idle">@(isFinished ? "Final" : "Closed")</span>
                 </div>
                 <div class="panel-body">
-                    <p class="door-opens">Opens <strong>@opensAt.ToString("MMM d, h:mm tt")</strong></p>
-                    <p class="muted">An hour before the start. The scanner appears on this page then.</p>
+                    @if (phase == AttendanceWindow.Phase.NotOpen)
+                    {
+                        <p class="door-opens">Time-in opens <strong>@w.TimeInOpens.ToString("MMM d, h:mm tt")</strong></p>
+                        <p class="muted">When the event starts, for @w.Minutes minutes. The scanner appears on this page by itself.</p>
+                    }
+                    else if (phase == AttendanceWindow.Phase.Between)
+                    {
+                        <p class="door-opens">Time-out opens <strong>@w.TimeOutOpens.ToString("h:mm tt")</strong></p>
+                        <p class="muted">Time-in closed at @w.TimeInCloses.ToString("h:mm tt"). The scanner comes back by itself when the event ends.</p>
+                    }
+                    else
+                    {
+                        <p class="door-opens">Attendance closed <strong>@w.TimeOutCloses.ToString("MMM d, h:mm tt")</strong></p>
+                        <p class="muted">Time-in and time-out windows are over, so these numbers are final.</p>
+                    }
                 </div>
             </div>
         }
@@ -264,6 +302,8 @@
                     <div><dt>Venue</dt><dd>@(string.IsNullOrEmpty(s.Venue) ? "—" : s.Venue)</dd></div>
                     <div><dt>Starts</dt><dd class="mono">@s.EventStart.ToString("yyyy-MM-dd HH:mm")</dd></div>
                     <div><dt>Ends</dt><dd class="mono">@s.EventEnd.ToString("yyyy-MM-dd HH:mm")</dd></div>
+                    <div><dt>Time-in</dt><dd class="mono">@w.TimeInOpens.ToString("h:mm") – @w.TimeInCloses.ToString("h:mm tt")</dd></div>
+                    <div><dt>Time-out</dt><dd class="mono">@w.TimeOutOpens.ToString("h:mm") – @w.TimeOutCloses.ToString("h:mm tt")</dd></div>
                     <div><dt>Late after</dt><dd>@Model.LateGraceMinutes min</dd></div>
                 </dl>
 
@@ -298,21 +338,22 @@
 </div>
 
 @section Scripts {
-    @if (doorOpen && !isFinished)
+    @if (doorOpen)
     {
         <script src="~/lib/jsqr/jsQR.js"></script>
         <script src="~/js/scanner.js" asp-append-version="true"></script>
         <script src="~/js/door.js" asp-append-version="true"></script>
     }
-    else if (!isFinished)
+    @if (nextChange.HasValue)
     {
         <script>
             (function () {
-                // Swap the closed card for the scanner when the door opens,
-                // without the officer having to reload.
-                var card = document.querySelector("[data-opens-at]");
-                var wait = card && new Date(card.getAttribute("data-opens-at")) - Date.now();
-                if (wait > 0 && wait < 6 * 3600 * 1000) { setTimeout(function () { location.reload(); }, wait + 1000); }
+                // Windows open and close on their own: when this one changes,
+                // reload so the door shows time-in, time-out or closed as it
+                // should, without the officer doing anything.
+                var at = new Date("@nextChange.Value.ToString("yyyy-MM-ddTHH:mm:ss")");
+                var wait = at - Date.now();
+                if (wait > 0 && wait < 12 * 3600 * 1000) { setTimeout(function () { location.reload(); }, wait + 1000); }
             })();
         </script>
     }

@@ -78,8 +78,23 @@
             </div>
             <div class="field">
                 <label asp-for="LateGraceMinutes" class="req"></label>
-                <input asp-for="LateGraceMinutes" class="input-a" type="number" min="0" max="240" />
+                <input asp-for="LateGraceMinutes" class="input-a" type="number" min="0" max="30" />
                 <span asp-validation-for="LateGraceMinutes" class="field-error"></span>
+            </div>
+
+            @* Time-in opens by itself at the start and time-out at the end, each
+               for this long. *@
+            <div class="field span-4">
+                <label asp-for="AttendanceWindowMinutes" class="req"></label>
+                <div class="window-pick" role="radiogroup" aria-label="Window length">
+                    @foreach (var m in new[] { 15, 20, 25, 30 })
+                    {
+                        <input type="radio" name="AttendanceWindowMinutes" id="win-@m" value="@m" checked="@(Model.AttendanceWindowMinutes == m)" />
+                        <label for="win-@m">@m min</label>
+                    }
+                </div>
+                <span class="hint">Time-in opens when the event starts and time-out when it ends, each for this long. Both open by themselves.</span>
+                <span asp-validation-for="AttendanceWindowMinutes" class="field-error"></span>
             </div>
 
             <div class="field span-4">

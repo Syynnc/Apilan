@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -27,26 +28,43 @@ namespace ASI.Basecode.Services.Services
         {
             var studentNumber = entry.StudentNumber.Trim();
 
-            // A scan does not know which way the student is going: someone still
-            // inside is leaving, anyone else is arriving. One visit per event, so
-            // a student who has already timed out has nothing left to record.
-            recorded = entry.Action;
-            if (recorded == AttendanceAction.Auto)
-            {
-                var existing = _attendance.GetAttendanceDetails()
-                    .Where(a => a.EventId == entry.EventId && a.StudentNumber == studentNumber)
-                    .Select(a => new { a.TimeOut })
-                    .FirstOrDefault();
+            // The clock decides which way a scan goes: time-in opens by itself at
+            // the start and time-out at the end, each for the event's window.
+            var evt = _events.GetEvents()
+                .Where(e => e.Id == entry.EventId)
+                .Select(e => new { e.EventStart, e.EventEnd, e.AttendanceWindowMinutes })
+                .FirstOrDefault() ?? throw NotFound();
+            var window = new AttendanceWindow(evt.EventStart, evt.EventEnd, evt.AttendanceWindowMinutes);
 
-                if (existing?.TimeOut != null)
+            switch (window.At(entry.RecordedAt ?? DateTime.Now))
+            {
+                case AttendanceWindow.Phase.TimeIn:
+                    recorded = AttendanceAction.TimeIn;
+                    break;
+                case AttendanceWindow.Phase.TimeOut:
+                    recorded = AttendanceAction.TimeOut;
+                    break;
+                case AttendanceWindow.Phase.NotOpen:
+                    throw new InvalidDataException(string.Format(Errors.DoorNotOpen, window.TimeInOpens.ToString("h:mm tt")));
+                case AttendanceWindow.Phase.Between:
+                    throw new InvalidDataException(string.Format(Errors.DoorBetweenWindows,
+                        window.TimeInCloses.ToString("h:mm tt"), window.TimeOutOpens.ToString("h:mm tt")));
+                default:
+                    throw new InvalidDataException(string.Format(Errors.DoorClosed, window.TimeOutCloses.ToString("h:mm tt")));
+            }
+
+            // One visit per event: someone already in and out has nothing left.
+            if (recorded == AttendanceAction.TimeOut)
+            {
+                var timedOut = _attendance.GetAttendanceDetails()
+                    .Any(a => a.EventId == entry.EventId && a.StudentNumber == studentNumber && a.TimeOut != null);
+                if (timedOut)
                 {
                     throw new InvalidDataException(string.Format(Errors.AlreadyTimedInAndOut, StudentName(studentNumber)));
                 }
-
-                recorded = existing != null ? AttendanceAction.TimeOut : AttendanceAction.TimeIn;
             }
 
-            // The procedures check the time-in window, duplicates and capacity.
+            // The procedures check the windows again, duplicates and capacity.
             if (recorded == AttendanceAction.TimeOut)
             {
                 Run(() => _attendance.TimeOut(entry.EventId, studentNumber, entry.RecordedAt, recordedBy));

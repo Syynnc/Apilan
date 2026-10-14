@@ -25,9 +25,6 @@ namespace ASI.Basecode.Resources.Constants
         {
             TimeIn = 0,
             TimeOut = 1,
-
-            /// <summary>Time in, or time out if the student is already inside — what a scan at the door means.</summary>
-            Auto = 2,
         }
     }
 }

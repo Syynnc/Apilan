@@ -222,8 +222,7 @@
 .door-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); }
 
 /* How people are recorded: the main switch, one segment per mode. */
-.door-modes,
-.door-actions {
+.door-modes {
     display: inline-flex;
     padding: 4px;
     gap: 2px;
@@ -231,10 +230,8 @@
     border-radius: var(--r-pill);
     background: var(--surface-sunken);
 }
-.door-modes input,
-.door-actions input { position: absolute; opacity: 0; pointer-events: none; }
-.door-modes label,
-.door-actions label {
+.door-modes input { position: absolute; opacity: 0; pointer-events: none; }
+.door-modes label {
     display: inline-flex;
     align-items: center;
     gap: var(--s-2);
@@ -247,15 +244,36 @@
 }
 .door-modes label { padding: var(--s-2) var(--s-4); font-size: var(--fs-sm); }
 .door-modes svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-.door-modes label:hover,
-.door-actions label:hover { color: var(--ink); }
+.door-modes label:hover { color: var(--ink); }
 .door-modes input:checked + label { background: var(--accent); color: var(--accent-ink); }
-.door-modes input:focus-visible + label,
-.door-actions input:focus-visible + label { outline: 2px solid var(--focus); outline-offset: 2px; }
+.door-modes input:focus-visible + label { outline: 2px solid var(--focus); outline-offset: 2px; }
 
-/* What to record: secondary, so quieter. */
-.door-actions label { padding: 6px var(--s-3); font-size: var(--fs-2xs); }
-.door-actions input:checked + label { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 0 0 1px var(--line); }
+/* Which window is open: the clock decides, so it is said, not chosen. */
+.door-phase {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px 3px 8px;
+    border-radius: var(--r-pill);
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    background: var(--ok-wash);
+    color: var(--ok);
+}
+.door-phase svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.door-station.is-out .door-phase { background: var(--teal-wash); color: var(--teal); }
+
+/* How much of the window has gone. */
+.door-window { height: 4px; background: var(--surface-sunken); border-bottom: var(--border); }
+.door-window > i { display: block; height: 100%; background: var(--ok); transition: width 600ms var(--ease-out), background-color var(--t-med) var(--ease-out); }
+.door-station.is-out .door-window > i { background: var(--teal); }
+.door-window.is-ending > i { background: var(--warn); }
+
+.door-records { font-size: var(--fs-2xs); color: var(--ink-3); }
+.door-records strong { color: var(--ink); }
 
 .door-pane { display: grid; gap: var(--s-3); }
 .door-pane[hidden] { display: none; }
@@ -475,8 +493,8 @@ details.more > summary {
     .door-grid { grid-template-columns: minmax(0, 1fr); }
     .door-main { border-right: 0; border-bottom: var(--border); }
     .door-controls { flex-direction: column; align-items: stretch; }
-    .door-modes, .door-actions { display: flex; }
-    .door-modes label, .door-actions label { flex: 1; justify-content: center; }
+    .door-modes { display: flex; }
+    .door-modes label { flex: 1; justify-content: center; }
     .door-station .scan-view, .scan-idle { aspect-ratio: 4 / 3; }
 }
 @media (max-width: 720px) {
@@ -1910,3 +1928,24 @@ a.b-stat.accent:hover { border-color: var(--accent-hover); background: var(--acc
     .leaders li { grid-template-columns: 28px minmax(0, 1fr) auto; }
     .leaders .dim, .leaders .hb-track { display: none; }
 }
+
+/* ---- Event form: the attendance window length -------------------------- */
+.window-pick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-2); }
+.window-pick input { position: absolute; opacity: 0; pointer-events: none; }
+.window-pick label {
+    display: block;
+    padding: var(--s-2) var(--s-3);
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    border: var(--border-strong);
+    border-radius: var(--r-sm);
+    background: var(--surface);
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: background-color var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out);
+}
+.window-pick label:hover { border-color: var(--accent-edge); color: var(--ink); }
+.window-pick input:checked + label { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.window-pick input:focus-visible + label { outline: 2px solid var(--focus); outline-offset: 2px; }

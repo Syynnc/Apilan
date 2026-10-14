@@ -129,4 +129,25 @@
         }
         if (e.key.length === 1) { burst += e.key; }
     });
+
+    /* The open window counts down in the header and fills its bar, so the
+       officer sees how long is left. The page reloads itself when it closes. */
+    var left = document.querySelector("[data-window-left]");
+    var bar = document.querySelector("[data-window-bar]");
+    if (left && bar) {
+        var opens = new Date(bar.getAttribute("data-opens")).getTime();
+        var closes = new Date(left.getAttribute("data-closes")).getTime();
+        var closesText = left.textContent.trim().replace(/^closes\s*/, "");
+        var fill = bar.querySelector("i");
+
+        var tick = function () {
+            var now = Date.now();
+            var mins = Math.max(0, Math.ceil((closes - now) / 60000));
+            left.textContent = (mins <= 1 ? "under a minute" : mins + " min") + " left · closes " + closesText;
+            fill.style.width = Math.min(100, Math.max(0, (now - opens) / (closes - opens) * 100)) + "%";
+            bar.classList.toggle("is-ending", mins <= 3);
+        };
+        tick();
+        setInterval(tick, 15000);
+    }
 })();

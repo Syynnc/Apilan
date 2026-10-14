@@ -16,6 +16,12 @@ namespace ASI.Basecode.Data.Models
         public DateTime EventStart { get; set; }
         public DateTime EventEnd { get; set; }
         public int LateGraceMinutes { get; set; }
+
+        /// <summary>
+        /// Minutes (15 to 30) that time-in stays open from the start, and
+        /// time-out from the end.
+        /// </summary>
+        public int AttendanceWindowMinutes { get; set; }
         public string CreatedBy { get; set; }
         public DateTime CreatedTime { get; set; }
         public string UpdatedBy { get; set; }
