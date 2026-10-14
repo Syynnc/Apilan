@@ -80,11 +80,13 @@
 .side-toggle .caret { transition: transform var(--t-med) var(--ease-out); transform-origin: 14px 12px; }
 
 /* Which school and org this console speaks for — Apilan serves exactly one. */
+/* The organization, at the foot beside the signed-in officer. */
 .side-org {
-    display: grid;
-    gap: 2px;
-    margin-top: calc(var(--s-2) * -1);
-    padding: var(--s-3);
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    margin: 0 0 var(--s-2);
+    padding: 6px var(--s-2);
     border: 1px dashed var(--line-strong);
     border-radius: var(--r-sm);
     background: var(--surface-sunken);
@@ -92,21 +94,21 @@
     overflow: hidden;
     transition: opacity var(--t-fast) var(--ease-out);
 }
+.side-org svg { width: 15px; height: 15px; flex: none; fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .side-org .org {
-    font-size: var(--fs-xs);
+    font-size: var(--fs-2xs);
     font-weight: 600;
     color: var(--ink);
     overflow: hidden;
     text-overflow: ellipsis;
 }
 .side-org .school {
+    margin-left: auto;
     font-family: var(--font-mono);
     font-size: var(--fs-3xs);
     letter-spacing: var(--tracking-wide);
     text-transform: uppercase;
     color: var(--accent);
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .side-group { display: grid; gap: 2px; }
