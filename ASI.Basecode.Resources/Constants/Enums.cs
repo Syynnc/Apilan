@@ -13,6 +13,9 @@ namespace ASI.Basecode.Resources.Constants
             Success = 0,
             Failed = 1,
             Inactive = 2,
+
+            /// <summary>The account is enabled, but the student record it belongs to was deactivated.</summary>
+            MemberInactive = 3,
         }
 
         /// <summary>

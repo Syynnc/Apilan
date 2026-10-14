@@ -125,5 +125,14 @@ namespace ASI.Basecode.Resources.Messages {
                 return ResourceManager.GetString("AlreadyTimedInAndOut", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Your member record has been deactivated. Ask an officer to restore it..
+        /// </summary>
+        public static string MemberDeactivated {
+            get {
+                return ResourceManager.GetString("MemberDeactivated", resourceCulture);
+            }
+        }
     }
 }

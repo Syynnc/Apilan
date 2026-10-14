@@ -39,4 +39,7 @@
   <data name="AlreadyTimedInAndOut" xml:space="preserve">
     <value>{0} has already timed in and out of this event.</value>
   </data>
+  <data name="MemberDeactivated" xml:space="preserve">
+    <value>Your member record has been deactivated. Ask an officer to restore it.</value>
+  </data>
 </root>
