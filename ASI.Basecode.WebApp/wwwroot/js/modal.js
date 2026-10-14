@@ -60,15 +60,16 @@
     });
 
     // A click on the backdrop (the dialog element itself, outside its content) closes it.
+    // A dialog marked data-force (the first-sign-in prompt) ignores both.
     document.addEventListener("mousedown", function (e) {
-        if (e.target.tagName === "DIALOG" && e.target.open) { close(e.target); }
+        if (e.target.tagName === "DIALOG" && e.target.open && !e.target.hasAttribute("data-force")) { close(e.target); }
     });
 
     // Esc animates out instead of snapping shut.
     document.addEventListener("cancel", function (e) {
         if (e.target.tagName === "DIALOG") {
             e.preventDefault();
-            close(e.target);
+            if (!e.target.hasAttribute("data-force")) { close(e.target); }
         }
     }, true);
 
@@ -220,6 +221,12 @@
         form.addEventListener("change", paint);
         paint();
     }
+
+    // Dialogs that must show as soon as the page does (the first-sign-in prompt).
+    document.querySelectorAll("dialog[data-open-on-load]").forEach(function (d) {
+        wire(d);
+        open(d);
+    });
 
     // A form rendered as a page (no modal) still gets its preview.
     document.querySelectorAll(".form-page form[data-modal-form]").forEach(function (f) {

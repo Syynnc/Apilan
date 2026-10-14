@@ -24,6 +24,12 @@ namespace ASI.Basecode.Resources.Constants
         /// <summary>Custom claim carrying the linked student's display name</summary>
         public const string ClaimDisplayName = "DisplayName";
 
+        /// <summary>
+        /// Present while the account is still on the default password: every page
+        /// then opens the change-password prompt before anything else.
+        /// </summary>
+        public const string ClaimMustChangePassword = "MustChangePassword";
+
         /// <summary>attendance_modes.id for a member pass read by the door camera</summary>
         public const int QrAttendanceMode = 1;
 

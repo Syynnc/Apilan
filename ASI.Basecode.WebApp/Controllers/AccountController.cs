@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using ASI.Basecode.Resources.Constants;
@@ -10,6 +11,7 @@ using ASI.Basecode.WebApp.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using static ASI.Basecode.Resources.Constants.Enums;
 
@@ -93,29 +95,71 @@ namespace ASI.Basecode.WebApp.Controllers
 
         [Authorize]
         [HttpGet]
-        public IActionResult ChangePassword() => View(new ChangePasswordViewModel());
+        public IActionResult ChangePassword() =>
+            View(new ChangePasswordViewModel { FirstSignIn = MustChangePassword });
 
+        /// <summary>
+        /// Both the change-password page and the first-sign-in prompt post here;
+        /// the prompt posts from the modal script and gets the form back (422)
+        /// or JSON naming the page to carry on to.
+        /// </summary>
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult ChangePassword(ChangePasswordViewModel model)
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
         {
+            if (!model.FirstSignIn && string.IsNullOrEmpty(model.CurrentPassword))
+            {
+                ModelState.AddModelError(nameof(model.CurrentPassword), "Enter your current password.");
+            }
+
             if (!ModelState.IsValid)
             {
-                return View(model);
+                return PasswordView(model, invalid: true);
             }
 
             try
             {
                 _accountService.ChangePassword(AccountId, model, CurrentUserName);
-                TempData["Success"] = Common.PasswordChanged;
-                return RedirectToAction(nameof(ChangePassword));
             }
             catch (InvalidDataException ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
-                return View(model);
+                return PasswordView(model, invalid: true);
             }
+
+            // Re-issue the cookie without the must-change flag, so the prompt stops.
+            if (MustChangePassword)
+            {
+                var claims = User.Claims.Where(c => c.Type != Const.ClaimMustChangePassword);
+                await SignInAsync(new ClaimsIdentity(claims, Const.AuthenticationScheme, ClaimTypes.Name, ClaimTypes.Role));
+            }
+
+            TempData["Success"] = Common.PasswordChanged;
+            var next = !string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl)
+                ? model.ReturnUrl
+                : Url.Action("Index", "Home");
+            return SavedRedirect(next);
+        }
+
+        private IActionResult PasswordView(ChangePasswordViewModel model, bool invalid)
+        {
+            // Never send a typed password back down to the browser.
+            ModelState.Remove(nameof(model.CurrentPassword));
+            ModelState.Remove(nameof(model.NewPassword));
+            ModelState.Remove(nameof(model.ConfirmPassword));
+            model.CurrentPassword = model.NewPassword = model.ConfirmPassword = null;
+
+            if (!IsModalRequest)
+            {
+                return View(nameof(ChangePassword), model);
+            }
+
+            if (invalid)
+            {
+                Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+            }
+            return PartialView("_PasswordForm", model);
         }
 
         /* -------------------- Account management (officer) ------------------ */
@@ -181,9 +225,17 @@ namespace ASI.Basecode.WebApp.Controllers
                 claims.Add(new Claim(Const.ClaimUserId, account.UserId.Value.ToString()));
             }
 
-            var identity = new ClaimsIdentity(claims, Const.AuthenticationScheme, ClaimTypes.Name, ClaimTypes.Role);
-            var properties = new AuthenticationProperties { IsPersistent = true };
+            if (account.MustChangePassword)
+            {
+                claims.Add(new Claim(Const.ClaimMustChangePassword, "true"));
+            }
 
+            await SignInAsync(new ClaimsIdentity(claims, Const.AuthenticationScheme, ClaimTypes.Name, ClaimTypes.Role));
+        }
+
+        private async Task SignInAsync(ClaimsIdentity identity)
+        {
+            var properties = new AuthenticationProperties { IsPersistent = true };
             await HttpContext.SignInAsync(Const.AuthenticationScheme, new ClaimsPrincipal(identity), properties);
         }
     }

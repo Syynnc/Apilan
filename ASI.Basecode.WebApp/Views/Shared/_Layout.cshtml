@@ -112,9 +112,14 @@
 
         <nav class="side-group">
             <h6>Administration</h6>
-            <a class="@nav("Account")" title="Accounts" asp-controller="Account" asp-action="Index">
+            <a class="@((controller == "Account" && (ViewContext.RouteData.Values["action"] as string) != "ChangePassword") ? "side-link is-active" : "side-link")" title="Accounts" asp-controller="Account" asp-action="Index">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8" r="3.2"/><path d="M4 19c1.3-3 3.4-4.5 6-4.5M17 13v6M14 16h6"/></svg>
                 <span class="lbl">Accounts</span>
+            </a>
+            <a class="@(controller == "Account" && (ViewContext.RouteData.Values["action"] as string) == "ChangePassword" ? "side-link is-active" : "side-link")"
+               title="My password" asp-controller="Account" asp-action="ChangePassword">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v2"/></svg>
+                <span class="lbl">My password</span>
             </a>
         </nav>
 
@@ -182,12 +187,15 @@
     <div class="modal-content"></div>
 </dialog>
 
+<partial name="_FirstPasswordPrompt" />
+
 <partial name="_ValidationScriptsPartial" />
 <script src="~/js/theme.js" asp-append-version="true"></script>
 <script src="~/js/console.js" asp-append-version="true"></script>
 <script src="~/js/app.js" asp-append-version="true"></script>
 <script src="~/js/tables.js" asp-append-version="true"></script>
 <script src="~/js/modal.js" asp-append-version="true"></script>
+<script src="~/js/password.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

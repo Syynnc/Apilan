@@ -31,6 +31,7 @@ namespace ASI.Basecode.Services.ServiceModels
 
         [Required(ErrorMessage = "Enter a new password.")]
         [StringLength(100, MinimumLength = 8, ErrorMessage = "Use at least 8 characters.")]
+        [RegularExpression(@"^(?=.*[A-Za-z])(?=.*\d).+$", ErrorMessage = "Mix letters and numbers.")]
         [DataType(DataType.Password)]
         [Display(Name = "New password")]
         public string NewPassword { get; set; }
@@ -43,6 +44,9 @@ namespace ASI.Basecode.Services.ServiceModels
 
         /// <summary>Set when the form is the forced first-sign-in prompt.</summary>
         public bool FirstSignIn { get; set; }
+
+        /// <summary>Where to go once the password is changed.</summary>
+        public string ReturnUrl { get; set; }
     }
 
     public class AccountListItem
