@@ -42,6 +42,13 @@ namespace ASI.Basecode.Services.Services
                 return LoginResult.Inactive;
             }
 
+            // Deactivating a member is meant to shut them out, but it only flips
+            // dbo.users — the account row stays enabled — so check both.
+            if (found.User != null && !found.User.IsActive)
+            {
+                return LoginResult.MemberInactive;
+            }
+
             _accounts.RecordLogin(found.Id);
 
             account = new SignedInAccount

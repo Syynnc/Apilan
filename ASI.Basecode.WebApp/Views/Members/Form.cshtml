@@ -51,15 +51,12 @@
                     <span asp-validation-for="Course" class="field-error"></span>
                 </div>
 
-                <div class="field span-2">
+                @* No "Active" box: sp_User_Create/Update never read is_active, so it
+                   silently did nothing. Status changes go through Deactivate/Restore. *@
+                <div class="field span-4">
                     <label asp-for="ContactNumber"></label>
                     <input asp-for="ContactNumber" class="input-a mono" placeholder="+639XXXXXXXXX" />
                     <span asp-validation-for="ContactNumber" class="field-error"></span>
-                </div>
-                <div class="field span-2" style="align-self:end">
-                    <label class="check-inline">
-                        <input asp-for="IsActive" type="checkbox" /> Active
-                    </label>
                 </div>
             </div>
 

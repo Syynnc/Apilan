@@ -56,6 +56,12 @@ namespace ASI.Basecode.WebApp.Controllers
                 return View(model);
             }
 
+            if (result == LoginResult.MemberInactive)
+            {
+                ModelState.AddModelError(string.Empty, Errors.MemberDeactivated);
+                return View(model);
+            }
+
             if (result != LoginResult.Success)
             {
                 ModelState.AddModelError(string.Empty, Errors.InvalidLogin);
