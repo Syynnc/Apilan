@@ -24,13 +24,22 @@
     }
 
     function close(dialog) {
-        if (!dialog.open) { return; }
+        if (!dialog.open || dialog.classList.contains("is-closing")) { return; }
         if (REDUCED) { dialog.close(); return; }
         dialog.classList.add("is-closing");
-        setTimeout(function () {
+
+        // Shut it when the exit animation actually ends, not on a guessed
+        // timer; the timer is only a fallback if the event never comes.
+        var done = false;
+        function finish(e) {
+            if (done || (e && e.target !== dialog)) { return; }
+            done = true;
+            dialog.removeEventListener("animationend", finish);
             dialog.classList.remove("is-closing");
             dialog.close();
-        }, 180);
+        }
+        dialog.addEventListener("animationend", finish);
+        setTimeout(finish, 320);
     }
 
     document.addEventListener("click", function (e) {
@@ -80,20 +89,58 @@
     }, true);
 
     /* ---- Loading a form into the shared modal ---------------------------- */
-    function load(url, trigger) {
-        shell.classList.add("is-loading");
-        fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" }, credentials: "same-origin" })
+    // A form is fetched as soon as the pointer rests on (or focus reaches) its
+    // link, so by the click it is usually already here and the modal opens at
+    // once. Each fetch is used for one opening only, and only briefly.
+    var PREFETCH_TTL_MS = 30000;
+    var prefetched = {};
+
+    function fetchForm(url) {
+        return fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" }, credentials: "same-origin" })
             .then(function (r) {
                 if (!r.ok) { throw new Error(r.status); }
                 return r.text();
-            })
+            });
+    }
+
+    function prefetch(url) {
+        var hit = prefetched[url];
+        if (hit && Date.now() - hit.at < PREFETCH_TTL_MS) { return; }
+        var entry = { at: Date.now(), html: fetchForm(url) };
+        entry.html.catch(function () { if (prefetched[url] === entry) { delete prefetched[url]; } });
+        prefetched[url] = entry;
+    }
+
+    function take(url) {
+        var hit = prefetched[url];
+        delete prefetched[url];
+        return hit && Date.now() - hit.at < PREFETCH_TTL_MS ? hit.html : fetchForm(url);
+    }
+
+    function warm(e) {
+        var link = e.target.closest && e.target.closest("a[data-modal]");
+        if (link && shell) { prefetch(link.href); }
+    }
+    document.addEventListener("pointerover", warm, { passive: true });
+    document.addEventListener("focusin", warm);
+
+    function load(url, trigger) {
+        if (shell.open) { return; }
+        // Only show "working" if the wait is long enough to notice.
+        var busy = setTimeout(function () { if (trigger) { trigger.classList.add("is-opening"); } }, 120);
+        shell.classList.add("is-loading");
+        take(url)
             .then(function (html) {
                 shell.querySelector(".modal-content").innerHTML = html;
                 wire(shell);
                 open(shell, trigger);
             })
             .catch(function () { window.location.href = url; })
-            .then(function () { shell.classList.remove("is-loading"); });
+            .then(function () {
+                clearTimeout(busy);
+                if (trigger) { trigger.classList.remove("is-opening"); }
+                shell.classList.remove("is-loading");
+            });
     }
 
     function wire(root) {
