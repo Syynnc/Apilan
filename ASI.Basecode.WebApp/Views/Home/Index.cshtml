@@ -25,7 +25,7 @@
 
         <div class="hero-copy">
             <span class="hero-tag">
-                <b>@schoolShort only</b>
+                <b>Made for @schoolShort</b>
                 Events · QR check-in · Reports
             </span>
 
@@ -116,8 +116,8 @@
 </section>
 
 @* ============================================================ SCHOOL ===== *@
-@* Apilan is not a platform other schools sign up for: one deployment, one
-   campus. Said plainly, right under the hero, so nobody looks for a sign-up. *@
+@* Apilan is the school's own system, one deployment for one campus. Said
+   warmly, right under the hero: whose it is and how you get in. *@
 <section class="campus" id="campus" aria-labelledby="campus-title">
     <div class="shell">
         <div class="campus-inner reveal">
@@ -129,18 +129,18 @@
                 </svg>
             </div>
             <div class="campus-copy">
-                <span class="eyebrow">One school, one system</span>
-                <h2 id="campus-title">Built for <em>@school</em> — and nobody else.</h2>
+                <span class="eyebrow">Our campus, our system</span>
+                <h2 id="campus-title">A home for every <em>@school</em> event.</h2>
                 <p>
-                    Every event, member and report in Apilan belongs to @schoolShort. Accounts
-                    are issued by @org officers against your student number, so everyone
-                    scanned at the door is one of our own students.
+                    Every event, member and report in Apilan is part of the @schoolShort
+                    community. Your @org officers set up your account with your student
+                    number, so there is nothing to sign up for: sign in and your pass is ready.
                 </p>
             </div>
             <ul class="campus-facts">
-                <li><b>1</b><span>Campus served</span></li>
-                <li><b>0</b><span>Public sign-ups</span></li>
-                <li><b>@schoolShort</b><span>Student numbers only</span></li>
+                <li><b>@schoolShort</b><span>Our home campus</span></li>
+                <li><b>@org</b><span>Sets up your account</span></li>
+                <li><b>1 pass</b><span>For every event</span></li>
             </ul>
         </div>
     </div>
@@ -429,11 +429,11 @@
         <div class="cta-ticket reveal">
 
             <div class="cta-ticket-body">
-                <span class="eyebrow">Admit one school</span>
+                <span class="eyebrow">Your pass is waiting</span>
                 <h2>Your next general assembly can check in 400 people.</h2>
                 <p>
-                    Officers of @org create every member account — there is no public
-                    sign-up. Members sign in once to get their pass, and the door does the rest.
+                    Your @org officers have already set up your account, so there is
+                    nothing to fill in. Sign in once to get your pass, and the door does the rest.
                 </p>
                 <div class="hero-cta">
                     <a class="btn-a lg" asp-controller="Account" asp-action="Login">Sign in</a>
@@ -447,7 +447,7 @@
                     <path d="@signInQr.Path" />
                 </svg>
                 <span class="admit">APL · SIGN IN</span>
-                <span class="fine">@schoolShort<br />students<br />only</span>
+                <span class="fine">For every<br />@schoolShort<br />student</span>
             </div>
 
         </div>
