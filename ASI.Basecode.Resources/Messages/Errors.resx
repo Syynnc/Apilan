@@ -69,16 +69,10 @@
   <data name="DoorNotOpen" xml:space="preserve">
     <value>Time-in opens when the event starts, at {0}.</value>
   </data>
-  <data name="DoorBetweenWindows" xml:space="preserve">
-    <value>Time-in closed at {0}. Time-out opens when the event ends, at {1}.</value>
-  </data>
   <data name="DoorClosed" xml:space="preserve">
     <value>Attendance for this event closed at {0}.</value>
   </data>
   <data name="WindowLongerThanEvent" xml:space="preserve">
     <value>The event must last at least as long as its attendance window.</value>
-  </data>
-  <data name="GraceOutsideWindow" xml:space="preserve">
-    <value>Late after has to fall inside the time-in window.</value>
   </data>
 </root>

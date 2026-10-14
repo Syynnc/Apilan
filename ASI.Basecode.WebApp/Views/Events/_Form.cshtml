@@ -67,7 +67,7 @@
             </div>
 
             <div class="field span-2">
-                <label asp-for="Venue"></label>
+                <label asp-for="Venue" class="req"></label>
                 <input asp-for="Venue" class="input-a" placeholder="Gymnasium" />
                 <span asp-validation-for="Venue" class="field-error"></span>
             </div>
@@ -75,11 +75,6 @@
                 <label asp-for="EventCapacity"></label>
                 <input asp-for="EventCapacity" class="input-a" type="number" min="1" placeholder="No limit" />
                 <span asp-validation-for="EventCapacity" class="field-error"></span>
-            </div>
-            <div class="field">
-                <label asp-for="LateGraceMinutes" class="req"></label>
-                <input asp-for="LateGraceMinutes" class="input-a" type="number" min="0" max="30" />
-                <span asp-validation-for="LateGraceMinutes" class="field-error"></span>
             </div>
 
             @* Time-in opens by itself at the start and time-out at the end, each
@@ -93,7 +88,7 @@
                         <label for="win-@m">@m min</label>
                     }
                 </div>
-                <span class="hint">Time-in opens when the event starts and time-out when it ends, each for this long. Both open by themselves.</span>
+                <span class="hint">Time-in opens when the event starts: on time for this long, late after it until the event ends. Time-out opens when the event ends, for this long. Both open by themselves.</span>
                 <span asp-validation-for="AttendanceWindowMinutes" class="field-error"></span>
             </div>
 

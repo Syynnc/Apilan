@@ -40,6 +40,8 @@ namespace ASI.Basecode.Services.Services
             switch (window.At(entry.RecordedAt ?? DateTime.Now))
             {
                 case AttendanceWindow.Phase.TimeIn:
+                case AttendanceWindow.Phase.LateTimeIn:
+                    // After the window it is still a time-in; the views mark it late.
                     recorded = AttendanceAction.TimeIn;
                     break;
                 case AttendanceWindow.Phase.TimeOut:
@@ -47,9 +49,6 @@ namespace ASI.Basecode.Services.Services
                     break;
                 case AttendanceWindow.Phase.NotOpen:
                     throw new InvalidDataException(string.Format(Errors.DoorNotOpen, window.TimeInOpens.ToString("h:mm tt")));
-                case AttendanceWindow.Phase.Between:
-                    throw new InvalidDataException(string.Format(Errors.DoorBetweenWindows,
-                        window.TimeInCloses.ToString("h:mm tt"), window.TimeOutOpens.ToString("h:mm tt")));
                 default:
                     throw new InvalidDataException(string.Format(Errors.DoorClosed, window.TimeOutCloses.ToString("h:mm tt")));
             }
