@@ -17,29 +17,44 @@
     /* ---- Opening and closing --------------------------------------------- */
     function open(dialog, trigger) {
         lastTrigger = trigger || document.activeElement;
-        dialog.classList.remove("is-closing");
+        dialog.classList.remove("is-closing", "is-shown");
         if (!dialog.open) { dialog.showModal(); }
+        document.documentElement.classList.add("has-modal");
+
         var first = dialog.querySelector("[autofocus], input:not([type=hidden]):not([disabled]), select, textarea, button");
-        if (first) { first.focus(); }
+        if (first) { first.focus({ preventScroll: true }); }
+
+        // Draw it once where it starts (transparent, a little low), then move
+        // it on the next frame: the first paint never lands mid-transition.
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () { dialog.classList.add("is-shown"); });
+        });
+    }
+
+    function shut(dialog) {
+        dialog.classList.remove("is-closing", "is-shown");
+        dialog.close();
+        if (!document.querySelector("dialog.modal[open]")) {
+            document.documentElement.classList.remove("has-modal");
+        }
     }
 
     function close(dialog) {
         if (!dialog.open || dialog.classList.contains("is-closing")) { return; }
-        if (REDUCED) { dialog.close(); return; }
+        if (REDUCED) { shut(dialog); return; }
         dialog.classList.add("is-closing");
 
-        // Shut it when the exit animation actually ends, not on a guessed
-        // timer; the timer is only a fallback if the event never comes.
+        // Shut it when the fade actually ends, not on a guessed timer; the
+        // timer is only a fallback if the event never comes.
         var done = false;
         function finish(e) {
-            if (done || (e && e.target !== dialog)) { return; }
+            if (done || (e && (e.target !== dialog || e.propertyName !== "opacity"))) { return; }
             done = true;
-            dialog.removeEventListener("animationend", finish);
-            dialog.classList.remove("is-closing");
-            dialog.close();
+            dialog.removeEventListener("transitionend", finish);
+            shut(dialog);
         }
-        dialog.addEventListener("animationend", finish);
-        setTimeout(finish, 320);
+        dialog.addEventListener("transitionend", finish);
+        setTimeout(finish, 260);
     }
 
     document.addEventListener("click", function (e) {
@@ -83,8 +98,14 @@
     }, true);
 
     document.addEventListener("close", function (e) {
-        if (e.target.tagName === "DIALOG" && lastTrigger && document.contains(lastTrigger)) {
-            lastTrigger.focus();
+        if (e.target.tagName !== "DIALOG") { return; }
+        // However it closed, the page scrolls again once no dialog is left.
+        e.target.classList.remove("is-closing", "is-shown");
+        if (!document.querySelector("dialog.modal[open]")) {
+            document.documentElement.classList.remove("has-modal");
+        }
+        if (lastTrigger && document.contains(lastTrigger)) {
+            lastTrigger.focus({ preventScroll: true });
         }
     }, true);
 
