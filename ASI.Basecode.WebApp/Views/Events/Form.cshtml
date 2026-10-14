@@ -1,0 +1,81 @@
+@model EventViewModel
+@{
+    var isNew = Model.Id == 0;
+    ViewData["Title"] = isNew ? "New event" : "Edit event";
+    ViewData["Module"] = "Events";
+}
+
+<div class="panel" style="max-width:860px">
+    <div class="panel-head"><h2>@ViewData["Title"]</h2></div>
+    <div class="panel-body">
+        <form asp-action="Save" method="post" novalidate>
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="field-error" style="margin-bottom:var(--s-4)"></div>
+
+            <div class="form-a">
+                <div class="field span-4">
+                    <label asp-for="EventName"></label>
+                    <input asp-for="EventName" class="input-a" />
+                    <span asp-validation-for="EventName" class="field-error"></span>
+                </div>
+
+                <div class="field span-2">
+                    <label asp-for="EventTypeId"></label>
+                    <select asp-for="EventTypeId" class="input-a"
+                            asp-items="@(new SelectList(Model.EventTypes, nameof(LookupItem.Id), nameof(LookupItem.Name)))">
+                        <option value="">Choose a type…</option>
+                    </select>
+                    <span asp-validation-for="EventTypeId" class="field-error"></span>
+                </div>
+                <div class="field span-2">
+                    <label asp-for="EventHost"></label>
+                    <input asp-for="EventHost" class="input-a" />
+                    <span asp-validation-for="EventHost" class="field-error"></span>
+                </div>
+
+                <div class="field span-2">
+                    <label asp-for="EventStart"></label>
+                    <input asp-for="EventStart" type="datetime-local" class="input-a" />
+                    <span asp-validation-for="EventStart" class="field-error"></span>
+                </div>
+                <div class="field span-2">
+                    <label asp-for="EventEnd"></label>
+                    <input asp-for="EventEnd" type="datetime-local" class="input-a" />
+                    <span asp-validation-for="EventEnd" class="field-error"></span>
+                </div>
+
+                <div class="field span-2">
+                    <label asp-for="Venue"></label>
+                    <input asp-for="Venue" class="input-a" />
+                    <span asp-validation-for="Venue" class="field-error"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="EventCapacity"></label>
+                    <input asp-for="EventCapacity" class="input-a" type="number" min="1" />
+                    <span class="hint">Leave empty for no limit.</span>
+                    <span asp-validation-for="EventCapacity" class="field-error"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="LateGraceMinutes"></label>
+                    <input asp-for="LateGraceMinutes" class="input-a" type="number" min="0" max="240" />
+                    <span asp-validation-for="LateGraceMinutes" class="field-error"></span>
+                </div>
+
+                <div class="field span-4">
+                    <label asp-for="Description"></label>
+                    <textarea asp-for="Description" class="input-a" rows="3"></textarea>
+                    <span asp-validation-for="Description" class="field-error"></span>
+                </div>
+            </div>
+
+            <div class="form-foot">
+                <a class="btn-a ghost" asp-action="Index">Cancel</a>
+                <button type="submit" class="btn-a">@(isNew ? "Create event" : "Save changes")</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

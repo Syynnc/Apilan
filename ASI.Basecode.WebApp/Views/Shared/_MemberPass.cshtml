@@ -1,0 +1,46 @@
+@model StudentViewModel
+@using ASI.Basecode.WebApp.Helpers
+@*
+    A member's attendance pass. The QR carries the student number and nothing
+    else, so the door reads exactly what an officer would type.
+    ViewData["PassDownload"] — URL of the PNG copy, when the viewer may save one.
+*@
+@{
+    var qr = QrCode.Render(Model.StudentNumber);
+    // The viewBox puts back the two-module quiet zone the path leaves out.
+    var span = qr.Modules + 4;
+    var download = ViewData["PassDownload"] as string;
+    var course = string.Join(" · ", new[] { Model.Course, Model.YearLevel.HasValue ? $"Year {Model.YearLevel}" : null }
+        .Where(x => !string.IsNullOrWhiteSpace(x)));
+}
+
+<div>
+    <article class="pass" aria-label="Attendance pass">
+        <div class="pass-body">
+            <span class="pass-kicker">Apilan · Attendance pass</span>
+            <h3 class="pass-name">@Model.FirstName @Model.LastName</h3>
+            @if (!string.IsNullOrEmpty(course))
+            {
+                <span class="pass-meta">@course</span>
+            }
+            <span class="pass-how">
+                Show this at the door. The first scan times you in, the next one times you out.
+            </span>
+        </div>
+        <div class="pass-stub">
+            <svg class="qr" viewBox="-2 -2 @span @span" role="img"
+                 aria-label="QR code for student number @Model.StudentNumber">
+                <path d="@qr.Path" />
+            </svg>
+            <span class="sn">@Model.StudentNumber</span>
+        </div>
+    </article>
+
+    @if (!string.IsNullOrEmpty(download))
+    {
+        <div class="pass-actions">
+            <a class="btn-a ghost sm" href="@download">Save as image</a>
+            <button type="button" class="btn-a quiet sm" onclick="window.print()">Print</button>
+        </div>
+    }
+</div>

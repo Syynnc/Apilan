@@ -1,0 +1,61 @@
+@model EventListViewModel
+@{
+    ViewData["Title"] = "Events";
+    ViewData["Module"] = "Transactions";
+
+    Func<string, string> chip = status => status switch
+    {
+        Const.StatusOngoing => "chip info",
+        Const.StatusUpcoming => "chip idle",
+        _ => "chip ok",
+    };
+    Func<string, string> seg = s =>
+        string.Equals(Model.Status, s, StringComparison.OrdinalIgnoreCase) ? "is-active" : null;
+}
+
+@section Actions {
+    <a class="btn-a" asp-action="Create">New event</a>
+}
+
+<div class="stack">
+    <form method="get" class="toolbar">
+        <input type="search" name="search" value="@Model.Search" class="input-a grow" placeholder="Search name, venue, or host…" />
+        <div class="segmented">
+            <a class="@seg(null)" asp-action="Index" asp-route-search="@Model.Search">All</a>
+            <a class="@seg(Const.StatusUpcoming)" asp-action="Index" asp-route-status="@Const.StatusUpcoming" asp-route-search="@Model.Search">Upcoming (@Model.UpcomingCount)</a>
+            <a class="@seg(Const.StatusOngoing)" asp-action="Index" asp-route-status="@Const.StatusOngoing" asp-route-search="@Model.Search">Ongoing (@Model.OngoingCount)</a>
+            <a class="@seg(Const.StatusFinished)" asp-action="Index" asp-route-status="@Const.StatusFinished" asp-route-search="@Model.Search">Finished (@Model.FinishedCount)</a>
+        </div>
+        <button type="submit" class="btn-a ghost sm">Search</button>
+    </form>
+
+    <div class="panel">
+        @if (!Model.Events.Any())
+        {
+            <div class="panel-body">
+                <div class="empty-a"><div class="glyph">▦</div><h4>No events</h4><p>Create one to start taking attendance.</p></div>
+            </div>
+        }
+        else
+        {
+            <table class="table-a">
+                <thead>
+                    <tr><th>Event</th><th>Type</th><th>When</th><th>Venue</th><th class="num">Present</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var e in Model.Events)
+                {
+                    <tr>
+                        <td><a asp-action="Details" asp-route-id="@e.EventId"><strong>@e.EventName</strong></a></td>
+                        <td>@e.EventType</td>
+                        <td class="mono">@e.EventStart.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@(string.IsNullOrEmpty(e.Venue) ? "—" : e.Venue)</td>
+                        <td class="num">@(e.TotalPresent ?? 0)@(e.EventCapacity.HasValue ? $" / {e.EventCapacity}" : "")</td>
+                        <td><span class="@chip(e.EventStatus)">@e.EventStatus</span></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

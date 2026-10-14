@@ -1,0 +1,43 @@
+@*
+    Site-wide background: an endless month grid. Purely decorative, fixed behind
+    every public page, and faded out toward the bottom of the viewport.
+
+    The numerals run 1..31 continuously across the whole grid rather than tiling,
+    so no two rows line up and it never reads as a repeated pattern.
+*@
+@{
+    const int cols = 21;
+    const int rows = 14;
+    const int cell = 60;
+
+    var width = cols * cell;
+    var height = rows * cell;
+
+    var rules = new System.Text.StringBuilder();
+    for (var c = 0; c <= cols; c++)
+    {
+        rules.Append($"M{c * cell} 0V{height}");
+    }
+    for (var r = 0; r <= rows; r++)
+    {
+        rules.Append($"M0 {r * cell}H{width}");
+    }
+
+    // Razor reserves <text> as its own transition tag, so the numerals are
+    // assembled as markup and written out in one go.
+    var numerals = new System.Text.StringBuilder();
+    var day = 1;
+    for (var r = 0; r < rows; r++)
+    {
+        for (var c = 0; c < cols; c++)
+        {
+            numerals.Append($"<text x=\"{(c * cell) + 9}\" y=\"{(r * cell) + 19}\">{day}</text>");
+            day = (day % 31) + 1;
+        }
+    }
+}
+
+<svg class="page-cal" viewBox="0 0 @width @height" preserveAspectRatio="xMidYMin slice" aria-hidden="true" focusable="false">
+    <path class="rule" d="@rules.ToString()" />
+    @Html.Raw(numerals.ToString())
+</svg>

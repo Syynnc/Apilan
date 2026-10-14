@@ -1,40 +1,66 @@
-﻿using ASI.Basecode.WebApp.Mvc;
-using AutoMapper;
-using Microsoft.AspNetCore.Http;
+using ASI.Basecode.Services.Interfaces;
+using ASI.Basecode.WebApp.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    /// <summary>
-    /// Home Controller
-    /// </summary>
-    public class HomeController : ControllerBase<HomeController>
+    public class HomeController : BaseController
     {
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="httpContextAccessor"></param>
-        /// <param name="loggerFactory"></param>
-        /// <param name="configuration"></param>
-        /// <param name="localizer"></param>
-        /// <param name="mapper"></param>
-        public HomeController(IHttpContextAccessor httpContextAccessor,
-                              ILoggerFactory loggerFactory,
-                              IConfiguration configuration,
-                              IMapper mapper = null) : base(httpContextAccessor, loggerFactory, configuration, mapper)
-        {
+        private readonly IStudentService _students;
 
+        public HomeController(IStudentService students)
+        {
+            _students = students;
         }
 
-        /// <summary>
-        /// Returns Home View.
-        /// </summary>
-        /// <returns> Home View </returns>
+        [AllowAnonymous]
         public IActionResult Index()
         {
-            return View();
+            if (User.Identity?.IsAuthenticated != true)
+            {
+                return View();
+            }
+
+            // Officers land on the console; members on their own attendance.
+            return IsOfficer
+                ? RedirectToAction("Index", "Dashboard")
+                : RedirectToAction(nameof(MyAttendance));
         }
+
+        /// <summary>A member's own record — their linked student's attendance history.</summary>
+        [Authorize]
+        public IActionResult MyAttendance()
+        {
+            if (IsOfficer)
+            {
+                return RedirectToAction("Index", "Dashboard");
+            }
+
+            if (LinkedUserId is not int userId)
+            {
+                // A member account with no student record linked yet.
+                return View("NoRecord");
+            }
+
+            return View(_students.GetStudentDetail(userId));
+        }
+
+        /// <summary>The signed-in member's own pass as a PNG, to keep on their phone.</summary>
+        [Authorize]
+        public IActionResult MyPass()
+        {
+            if (LinkedUserId is not int userId)
+            {
+                return NotFound();
+            }
+
+            var student = _students.GetStudent(userId);
+            return File(QrCode.Png(student.StudentNumber), "image/png", $"apilan-pass-{student.StudentNumber}.png");
+        }
+
+        [AllowAnonymous]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error() => View();
     }
 }

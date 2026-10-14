@@ -1,0 +1,69 @@
+@model StudentListViewModel
+@{
+    ViewData["Title"] = "Members";
+    ViewData["Module"] = "Master data";
+}
+
+@section Actions {
+    <a class="btn-a" asp-action="Create">New member</a>
+}
+
+<div class="stack">
+    <form method="get" class="toolbar">
+        <input type="search" name="search" value="@Model.Search" class="input-a grow" placeholder="Search name, student no., or course…" />
+        <label class="check-inline">
+            <input type="checkbox" name="showInactive" value="true" @(Model.ShowInactive ? "checked" : "") onchange="this.form.submit()" />
+            Show inactive
+        </label>
+        <button type="submit" class="btn-a ghost sm">Search</button>
+        <span class="count">@Model.Students.Count shown</span>
+    </form>
+
+    <div class="panel">
+        @if (!Model.Students.Any())
+        {
+            <div class="panel-body"><div class="empty-a"><div class="glyph">◎</div><h4>No members</h4><p>Add one, or widen the search.</p></div></div>
+        }
+        else
+        {
+            <table class="table-a">
+                <thead>
+                    <tr><th>Name</th><th>Student no.</th><th>Course</th><th class="num">Year</th><th class="num">Attended</th><th>Status</th><th></th></tr>
+                </thead>
+                <tbody>
+                @foreach (var m in Model.Students)
+                {
+                    <tr>
+                        <td><a asp-action="Details" asp-route-id="@m.Id"><strong>@m.FullName</strong></a></td>
+                        <td class="mono">@m.StudentNumber</td>
+                        <td>@(string.IsNullOrEmpty(m.Course) ? "—" : m.Course)</td>
+                        <td class="num">@(m.YearLevel?.ToString() ?? "—")</td>
+                        <td class="num">@m.EventsAttended</td>
+                        <td>
+                            @if (m.IsActive)
+                            {
+                                <span class="chip ok">Active</span>
+                            }
+                            else
+                            {
+                                <span class="chip idle">Inactive</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="row-actions">
+                                <a class="btn-a quiet sm" asp-action="Edit" asp-route-id="@m.Id">Edit</a>
+                                <form asp-action="SetActive" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@m.Id" />
+                                    <input type="hidden" name="isActive" value="@((!m.IsActive).ToString().ToLower())" />
+                                    <button type="submit" class="btn-a quiet sm">@(m.IsActive ? "Deactivate" : "Restore")</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

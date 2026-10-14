@@ -1,0 +1,61 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["Module"] = "Transactions";
+
+    Func<string, string> chip = status => status switch
+    {
+        Const.StatusOngoing => "chip info",
+        Const.StatusUpcoming => "chip idle",
+        _ => "chip ok",
+    };
+}
+
+<div class="stack-lg">
+    <div class="tiles">
+        <div class="tile accent"><span class="l">Active members</span><span class="n">@Model.ActiveStudents</span></div>
+        <div class="tile"><span class="l">Events</span><span class="n">@Model.TotalEvents</span><span class="s">@Model.UpcomingEvents upcoming</span></div>
+        <div class="tile"><span class="l">Check-ins</span><span class="n">@Model.AttendanceRecords</span></div>
+        <div class="tile"><span class="l">Missing time-outs</span><span class="n">@Model.MissingTimeOuts</span><span class="s">finished events</span></div>
+    </div>
+
+    @{
+        var sections = new[]
+        {
+            ("Happening now", Model.Ongoing),
+            ("Upcoming", Model.Upcoming),
+            ("Recently finished", Model.RecentlyFinished),
+        };
+    }
+
+    @foreach (var (title, list) in sections)
+    {
+        <div class="panel">
+            <div class="panel-head"><h2>@title</h2><span class="count">@list.Count</span></div>
+            @if (!list.Any())
+            {
+                <div class="panel-body"><p class="muted" style="margin:0">Nothing here right now.</p></div>
+            }
+            else
+            {
+                <table class="table-a">
+                    <thead>
+                        <tr><th>Event</th><th>When</th><th>Venue</th><th class="num">Present</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var e in list)
+                    {
+                        <tr>
+                            <td><a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId"><strong>@e.EventName</strong></a><br /><span class="dim">@e.EventType</span></td>
+                            <td class="mono">@e.EventStart.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@(string.IsNullOrEmpty(e.Venue) ? "—" : e.Venue)</td>
+                            <td class="num">@(e.TotalPresent ?? 0)@(e.EventCapacity.HasValue ? $" / {e.EventCapacity}" : "")</td>
+                            <td><span class="@chip(e.EventStatus)">@e.EventStatus</span></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+</div>

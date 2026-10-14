@@ -1,0 +1,71 @@
+@model ReportViewModel
+@{
+    ViewData["Title"] = "Participation";
+    ViewData["Module"] = "Reports";
+}
+
+<div class="stack-lg">
+    <form method="get" class="filter-bar">
+        <div class="field">
+            <label for="course">Course</label>
+            <select name="course" id="course" class="input-a" onchange="this.form.submit()">
+                <option value="">All courses</option>
+                @foreach (var c in Model.Courses)
+                {
+                    <option value="@c" selected="@(c == Model.Course)">@c</option>
+                }
+            </select>
+        </div>
+    </form>
+
+    <div class="panel">
+        <div class="panel-head"><h2>Members</h2><span class="count">@Model.Students.Count</span></div>
+        @if (!Model.Students.Any())
+        {
+            <div class="panel-body"><p class="muted" style="margin:0">No members match this filter.</p></div>
+        }
+        else
+        {
+            <table class="table-a">
+                <thead>
+                    <tr><th>Name</th><th>Student no.</th><th>Course</th><th class="num">Attended</th><th class="num">Late</th><th class="num">Missing out</th><th>Last attended</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var st in Model.Students)
+                {
+                    <tr>
+                        <td><strong>@st.FullName</strong></td>
+                        <td class="mono">@st.StudentNumber</td>
+                        <td>@st.Course</td>
+                        <td class="num">@(st.EventsAttended ?? 0)</td>
+                        <td class="num">@(st.TimesLate ?? 0)</td>
+                        <td class="num">@(st.MissingTimeOuts ?? 0)</td>
+                        <td class="mono">@(st.LastAttended?.ToString("yyyy-MM-dd") ?? "—")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <div class="panel">
+        <div class="panel-head"><h2>Events</h2><span class="count">@Model.Events.Count</span></div>
+        <table class="table-a">
+            <thead>
+                <tr><th>Event</th><th>When</th><th class="num">Present</th><th class="num">Late</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var e in Model.Events)
+            {
+                <tr>
+                    <td><a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId"><strong>@e.EventName</strong></a></td>
+                    <td class="mono">@e.EventStart.ToString("yyyy-MM-dd")</td>
+                    <td class="num">@(e.TotalPresent ?? 0)</td>
+                    <td class="num">@(e.LateCount ?? 0)</td>
+                    <td><span class="chip @(e.EventStatus == Const.StatusOngoing ? "info" : e.EventStatus == Const.StatusUpcoming ? "idle" : "ok")">@e.EventStatus</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

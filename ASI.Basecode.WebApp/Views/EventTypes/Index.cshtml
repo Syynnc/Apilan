@@ -1,0 +1,42 @@
+@model List<EventTypeViewModel>
+@{
+    ViewData["Title"] = "Event types";
+    ViewData["Module"] = "Master data";
+}
+
+@section Actions {
+    <a class="btn-a" asp-action="Create">New type</a>
+}
+
+<div class="panel">
+    @if (!Model.Any())
+    {
+        <div class="panel-body"><div class="empty-a"><h4>No event types</h4><p>Add one to categorise events.</p></div></div>
+    }
+    else
+    {
+        <table class="table-a">
+            <thead><tr><th>Name</th><th>Description</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var t in Model)
+            {
+                <tr>
+                    <td><strong>@t.TypeName</strong></td>
+                    <td>@(string.IsNullOrEmpty(t.Description) ? "—" : t.Description)</td>
+                    <td>
+                        @if (t.IsActive)
+                        {
+                            <span class="chip ok">Active</span>
+                        }
+                        else
+                        {
+                            <span class="chip idle">Inactive</span>
+                        }
+                    </td>
+                    <td><div class="row-actions"><a class="btn-a quiet sm" asp-action="Edit" asp-route-id="@t.Id">Edit</a></div></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</div>

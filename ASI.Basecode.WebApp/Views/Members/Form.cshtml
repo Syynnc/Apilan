@@ -1,0 +1,76 @@
+@model StudentViewModel
+@{
+    var isNew = Model.Id == 0;
+    ViewData["Title"] = isNew ? "New member" : "Edit member";
+    ViewData["Module"] = "Members";
+}
+
+<div class="panel" style="max-width:860px">
+    <div class="panel-head"><h2>@ViewData["Title"]</h2></div>
+    <div class="panel-body">
+        <form asp-action="Save" method="post" novalidate>
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="field-error" style="margin-bottom:var(--s-4)"></div>
+
+            <div class="form-a">
+                <div class="field span-2">
+                    <label asp-for="StudentNumber"></label>
+                    <input asp-for="StudentNumber" class="input-a mono" />
+                    <span asp-validation-for="StudentNumber" class="field-error"></span>
+                </div>
+                <div class="field span-2">
+                    <label asp-for="Email"></label>
+                    <input asp-for="Email" class="input-a" type="email" />
+                    <span asp-validation-for="Email" class="field-error"></span>
+                </div>
+
+                <div class="field span-2">
+                    <label asp-for="FirstName"></label>
+                    <input asp-for="FirstName" class="input-a" />
+                    <span asp-validation-for="FirstName" class="field-error"></span>
+                </div>
+                <div class="field span-2">
+                    <label asp-for="LastName"></label>
+                    <input asp-for="LastName" class="input-a" />
+                    <span asp-validation-for="LastName" class="field-error"></span>
+                </div>
+
+                <div class="field">
+                    <label asp-for="Gender"></label>
+                    <input asp-for="Gender" class="input-a" />
+                    <span asp-validation-for="Gender" class="field-error"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="YearLevel"></label>
+                    <input asp-for="YearLevel" class="input-a" type="number" min="1" max="6" />
+                    <span asp-validation-for="YearLevel" class="field-error"></span>
+                </div>
+                <div class="field span-2">
+                    <label asp-for="Course"></label>
+                    <input asp-for="Course" class="input-a" />
+                    <span asp-validation-for="Course" class="field-error"></span>
+                </div>
+
+                <div class="field span-2">
+                    <label asp-for="ContactNumber"></label>
+                    <input asp-for="ContactNumber" class="input-a mono" placeholder="+639XXXXXXXXX" />
+                    <span asp-validation-for="ContactNumber" class="field-error"></span>
+                </div>
+                <div class="field span-2" style="align-self:end">
+                    <label class="check-inline">
+                        <input asp-for="IsActive" type="checkbox" /> Active
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-foot">
+                <a class="btn-a ghost" asp-action="Index">Cancel</a>
+                <button type="submit" class="btn-a">@(isNew ? "Create member" : "Save changes")</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
