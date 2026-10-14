@@ -989,18 +989,40 @@ dialog.modal::backdrop {
     backdrop-filter: blur(4px) saturate(0.9);
     -webkit-backdrop-filter: blur(4px) saturate(0.9);
 }
-dialog.modal[open] { animation: modal-in 460ms var(--ease-spring) both; }
-dialog.modal[open]::backdrop { animation: scrim-in 260ms var(--ease-out) both; }
-dialog.modal.is-closing { animation: modal-out 180ms var(--ease-in-out) both; }
-dialog.modal.is-closing::backdrop { animation: scrim-out 180ms var(--ease-in-out) both; }
+/* One calm glide rather than a spring: a little rise and grow, no overshoot,
+   no tilt. Only opacity and transform move, on its own layer, so the heavy
+   shadow is painted once and not on every frame. */
+dialog.modal[open] {
+    will-change: transform, opacity;
+    animation: modal-in 340ms var(--ease-glide) both;
+}
+dialog.modal[open]::backdrop { animation: scrim-in 300ms var(--ease-out) both; }
+dialog.modal.is-closing { animation: modal-out 200ms var(--ease-exit) both; }
+dialog.modal.is-closing::backdrop { animation: scrim-out 220ms var(--ease-exit) both; }
 
 @keyframes modal-in {
-    from { opacity: 0; transform: translateY(28px) rotate(-1.5deg) scale(0.96); }
+    from { opacity: 0; transform: translateY(18px) scale(0.975); }
     to   { opacity: 1; transform: none; }
 }
-@keyframes modal-out { to { opacity: 0; transform: translateY(14px) scale(0.98); } }
+@keyframes modal-out { to { opacity: 0; transform: translateY(10px) scale(0.985); } }
 @keyframes scrim-in  { from { opacity: 0; } }
 @keyframes scrim-out { to   { opacity: 0; } }
+
+/* The form settles a beat after the ticket. A form coming back with errors
+   is new content too, so it fades in the same way instead of snapping, and
+   then shakes. */
+dialog.modal[open] .modal-content > * { animation: modal-content-in 360ms var(--ease-glide) 70ms both; }
+dialog.modal[open] .modal-content > .shake { animation: shake 420ms var(--ease-out); }
+@keyframes modal-content-in { from { opacity: 0; transform: translateY(6px); } }
+
+/* The link that opened it says it is working when the server is slow. */
+[data-modal].is-opening { cursor: progress; opacity: 0.7; transition: opacity var(--t-fast) var(--ease-out); }
+
+@media (prefers-reduced-motion: reduce) {
+    dialog.modal[open], dialog.modal.is-closing,
+    dialog.modal[open]::backdrop, dialog.modal.is-closing::backdrop,
+    dialog.modal[open] .modal-content > * { animation-duration: 1ms; animation-delay: 0ms; }
+}
 
 .modal-content {
     max-height: calc(100dvh - 2rem);
