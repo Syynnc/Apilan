@@ -177,10 +177,17 @@
 
 </div>
 
+@* One modal for every add/edit form; modal.js loads the form into it. *@
+<dialog class="modal" id="app-modal" aria-label="Form">
+    <div class="modal-content"></div>
+</dialog>
+
+<partial name="_ValidationScriptsPartial" />
 <script src="~/js/theme.js" asp-append-version="true"></script>
 <script src="~/js/console.js" asp-append-version="true"></script>
 <script src="~/js/app.js" asp-append-version="true"></script>
 <script src="~/js/tables.js" asp-append-version="true"></script>
+<script src="~/js/modal.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

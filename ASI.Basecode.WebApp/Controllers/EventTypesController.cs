@@ -24,14 +24,14 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpGet]
-        public IActionResult Create() => View("Form", new EventTypeViewModel());
+        public IActionResult Create() => FormView(new EventTypeViewModel());
 
         [HttpGet]
         public IActionResult Edit(int id)
         {
             try
             {
-                return View("Form", _eventTypes.GetEventType(id));
+                return FormView(_eventTypes.GetEventType(id));
             }
             catch (InvalidDataException)
             {
@@ -45,19 +45,19 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View("Form", model);
+                return FormView(model, invalid: true);
             }
 
             try
             {
                 _eventTypes.SaveEventType(model);
                 TempData["Success"] = string.Format(Common.EventTypeSaved, model.TypeName);
-                return RedirectToAction(nameof(Index));
+                return SavedRedirect(Url.Action(nameof(Index)));
             }
             catch (InvalidDataException ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
-                return View("Form", model);
+                return FormView(model, invalid: true);
             }
         }
     }

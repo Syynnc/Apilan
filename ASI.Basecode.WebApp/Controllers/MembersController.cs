@@ -70,14 +70,14 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpGet]
-        public IActionResult Create() => View("Form", new StudentViewModel());
+        public IActionResult Create() => FormView(new StudentViewModel());
 
         [HttpGet]
         public IActionResult Edit(int id)
         {
             try
             {
-                return View("Form", _students.GetStudent(id));
+                return FormView(_students.GetStudent(id));
             }
             catch (InvalidDataException)
             {
@@ -91,7 +91,7 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View("Form", model);
+                return FormView(model, invalid: true);
             }
 
             try
@@ -106,12 +106,12 @@ namespace ASI.Basecode.WebApp.Controllers
                 }
 
                 TempData["Success"] = string.Format(Common.StudentSaved, model.StudentNumber);
-                return RedirectToAction(nameof(Index));
+                return SavedRedirect(Url.Action(nameof(Index)));
             }
             catch (InvalidDataException ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
-                return View("Form", model);
+                return FormView(model, invalid: true);
             }
         }
 

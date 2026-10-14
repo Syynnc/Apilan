@@ -54,14 +54,14 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpGet]
-        public IActionResult Create() => View("Form", _events.NewEvent());
+        public IActionResult Create() => FormView(_events.NewEvent());
 
         [HttpGet]
         public IActionResult Edit(int id)
         {
             try
             {
-                return View("Form", _events.GetEvent(id));
+                return FormView(_events.GetEvent(id));
             }
             catch (InvalidDataException)
             {
@@ -76,7 +76,7 @@ namespace ASI.Basecode.WebApp.Controllers
             if (!ModelState.IsValid)
             {
                 _events.PopulateLookups(model);
-                return View("Form", model);
+                return FormView(model, invalid: true);
             }
 
             try
@@ -91,13 +91,16 @@ namespace ASI.Basecode.WebApp.Controllers
                 }
 
                 TempData["Success"] = string.Format(Common.EventSaved, model.EventName);
-                return RedirectToAction(nameof(Index));
+
+                // An edit made from the event's own page goes back there.
+                var back = model.Id != 0 ? Url.Action(nameof(Details), new { id = model.Id }) : Url.Action(nameof(Index));
+                return SavedRedirect(back);
             }
             catch (InvalidDataException ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
                 _events.PopulateLookups(model);
-                return View("Form", model);
+                return FormView(model, invalid: true);
             }
         }
 

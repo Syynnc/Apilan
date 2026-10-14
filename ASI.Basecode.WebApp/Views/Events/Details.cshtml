@@ -27,7 +27,7 @@
 
 @section Actions {
     <a class="btn-a ghost" asp-controller="Attendance" asp-action="Export" asp-route-eventId="@s.EventId">Export CSV</a>
-    <a class="btn-a ghost" asp-action="Edit" asp-route-id="@s.EventId">Edit</a>
+    <a class="btn-a ghost" asp-action="Edit" asp-route-id="@s.EventId" data-modal>Edit</a>
 }
 
 <div class="split @(isFinished ? "" : "door-first")">

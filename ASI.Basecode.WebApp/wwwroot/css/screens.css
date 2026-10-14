@@ -899,9 +899,11 @@ details.more > summary {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
     transition: transform var(--t-med) var(--ease-spring);
 }
-.switch input:checked + .switch-track { background: var(--accent); }
-.switch input:checked + .switch-track::after { transform: translateX(14px); }
-.switch input:focus-visible + .switch-track { outline: 2px solid var(--focus); outline-offset: 2px; }
+/* ~ not +: asp-for puts a hidden input between the checkbox and the track. */
+.field > label.switch { display: inline-flex; margin: 0; font-weight: 500; }
+.switch input:checked ~ .switch-track { background: var(--accent); }
+.switch input:checked ~ .switch-track::after { transform: translateX(14px); }
+.switch input:focus-visible ~ .switch-track { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 /* ---- Switched-off rows: deactivated members, disabled accounts ---------- */
 /* The row greys out so it reads as "not in play", but its status chip keeps
@@ -918,3 +920,253 @@ details.more > summary {
 
 .off-banner { align-items: center; flex-wrap: wrap; }
 .off-banner form { margin-left: auto; }
+
+/* ==========================================================================
+   MODAL — a ticket laid on the desk. The scrim dims the page, the ticket
+   swings up into place, and the stub's punch-holes are real holes: you see
+   the dimmed page through them.
+   ========================================================================== */
+dialog.modal {
+    width: fit-content;
+    max-width: calc(100vw - 2rem);
+    max-height: calc(100dvh - 2rem);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    overflow: visible;
+    filter: drop-shadow(0 32px 64px rgba(10, 12, 9, 0.30)) drop-shadow(0 4px 10px rgba(10, 12, 9, 0.12));
+}
+dialog.modal::backdrop {
+    background: var(--scrim);
+    backdrop-filter: blur(4px) saturate(0.9);
+    -webkit-backdrop-filter: blur(4px) saturate(0.9);
+}
+dialog.modal[open] { animation: modal-in 460ms var(--ease-spring) both; }
+dialog.modal[open]::backdrop { animation: scrim-in 260ms var(--ease-out) both; }
+dialog.modal.is-closing { animation: modal-out 180ms var(--ease-in-out) both; }
+dialog.modal.is-closing::backdrop { animation: scrim-out 180ms var(--ease-in-out) both; }
+
+@keyframes modal-in {
+    from { opacity: 0; transform: translateY(28px) rotate(-1.5deg) scale(0.96); }
+    to   { opacity: 1; transform: none; }
+}
+@keyframes modal-out { to { opacity: 0; transform: translateY(14px) scale(0.98); } }
+@keyframes scrim-in  { from { opacity: 0; } }
+@keyframes scrim-out { to   { opacity: 0; } }
+
+.modal-content {
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-radius: var(--r-lg);
+    scrollbar-gutter: stable;
+}
+dialog.modal.is-loading { cursor: progress; }
+
+body:has(dialog[open]) { overflow: hidden; }
+
+/* ==========================================================================
+   TICKET FORM — the add/edit forms. Body on the left takes the details;
+   the stub on the right previews what is being made as it is typed.
+   ========================================================================== */
+.ticket-form {
+    --stub-w: 220px;
+    width: 820px;
+    max-width: 100%;
+    align-items: stretch;
+    text-align: left;
+}
+.ticket-form.narrow { width: 640px; --stub-w: 190px; }
+.ticket-form.wide { width: 920px; }
+
+.ticket-form .ticket-body { padding: var(--s-6); gap: var(--s-5); }
+
+.tf-head { position: relative; display: grid; gap: var(--s-2); padding-right: 44px; }
+.ticket-form .ticket-title {
+    margin: 0;
+    font-size: clamp(1.4rem, 2.6vw, 1.85rem);
+    line-height: 1.15;
+    min-height: 1.15em;
+    overflow-wrap: anywhere;
+    transition: color var(--t-fast) var(--ease-out);
+}
+.ticket-form .is-empty { color: var(--ink-3); }
+.ticket-form .ticket-title.is-empty { font-style: italic; }
+
+.tf-close {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border: var(--border);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--ink-3);
+    cursor: pointer;
+    transition: transform var(--t-med) var(--ease-spring), color var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out);
+}
+.tf-close:hover { color: var(--ink); border-color: var(--ink-3); transform: rotate(90deg); }
+.tf-close svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.form-page .tf-close { display: none; }
+
+.tf-alert:empty,
+.tf-alert.validation-summary-valid { display: none; }
+.tf-alert {
+    padding: var(--s-3) var(--s-4);
+    border-radius: var(--r-sm);
+    background: var(--risk-wash);
+    border: 1px solid color-mix(in srgb, var(--risk) 32%, transparent);
+    color: var(--risk);
+    font-size: var(--fs-2xs);
+}
+.tf-alert ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-1); }
+
+.tf-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s-4);
+}
+.tf-grid .field { margin: 0; }
+.tf-grid .span-2 { grid-column: span 2; }
+.tf-grid .span-4 { grid-column: 1 / -1; }
+.tf-grid textarea.input-a { resize: vertical; min-height: 64px; }
+
+label.req::after { content: " *"; color: var(--risk); font-weight: 700; }
+
+.tf-foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--s-3);
+    margin-top: auto;
+    padding-top: var(--s-4);
+    border-top: 1px dashed var(--line-strong);
+}
+.tf-legend { margin-right: auto; font-size: var(--fs-2xs); color: var(--ink-3); }
+.tf-legend i { color: var(--risk); font-style: normal; font-weight: 700; }
+
+.btn-a.is-busy { opacity: 0.7; cursor: progress; }
+.btn-a.is-busy::after {
+    content: "";
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    animation: spin 700ms linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---- The stub: a live preview ----------------------------------------- */
+.tf-stub {
+    width: var(--stub-w) !important;
+    gap: var(--s-4) !important;
+    padding: var(--s-6) var(--s-4) !important;
+    background: color-mix(in srgb, var(--tt) 7%, var(--surface-sunken)) !important;
+    transition: background-color var(--t-med) var(--ease-out);
+}
+.tf-stub .stub-code { font-size: var(--fs-sm); max-width: 100%; overflow-wrap: anywhere; }
+.tf-stub .stub-note { max-width: 100%; overflow-wrap: anywhere; }
+
+.tf-avatar {
+    width: 92px;
+    height: 92px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--tt);
+    color: var(--tt-ink);
+    font-family: var(--font-display);
+    font-size: 2.1rem;
+    font-weight: 600;
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--tt) 18%, transparent);
+    transition: background-color var(--t-med) var(--ease-out);
+}
+.tf-avatar.is-empty { color: color-mix(in srgb, var(--tt-ink) 70%, transparent); }
+
+.tf-swatch {
+    width: 96px;
+    height: 96px;
+    border-radius: var(--r-md);
+    background:
+        repeating-linear-gradient(135deg, transparent 0 9px, color-mix(in srgb, #fff 18%, transparent) 9px 11px),
+        var(--tt);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--tt) 18%, transparent);
+    transition: background-color var(--t-med) var(--ease-out);
+}
+
+.tf-stub .datepad { width: 96px; box-shadow: var(--shadow-pop); }
+.tf-stub .datepad .m { font-size: var(--fs-2xs); padding: 6px 0; transition: background-color var(--t-med) var(--ease-out); }
+.tf-stub .datepad .d { font-size: 2.6rem; padding: 10px 0 4px; }
+.tf-stub .datepad .w { padding-bottom: 10px; }
+.tf-cap {
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+.tf-cap b { color: var(--ink); font-size: var(--fs-sm); }
+
+.tf-signin {
+    display: grid;
+    gap: 2px;
+    width: 100%;
+    padding: var(--s-3);
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--r-sm);
+    background: var(--surface);
+    font-size: var(--fs-3xs);
+    line-height: 1.5;
+    color: var(--ink-3);
+}
+.tf-signin b {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--tt);
+}
+.tf-signin code { font-size: var(--fs-2xs); color: var(--ink); font-weight: 600; }
+
+/* In the modal the notches are cut through, not painted on. */
+.modal .ticket-form {
+    -webkit-mask:
+        radial-gradient(circle 11px at calc(100% - var(--stub-w)) 0, #0000 98%, #000) top / 100% 51% no-repeat,
+        radial-gradient(circle 11px at calc(100% - var(--stub-w)) 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+            mask:
+        radial-gradient(circle 11px at calc(100% - var(--stub-w)) 0, #0000 98%, #000) top / 100% 51% no-repeat,
+        radial-gradient(circle 11px at calc(100% - var(--stub-w)) 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+}
+.modal .ticket-form .ticket-stub::before,
+.modal .ticket-form .ticket-stub::after { display: none; }
+.modal .ticket-form .ticket-stub { border-left-style: dashed; }
+
+/* A rejected submit gives the ticket a short shake. */
+.ticket-form.shake { animation: shake 420ms var(--ease-out); }
+@keyframes shake {
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(5px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(2px); }
+}
+
+/* The same form as a page, for a direct link or no JavaScript. */
+.form-page { display: flex; justify-content: center; padding-block: var(--s-3); }
+.form-page .ticket-form { box-shadow: var(--shadow-lift); }
+
+@media (max-width: 760px) {
+    .ticket-form { flex-direction: column; }
+    .ticket-form .ticket-body { padding: var(--s-5); }
+    .ticket-form .tf-stub { display: none !important; }
+    .modal .ticket-form { -webkit-mask: none; mask: none; }
+    .tf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tf-grid .span-2 { grid-column: 1 / -1; }
+    .tf-foot { flex-wrap: wrap; }
+}
+
+.type-dot { flex: none; width: 12px; height: 12px; border-radius: 3px; background: var(--tt); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tt) 18%, transparent); }

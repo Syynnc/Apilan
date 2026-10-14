@@ -5,23 +5,35 @@
 }
 
 @section Actions {
-    <a class="btn-a" asp-action="Create">New type</a>
+    <a class="btn-a" asp-action="Create" data-modal>
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        New type
+    </a>
 }
 
 <div class="panel">
+    <div class="panel-head">
+        <h2>Types</h2>
+        <span class="count">@Model.Count(t => t.IsActive) active · @Model.Count total</span>
+    </div>
     @if (!Model.Any())
     {
         <div class="panel-body"><div class="empty-a"><h4>No event types</h4><p>Add one to categorise events.</p></div></div>
     }
     else
     {
-        <table class="table-a">
+        <table class="table-a" id="types-table" data-paginate="10">
             <thead><tr><th>Name</th><th>Description</th><th>Status</th><th></th></tr></thead>
             <tbody>
             @foreach (var t in Model)
             {
-                <tr>
-                    <td><strong>@t.TypeName</strong></td>
+                <tr class="@(t.IsActive ? null : "is-off")">
+                    <td>
+                        <div class="cell-event" data-type="@Ui.TicketType(t.TypeName)">
+                            <span class="type-dot" aria-hidden="true"></span>
+                            <strong>@t.TypeName</strong>
+                        </div>
+                    </td>
                     <td>@(string.IsNullOrEmpty(t.Description) ? "—" : t.Description)</td>
                     <td>
                         @if (t.IsActive)
@@ -33,7 +45,7 @@
                             <span class="chip idle">Inactive</span>
                         }
                     </td>
-                    <td><div class="row-actions"><a class="btn-a quiet sm" asp-action="Edit" asp-route-id="@t.Id">Edit</a></div></td>
+                    <td><div class="row-actions"><a class="btn-a quiet sm" asp-action="Edit" asp-route-id="@t.Id" data-modal>Edit</a></div></td>
                 </tr>
             }
             </tbody>
