@@ -95,8 +95,17 @@ namespace ASI.Basecode.WebApp.Controllers
 
         [Authorize]
         [HttpGet]
-        public IActionResult ChangePassword() =>
-            View(new ChangePasswordViewModel { FirstSignIn = MustChangePassword });
+        public IActionResult ChangePassword(string returnUrl = null)
+        {
+            // From the account menu it opens in the modal and comes back to
+            // the page it was opened on; as a page it stands on its own.
+            var model = new ChangePasswordViewModel
+            {
+                FirstSignIn = MustChangePassword,
+                ReturnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : null,
+            };
+            return IsModalRequest ? PartialView("_PasswordForm", model) : View(model);
+        }
 
         /// <summary>
         /// Both the change-password page and the first-sign-in prompt post here;
