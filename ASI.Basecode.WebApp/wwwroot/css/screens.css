@@ -988,8 +988,16 @@ details.more > summary {
 
 /* ==========================================================================
    MODAL — a ticket laid on the desk. The scrim dims the page, the ticket
-   swings up into place, and the stub's punch-holes are real holes: you see
-   the dimmed page through them.
+   rises into place, and the stub's punch-holes are real holes: you see the
+   dimmed page through them.
+
+   Built to stay smooth on a laptop's integrated graphics. Nothing here is
+   recomputed while it moves: no blur behind it (backdrop-filter) and no
+   filter shadow on it (drop-shadow), the two things that made it stutter.
+   The shadow is a plain box-shadow, painted once with the ticket and then
+   only moved. Only opacity and transform change, and they change as a
+   transition that starts the frame after the dialog is first drawn, so
+   drawing it never lands in the middle of the motion.
    ========================================================================== */
 dialog.modal {
     width: fit-content;
@@ -1000,46 +1008,33 @@ dialog.modal {
     background: transparent;
     color: var(--ink);
     overflow: visible;
-    filter: drop-shadow(0 32px 64px rgba(10, 12, 9, 0.30)) drop-shadow(0 4px 10px rgba(10, 12, 9, 0.12));
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+    transition: opacity 180ms var(--ease-out), transform 260ms var(--ease-glide);
+}
+dialog.modal[open] { will-change: transform, opacity; }
+dialog.modal.is-shown { opacity: 1; transform: none; }
+dialog.modal.is-closing {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+    transition: opacity 150ms var(--ease-exit), transform 170ms var(--ease-exit);
 }
 dialog.modal::backdrop {
     background: var(--scrim);
-    backdrop-filter: blur(4px) saturate(0.9);
-    -webkit-backdrop-filter: blur(4px) saturate(0.9);
-}
-/* One calm glide rather than a spring: a little rise and grow, no overshoot,
-   no tilt. Only opacity and transform move, on its own layer, so the heavy
-   shadow is painted once and not on every frame. */
-dialog.modal[open] {
-    will-change: transform, opacity;
-    animation: modal-in 340ms var(--ease-glide) both;
-}
-dialog.modal[open]::backdrop { animation: scrim-in 300ms var(--ease-out) both; }
-dialog.modal.is-closing { animation: modal-out 200ms var(--ease-exit) both; }
-dialog.modal.is-closing::backdrop { animation: scrim-out 220ms var(--ease-exit) both; }
 
-@keyframes modal-in {
-    from { opacity: 0; transform: translateY(18px) scale(0.975); }
-    to   { opacity: 1; transform: none; }
+    opacity: 0;
+    transition: opacity 220ms var(--ease-out);
 }
-@keyframes modal-out { to { opacity: 0; transform: translateY(10px) scale(0.985); } }
-@keyframes scrim-in  { from { opacity: 0; } }
-@keyframes scrim-out { to   { opacity: 0; } }
-
-/* The form settles a beat after the ticket. A form coming back with errors
-   is new content too, so it fades in the same way instead of snapping, and
-   then shakes. */
-dialog.modal[open] .modal-content > * { animation: modal-content-in 360ms var(--ease-glide) 70ms both; }
-dialog.modal[open] .modal-content > .shake { animation: shake 420ms var(--ease-out); }
-@keyframes modal-content-in { from { opacity: 0; transform: translateY(6px); } }
+dialog.modal.is-shown::backdrop { opacity: 1; }
+dialog.modal.is-closing::backdrop { opacity: 0; transition-duration: 170ms; }
 
 /* The link that opened it says it is working when the server is slow. */
 [data-modal].is-opening { cursor: progress; opacity: 0.7; transition: opacity var(--t-fast) var(--ease-out); }
 
 @media (prefers-reduced-motion: reduce) {
-    dialog.modal[open], dialog.modal.is-closing,
-    dialog.modal[open]::backdrop, dialog.modal.is-closing::backdrop,
-    dialog.modal[open] .modal-content > * { animation-duration: 1ms; animation-delay: 0ms; }
+    dialog.modal, dialog.modal.is-closing,
+    dialog.modal::backdrop, dialog.modal.is-closing::backdrop { transition-duration: 1ms; }
+    dialog.modal { transform: none; }
 }
 
 .modal-content {
@@ -1050,8 +1045,12 @@ dialog.modal[open] .modal-content > .shake { animation: shake 420ms var(--ease-o
     scrollbar-gutter: stable;
 }
 dialog.modal.is-loading { cursor: progress; }
+    box-shadow: 0 24px 48px -12px rgba(10, 12, 9, 0.38), 0 4px 12px rgba(10, 12, 9, 0.14);
 
-body:has(dialog[open]) { overflow: hidden; }
+/* Scrolling locks while a dialog is open; the scrollbar's space stays, so
+   the page behind does not jump sideways when it does. */
+html { scrollbar-gutter: stable; }
+html.has-modal { overflow: hidden; }
 
 /* ==========================================================================
    TICKET FORM — the add/edit forms. Body on the left takes the details;
