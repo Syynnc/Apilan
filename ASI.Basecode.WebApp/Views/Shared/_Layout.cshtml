@@ -116,21 +116,20 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8" r="3.2"/><path d="M4 19c1.3-3 3.4-4.5 6-4.5M17 13v6M14 16h6"/></svg>
                 <span class="lbl">Accounts</span>
             </a>
-            <a class="@(controller == "Account" && (ViewContext.RouteData.Values["action"] as string) == "ChangePassword" ? "side-link is-active" : "side-link")"
-               title="My password" asp-controller="Account" asp-action="ChangePassword">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v2"/></svg>
-                <span class="lbl">My password</span>
-            </a>
         </nav>
 
         <div class="side-foot">
-            <div class="side-user">
+            @* Your own account: the details and the change-password action
+               open from here, where people look for them. *@
+            <button type="button" class="side-user" popovertarget="account-pop"
+                    aria-haspopup="true" aria-expanded="false" title="Your account">
                 <span class="av" aria-hidden="true">@initials</span>
                 <span class="who">
                     <span class="nm">@displayName</span>
                     <span class="rl">Officer</span>
                 </span>
-            </div>
+                <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10l4-4 4 4M8 14l4 4 4-4" /></svg>
+            </button>
 
             <form asp-controller="Account" asp-action="Logout" method="post">
                 @Html.AntiForgeryToken()
@@ -186,6 +185,29 @@
 <dialog class="modal" id="app-modal" aria-label="Form">
     <div class="modal-content"></div>
 </dialog>
+
+<div class="account-pop" id="account-pop" popover role="menu" aria-label="Your account">
+    <div class="ap-head">
+        <span class="av" aria-hidden="true">@initials</span>
+        <span class="who">
+            <span class="nm">@displayName</span>
+            <span class="un">@User.Identity?.Name</span>
+        </span>
+    </div>
+    <dl class="ap-meta">
+        <div><dt>Role</dt><dd>Officer</dd></div>
+        <div><dt>Organization</dt><dd>@Apilan.Value.OrganizationName · @Apilan.Value.SchoolShortName</dd></div>
+    </dl>
+    <div class="ap-actions">
+        <a class="ap-item" role="menuitem" data-modal
+           asp-controller="Account" asp-action="ChangePassword"
+           asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v2"/></svg>
+            <span>Change password</span>
+            <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 7l5 5-5 5"/></svg>
+        </a>
+    </div>
+</div>
 
 <partial name="_FirstPasswordPrompt" />
 
