@@ -55,7 +55,7 @@ namespace ASI.Basecode.Resources.Messages {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Incorrect username or password..
+        ///   Looks up a localized string similar to That student ID and password do not match..
         /// </summary>
         public static string InvalidLogin {
             get {
