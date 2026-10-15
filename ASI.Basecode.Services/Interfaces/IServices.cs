@@ -29,11 +29,11 @@ namespace ASI.Basecode.Services.Interfaces
         string SetOfficer(int id, bool makeOfficer, int currentAccountId, string updatedBy);
 
         /// <summary>
-        /// The role a signed-in account holds now, or null when it may no longer
-        /// be signed in (disabled, deactivated or gone). Checked on every request
-        /// so a role change or a disable takes effect at once.
+        /// The role and name a signed-in account holds now, or null when it may no
+        /// longer be signed in (disabled, deactivated or gone). Checked on every
+        /// request so a role change, rename or disable takes effect at once.
         /// </summary>
-        string CurrentRole(int accountId);
+        (string Role, string DisplayName)? CurrentState(int accountId);
     }
 
     /// <summary>The activity log: who did what, and when.</summary>

@@ -8,7 +8,18 @@ namespace ASI.Basecode.WebApp.Helpers
     public static class Ui
     {
         // The ticket palette from tokens.css, in the order a new type is given one.
-        private static readonly string[] Tones = { "talk", "workshop", "assembly", "training", "service" };
+        public static readonly string[] Tones = { "talk", "workshop", "assembly", "training", "service" };
+
+        // Colours officers picked for a type, by lower-cased name.
+        private static volatile System.Collections.Generic.Dictionary<string, string> _chosen = new();
+
+        public static void SetChosenTones(System.Collections.Generic.IEnumerable<(string Name, string Color)> types)
+        {
+            _chosen = types
+                .Where(t => !string.IsNullOrWhiteSpace(t.Name) && Tones.Contains(t.Color))
+                .GroupBy(t => t.Name.Trim().ToLowerInvariant())
+                .ToDictionary(g => g.Key, g => g.First().Color);
+        }
 
         /// <summary>
         /// The ticket colour for an event type — the same type is always the same
@@ -20,6 +31,7 @@ namespace ASI.Basecode.WebApp.Helpers
         {
             var name = (eventType ?? string.Empty).Trim().ToLowerInvariant();
             if (name.Length == 0) return "talk";
+            if (_chosen.TryGetValue(name, out var chosen)) return chosen;
 
             if (name.Contains("assembly")) return "assembly";
             if (name.Contains("workshop") || name.Contains("training")) return "workshop";

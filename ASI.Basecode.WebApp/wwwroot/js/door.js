@@ -1,8 +1,8 @@
 /* Apilan — the door station on an event page.
 
    The mode switch is how a person gets recorded, and it is also what the record
-   says about it: QR Code shows the camera, Manual and RFID show the entry field
-   (a card reader types into it like a keyboard). Only the chosen way's controls
+   says about it: QR Code shows the camera, Manual shows the entry field.
+   Only the chosen way's controls
    are on screen, and the choice survives the reload after each entry. */
 (function () {
     "use strict";
