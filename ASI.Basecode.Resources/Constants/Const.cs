@@ -15,6 +15,14 @@ namespace ASI.Basecode.Resources.Constants
         public const string RoleOfficer = "Officer";
         public const string RoleMember = "Member";
 
+        /// <summary>
+        /// accounts.id of the initial officer, the bootstrap account that
+        /// database/01_RolesAndAccounts.sql sets up. Other officers cannot
+        /// disable it, reset its password or take its officer role away, so the
+        /// organization can never be locked out of its own console.
+        /// </summary>
+        public const int InitialOfficerAccountId = 1;
+
         /// <summary>Authorization policy guarding the console: Officer role only</summary>
         public const string OfficerOnlyPolicy = "OfficerOnly";
 
@@ -23,6 +31,12 @@ namespace ASI.Basecode.Resources.Constants
 
         /// <summary>Custom claim carrying the linked student's display name</summary>
         public const string ClaimDisplayName = "DisplayName";
+
+        /// <summary>
+        /// Present while the account is still on the default password: every page
+        /// then opens the change-password prompt before anything else.
+        /// </summary>
+        public const string ClaimMustChangePassword = "MustChangePassword";
 
         /// <summary>attendance_modes.id for a member pass read by the door camera</summary>
         public const int QrAttendanceMode = 1;

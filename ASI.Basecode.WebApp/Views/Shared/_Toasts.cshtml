@@ -1,0 +1,30 @@
+@*
+    What just happened, as toasts across the top of the page: a save, a
+    reset, a refusal. Each slides in, runs down a timer bar and slides out by
+    itself; hovering or focusing it holds the timer, and × closes it now.
+    Without JavaScript they simply stay, as plain notices.
+*@
+<div class="toasts" id="toasts" aria-live="polite" aria-relevant="additions">
+    @if (TempData["Success"] is string ok)
+    {
+        <div class="toast ok" role="status" data-toast>
+            <svg class="toast-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M8 12.5l2.8 2.8L16.5 9.5" /></svg>
+            <div class="toast-text"><strong>Done</strong><span>@ok</span></div>
+            <button type="button" class="toast-close" data-toast-close aria-label="Close notification">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+            <i class="toast-timer" aria-hidden="true"></i>
+        </div>
+    }
+    @if (TempData["Error"] is string bad)
+    {
+        <div class="toast bad" role="alert" data-toast data-toast-life="9000">
+            <svg class="toast-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7.5v5.5M12 16.5v.01" /></svg>
+            <div class="toast-text"><strong>Not done</strong><span>@bad</span></div>
+            <button type="button" class="toast-close" data-toast-close aria-label="Close notification">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+            <i class="toast-timer" aria-hidden="true"></i>
+        </div>
+    }
+</div>

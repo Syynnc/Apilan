@@ -45,6 +45,8 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
+@await Html.PartialAsync("_CalendarBackdrop")
+
 <div class="console">
 
     <aside class="side" id="side-nav">
@@ -105,20 +107,34 @@
 
         <nav class="side-group">
             <h6>Administration</h6>
-            <a class="@nav("Account")" title="Accounts" asp-controller="Account" asp-action="Index">
+            <a class="@((controller == "Account" && (ViewContext.RouteData.Values["action"] as string) != "ChangePassword") ? "side-link is-active" : "side-link")" title="Accounts" asp-controller="Account" asp-action="Index">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8" r="3.2"/><path d="M4 19c1.3-3 3.4-4.5 6-4.5M17 13v6M14 16h6"/></svg>
                 <span class="lbl">Accounts</span>
+            </a>
+            <a class="@nav("Activity")" title="Activity log" asp-controller="Activity" asp-action="Index">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+                <span class="lbl">Activity log</span>
             </a>
         </nav>
 
         <div class="side-foot">
-            <div class="side-user">
+            @* Whose console this is, beside who is using it. *@
+            <div class="side-org" title="@Apilan.Value.OrganizationName · @Apilan.Value.SchoolName">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10l8-5 8 5M6 10v7M10 10v7M14 10v7M18 10v7M3.5 19.5h17"/></svg>
+                <span class="org">@Apilan.Value.OrganizationName</span>
+                <span class="school">@Apilan.Value.SchoolShortName</span>
+            </div>
+            @* Your own account: the details and the change-password action
+               open from here, where people look for them. *@
+            <button type="button" class="side-user" popovertarget="account-pop"
+                    aria-haspopup="true" aria-expanded="false" title="Your account">
                 <span class="av" aria-hidden="true">@initials</span>
                 <span class="who">
                     <span class="nm">@displayName</span>
                     <span class="rl">Officer</span>
                 </span>
-            </div>
+                <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10l4-4 4 4M8 14l4 4 4-4" /></svg>
+            </button>
 
             <form asp-controller="Account" asp-action="Logout" method="post">
                 @Html.AntiForgeryToken()
@@ -155,14 +171,6 @@
         </header>
 
         <main class="console-body">
-            @if (TempData["Success"] is string ok)
-            {
-                <div class="flash ok"><strong>Done.</strong> @ok</div>
-            }
-            @if (TempData["Error"] is string bad)
-            {
-                <div class="flash bad"><strong>Not done.</strong> @bad</div>
-            }
 
             @RenderBody()
         </main>
@@ -170,8 +178,46 @@
 
 </div>
 
+@* One modal for every add/edit form; modal.js loads the form into it. *@
+<dialog class="modal" id="app-modal" aria-label="Form">
+    <div class="modal-content"></div>
+</dialog>
+
+<div class="account-pop" id="account-pop" popover role="menu" aria-label="Your account">
+    <div class="ap-head">
+        <span class="av" aria-hidden="true">@initials</span>
+        <span class="who">
+            <span class="nm">@displayName</span>
+            <span class="un">@User.Identity?.Name</span>
+        </span>
+    </div>
+    <dl class="ap-meta">
+        <div><dt>Role</dt><dd>Officer</dd></div>
+        <div><dt>Organization</dt><dd>@Apilan.Value.OrganizationName · @Apilan.Value.SchoolShortName</dd></div>
+    </dl>
+    <div class="ap-actions">
+        <a class="ap-item" role="menuitem" data-modal
+           asp-controller="Account" asp-action="ChangePassword"
+           asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v2"/></svg>
+            <span>Change password</span>
+            <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 7l5 5-5 5"/></svg>
+        </a>
+    </div>
+</div>
+
+<partial name="_Toasts" />
+<partial name="_FirstPasswordPrompt" />
+
+<partial name="_ValidationScriptsPartial" />
 <script src="~/js/theme.js" asp-append-version="true"></script>
+<script src="~/js/toast.js" asp-append-version="true"></script>
 <script src="~/js/console.js" asp-append-version="true"></script>
+<script src="~/js/app.js" asp-append-version="true"></script>
+<script src="~/js/tables.js" asp-append-version="true"></script>
+<script src="~/js/modal.js" asp-append-version="true"></script>
+<script src="~/js/combo.js" asp-append-version="true"></script>
+<script src="~/js/password.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

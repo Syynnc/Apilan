@@ -27,6 +27,7 @@ namespace ASI.Basecode.Data
         public virtual DbSet<EventType> EventTypes { get; set; }
         public virtual DbSet<Attendance> Attendances { get; set; }
         public virtual DbSet<AttendanceMode> AttendanceModes { get; set; }
+        public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
         // Views (read-only)
         public virtual DbSet<AttendanceDetail> AttendanceDetails { get; set; }
@@ -54,6 +55,12 @@ namespace ASI.Basecode.Data
             modelBuilder.Entity<Role>().ToTable("roles");
             modelBuilder.Entity<EventType>().ToTable("event_types");
             modelBuilder.Entity<AttendanceMode>().ToTable("attendance_modes");
+
+            modelBuilder.Entity<AuditLog>(entity =>
+            {
+                entity.ToTable("audit_logs");
+                entity.HasOne(e => e.Account).WithMany().HasForeignKey(e => e.AccountId);
+            });
 
             modelBuilder.Entity<Event>(entity =>
             {

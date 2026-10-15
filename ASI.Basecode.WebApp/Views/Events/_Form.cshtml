@@ -1,0 +1,119 @@
+@model EventViewModel
+@*
+    The event form, drawn as the event's ticket: details on the body, and a
+    stub whose tear-off date, colour and time fill in as the form does.
+*@
+@{
+    var isNew = Model.Id == 0;
+    var typeName = Model.EventTypes.FirstOrDefault(t => t.Id == Model.EventTypeId)?.Name;
+    var start = Model.EventStart ?? DateTime.Today;
+}
+
+<form asp-controller="Events" asp-action="Save" method="post" novalidate
+      class="ticket ticket-form wide" data-type="@Ui.TicketType(typeName)" data-modal-form
+      data-tone-from="EventTypeId" aria-labelledby="event-form-title">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="ticket-body">
+        <header class="tf-head">
+            <div class="ticket-kicker">
+                <span class="ticket-type" data-preview="EventTypeId" data-empty="@(isNew ? "New event" : "Edit event")">@(typeName ?? (isNew ? "New event" : "Edit event"))</span>
+                <span class="ticket-org">@Apilan.Value.OrganizationName · @Apilan.Value.SchoolShortName</span>
+            </div>
+            <h2 class="ticket-title" id="event-form-title"
+                data-preview="EventName" data-empty="@(isNew ? "Name the event" : "Edit event")">
+                @(isNew ? "Name the event" : Model.EventName)
+            </h2>
+            <button type="button" class="tf-close" data-modal-close aria-label="Close">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+        </header>
+
+        <div asp-validation-summary="ModelOnly" class="tf-alert"></div>
+
+        <div class="tf-grid">
+            <div class="field span-4">
+                <label asp-for="EventName" class="req"></label>
+                <input asp-for="EventName" class="input-a" placeholder="General Assembly 2026" autofocus />
+                <span asp-validation-for="EventName" class="field-error"></span>
+            </div>
+
+            <div class="field span-2">
+                <label asp-for="EventTypeId" class="req"></label>
+                <select asp-for="EventTypeId" class="input-a">
+                    <option value="">Choose a type…</option>
+                    @foreach (var t in Model.EventTypes)
+                    {
+                        <option value="@t.Id" data-tone="@Ui.TicketType(t.Name)">@t.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="EventTypeId" class="field-error"></span>
+            </div>
+            <div class="field span-2">
+                <label asp-for="EventHost"></label>
+                <input asp-for="EventHost" class="input-a" placeholder="Executive Board" />
+                <span asp-validation-for="EventHost" class="field-error"></span>
+            </div>
+
+            <div class="field span-2">
+                <label asp-for="EventStart" class="req"></label>
+                <input asp-for="EventStart" type="datetime-local" class="input-a" />
+                <span asp-validation-for="EventStart" class="field-error"></span>
+            </div>
+            <div class="field span-2">
+                <label asp-for="EventEnd" class="req"></label>
+                <input asp-for="EventEnd" type="datetime-local" class="input-a" />
+                <span asp-validation-for="EventEnd" class="field-error"></span>
+            </div>
+
+            <div class="field span-2">
+                <label asp-for="Venue" class="req"></label>
+                <input asp-for="Venue" class="input-a" placeholder="Gymnasium" />
+                <span asp-validation-for="Venue" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="EventCapacity"></label>
+                <input asp-for="EventCapacity" class="input-a" type="number" min="1" placeholder="No limit" />
+                <span asp-validation-for="EventCapacity" class="field-error"></span>
+            </div>
+
+            @* Time-in opens by itself at the start and time-out at the end, each
+               for this long. *@
+            <div class="field span-4">
+                <label asp-for="AttendanceWindowMinutes" class="req"></label>
+                <div class="window-pick" role="radiogroup" aria-label="Window length">
+                    @foreach (var m in new[] { 15, 20, 25, 30 })
+                    {
+                        <input type="radio" name="AttendanceWindowMinutes" id="win-@m" value="@m" checked="@(Model.AttendanceWindowMinutes == m)" />
+                        <label for="win-@m">@m min</label>
+                    }
+                </div>
+                <span class="hint">Time-in opens when the event starts: on time for this long, late after it until the event ends. Time-out opens when the event ends, for this long. Both open by themselves.</span>
+                <span asp-validation-for="AttendanceWindowMinutes" class="field-error"></span>
+            </div>
+
+            <div class="field span-4">
+                <label asp-for="Description"></label>
+                <textarea asp-for="Description" class="input-a" rows="2" placeholder="What happens at this event."></textarea>
+                <span asp-validation-for="Description" class="field-error"></span>
+            </div>
+        </div>
+
+        <footer class="tf-foot">
+            <span class="tf-legend"><i aria-hidden="true">*</i> Required</span>
+            <a class="btn-a ghost" asp-action="Index" data-modal-close>Cancel</a>
+            <button type="submit" class="btn-a">@(isNew ? "Create event" : "Save changes")</button>
+        </footer>
+    </div>
+
+    <aside class="ticket-stub tf-stub" aria-hidden="true">
+        <div class="datepad">
+            <span class="m" data-preview="EventStart" data-format="month">@start.ToString("MMM")</span>
+            <span class="d" data-preview="EventStart" data-format="day">@start.ToString("dd")</span>
+            <span class="w" data-preview="EventStart" data-format="weekday">@start.ToString("ddd")</span>
+        </div>
+        <span class="stub-code" data-preview="EventStart" data-format="time" data-empty="--:--">@start.ToString("h:mm tt")</span>
+        <span class="stub-note" data-preview="Venue" data-empty="Venue TBA">@(string.IsNullOrEmpty(Model.Venue) ? "Venue TBA" : Model.Venue)</span>
+        <span class="tf-cap"><b data-preview="EventCapacity" data-empty="∞">@(Model.EventCapacity?.ToString() ?? "∞")</b> seats</span>
+    </aside>
+</form>

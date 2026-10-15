@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using ASI.Basecode.Resources.Constants;
@@ -10,6 +11,7 @@ using ASI.Basecode.WebApp.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using static ASI.Basecode.Resources.Constants.Enums;
 
@@ -50,19 +52,26 @@ namespace ASI.Basecode.WebApp.Controllers
 
             var result = _accountService.AuthenticateUser(model.Identifier, model.Password, out var account);
 
-            if (result == LoginResult.Inactive)
-            {
-                ModelState.AddModelError(string.Empty, Errors.AccountInactive);
-                return View(model);
-            }
-
             if (result != LoginResult.Success)
             {
-                ModelState.AddModelError(string.Empty, Errors.InvalidLogin);
+                // Nobody is signed in, so the log names what was typed.
+                var typed = (model.Identifier ?? string.Empty).Trim();
+                var reason = result == LoginResult.Inactive ? "Account disabled"
+                    : result == LoginResult.MemberInactive ? "Member deactivated"
+                    : "Wrong student ID, username or password";
+                Audit(AuditActions.SignInFailed, AuditActions.TargetSession, null, typed, reason, actor: typed);
+
+                ModelState.AddModelError(string.Empty,
+                    result == LoginResult.Inactive ? Errors.AccountInactive
+                    : result == LoginResult.MemberInactive ? Errors.MemberDeactivated
+                    : Errors.InvalidLogin);
                 return View(model);
             }
 
             await SignInAsync(account);
+            Audit(AuditActions.SignedIn, AuditActions.TargetSession, account.Id, account.DisplayName,
+                account.MustChangePassword ? "Still on the default password" : null,
+                accountId: account.Id, actor: account.Username);
 
             if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
             {
@@ -76,6 +85,7 @@ namespace ASI.Basecode.WebApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
+            Audit(AuditActions.SignedOut, AuditActions.TargetSession, AccountId, DisplayName);
             await HttpContext.SignOutAsync(Const.AuthenticationScheme);
             return RedirectToAction(nameof(Login));
         }
@@ -87,29 +97,82 @@ namespace ASI.Basecode.WebApp.Controllers
 
         [Authorize]
         [HttpGet]
-        public IActionResult ChangePassword() => View(new ChangePasswordViewModel());
+        public IActionResult ChangePassword(string returnUrl = null)
+        {
+            // From the account menu it opens in the modal and comes back to
+            // the page it was opened on; as a page it stands on its own.
+            var model = new ChangePasswordViewModel
+            {
+                FirstSignIn = MustChangePassword,
+                ReturnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : null,
+            };
+            return IsModalRequest ? PartialView("_PasswordForm", model) : View(model);
+        }
 
+        /// <summary>
+        /// Both the change-password page and the first-sign-in prompt post here;
+        /// the prompt posts from the modal script and gets the form back (422)
+        /// or JSON naming the page to carry on to.
+        /// </summary>
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult ChangePassword(ChangePasswordViewModel model)
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
         {
+            if (!model.FirstSignIn && string.IsNullOrEmpty(model.CurrentPassword))
+            {
+                ModelState.AddModelError(nameof(model.CurrentPassword), "Enter your current password.");
+            }
+
             if (!ModelState.IsValid)
             {
-                return View(model);
+                return PasswordView(model, invalid: true);
             }
 
             try
             {
                 _accountService.ChangePassword(AccountId, model, CurrentUserName);
-                TempData["Success"] = Common.PasswordChanged;
-                return RedirectToAction(nameof(ChangePassword));
+                Audit(AuditActions.PasswordChanged, AuditActions.TargetAccount, AccountId, CurrentUserName,
+                    model.FirstSignIn ? "Replaced the default password at first sign-in" : null);
             }
             catch (InvalidDataException ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
-                return View(model);
+                return PasswordView(model, invalid: true);
             }
+
+            // Re-issue the cookie without the must-change flag, so the prompt stops.
+            if (MustChangePassword)
+            {
+                var claims = User.Claims.Where(c => c.Type != Const.ClaimMustChangePassword);
+                await SignInAsync(new ClaimsIdentity(claims, Const.AuthenticationScheme, ClaimTypes.Name, ClaimTypes.Role));
+            }
+
+            TempData["Success"] = Common.PasswordChanged;
+            var next = !string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl)
+                ? model.ReturnUrl
+                : Url.Action("Index", "Home");
+            return SavedRedirect(next);
+        }
+
+        private IActionResult PasswordView(ChangePasswordViewModel model, bool invalid)
+        {
+            // Never send a typed password back down to the browser.
+            ModelState.Remove(nameof(model.CurrentPassword));
+            ModelState.Remove(nameof(model.NewPassword));
+            ModelState.Remove(nameof(model.ConfirmPassword));
+            model.CurrentPassword = model.NewPassword = model.ConfirmPassword = null;
+
+            if (!IsModalRequest)
+            {
+                return View(nameof(ChangePassword), model);
+            }
+
+            if (invalid)
+            {
+                Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+            }
+            return PartialView("_PasswordForm", model);
         }
 
         /* -------------------- Account management (officer) ------------------ */
@@ -123,36 +186,13 @@ namespace ASI.Basecode.WebApp.Controllers
         [Authorize(Policy = Const.OfficerOnlyPolicy)]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(AccountViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                var page = _accountService.GetAccountsPage();
-                page.NewAccount = model;
-                return View(nameof(Index), page);
-            }
-
-            try
-            {
-                _accountService.AddAccount(model, CurrentUserName);
-                TempData["Success"] = string.Format(Common.AccountCreated, model.Username);
-            }
-            catch (InvalidDataException ex)
-            {
-                TempData["Error"] = ex.Message;
-            }
-
-            return RedirectToAction(nameof(Index));
-        }
-
-        [Authorize(Policy = Const.OfficerOnlyPolicy)]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
         public IActionResult SetActive(int id, bool isActive)
         {
             try
             {
                 var username = _accountService.SetActive(id, isActive, AccountId, CurrentUserName);
+                Audit(isActive ? AuditActions.AccountEnabled : AuditActions.AccountDisabled,
+                    AuditActions.TargetAccount, id, username);
                 TempData["Success"] = string.Format(Common.AccountStatusChanged, username, isActive ? "active" : "disabled");
             }
             catch (InvalidDataException ex)
@@ -166,18 +206,37 @@ namespace ASI.Basecode.WebApp.Controllers
         [Authorize(Policy = Const.OfficerOnlyPolicy)]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult ResetPassword(int id, string newPassword)
+        public IActionResult ResetPassword(int id)
         {
-            if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 8)
-            {
-                TempData["Error"] = "The new password must be at least 8 characters.";
-                return RedirectToAction(nameof(Index));
-            }
-
+            // Back to the default, never to a password the officer chose: the
+            // member is then made to pick their own at the next sign-in.
             try
             {
-                var username = _accountService.ResetPassword(id, newPassword, CurrentUserName);
+                var username = _accountService.ResetPassword(id, AccountId, CurrentUserName);
+                Audit(AuditActions.PasswordReset, AuditActions.TargetAccount, id, username, "Back to the default password");
                 TempData["Success"] = string.Format(Common.PasswordReset, username);
+            }
+            catch (InvalidDataException ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [Authorize(Policy = Const.OfficerOnlyPolicy)]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SetOfficer(int id, bool makeOfficer)
+        {
+            try
+            {
+                var username = _accountService.SetOfficer(id, makeOfficer, AccountId, CurrentUserName);
+                Audit(makeOfficer ? AuditActions.MadeOfficer : AuditActions.MadeMember,
+                    AuditActions.TargetAccount, id, username,
+                    makeOfficer ? "Member → Officer" : "Officer → Member");
+                TempData["Success"] = string.Format(Common.RoleChanged, username,
+                    makeOfficer ? "an officer" : "a member");
             }
             catch (InvalidDataException ex)
             {
@@ -204,9 +263,17 @@ namespace ASI.Basecode.WebApp.Controllers
                 claims.Add(new Claim(Const.ClaimUserId, account.UserId.Value.ToString()));
             }
 
-            var identity = new ClaimsIdentity(claims, Const.AuthenticationScheme, ClaimTypes.Name, ClaimTypes.Role);
-            var properties = new AuthenticationProperties { IsPersistent = true };
+            if (account.MustChangePassword)
+            {
+                claims.Add(new Claim(Const.ClaimMustChangePassword, "true"));
+            }
 
+            await SignInAsync(new ClaimsIdentity(claims, Const.AuthenticationScheme, ClaimTypes.Name, ClaimTypes.Role));
+        }
+
+        private async Task SignInAsync(ClaimsIdentity identity)
+        {
+            var properties = new AuthenticationProperties { IsPersistent = true };
             await HttpContext.SignInAsync(Const.AuthenticationScheme, new ClaimsPrincipal(identity), properties);
         }
     }

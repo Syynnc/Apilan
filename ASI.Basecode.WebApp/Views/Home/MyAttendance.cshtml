@@ -3,25 +3,72 @@
     var st = Model.Student;
     ViewData["Title"] = "My attendance";
     Layout = "_LayoutMember";
+
+    var meta = string.Join(" · ", new[]
+    {
+        st.StudentNumber,
+        st.Course,
+        YearLevels.Label(st.YearLevel)
+    }.Where(x => !string.IsNullOrWhiteSpace(x)));
+
+    var onTime = Model.EventsAttended - Model.TimesLate;
+    var onTimePct = Model.EventsAttended > 0 ? (int)Math.Round(onTime * 100.0 / Model.EventsAttended) : 0;
+
+    ViewData["PassDownload"] = Url.Action("MyPass", "Home");
 }
 
-<div class="stack-lg">
-    <div>
-        <span class="eyebrow">My record</span>
-        <h1 style="margin-bottom:var(--s-2)">@st.FirstName @st.LastName</h1>
-        <p class="muted mono" style="margin:0">@st.StudentNumber · @(string.IsNullOrEmpty(st.Course) ? "—" : st.Course)</p>
+<section class="member-hero">
+    <div class="member-hero-copy">
+        <span class="tag-pill">
+            <b>My record</b>
+            @Apilan.Value.OrganizationName · @Apilan.Value.SchoolShortName
+        </span>
+
+        <h1>Hi, <em>@st.FirstName</em>.</h1>
+        <p class="member-meta mono">@meta</p>
+
+        <div class="member-stats stagger">
+            <div class="rstat accent">
+                <span class="n">@Model.EventsAttended</span>
+                <span class="l">Events attended</span>
+            </div>
+            <div class="rstat @(Model.TimesLate > 0 ? "warn" : "")">
+                <span class="n">@Model.TimesLate</span>
+                <span class="l">Times late</span>
+            </div>
+            <div class="rstat @(Model.MissingTimeOuts > 0 ? "risk" : "")">
+                <span class="n">@Model.MissingTimeOuts</span>
+                <span class="l">Missing time-outs</span>
+            </div>
+        </div>
+
+        @if (Model.EventsAttended > 0)
+        {
+            <div class="punctuality" role="img" aria-label="@onTimePct percent of your arrivals were on time">
+                <div class="punctuality-head">
+                    <span>On-time arrivals</span>
+                    <span class="mono">@onTimePct%</span>
+                </div>
+                <div class="meter"><i style="width:@(onTimePct)%"></i></div>
+            </div>
+        }
+
+        @if (Model.MissingTimeOuts > 0)
+        {
+            <p class="member-nudge">Scan your pass on the way out too — a missing time-out leaves your attendance incomplete.</p>
+        }
+
+        <div class="member-actions">
+            <a class="btn-a ghost" asp-controller="Account" asp-action="ChangePassword">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
+                Change password
+            </a>
+        </div>
     </div>
 
-    @{ ViewData["PassDownload"] = Url.Action("MyPass", "Home"); }
-    <partial name="_MemberPass" model="st" view-data="ViewData" />
-
-    <div class="tiles">
-        <div class="tile accent"><span class="l">Events attended</span><span class="n">@Model.EventsAttended</span></div>
-        <div class="tile"><span class="l">Times late</span><span class="n">@Model.TimesLate</span></div>
-        <div class="tile"><span class="l">Missing time-outs</span><span class="n">@Model.MissingTimeOuts</span></div>
+    <div class="member-hero-pass">
+        <partial name="_MemberPass" model="st" view-data="ViewData" />
     </div>
+</section>
 
-    <partial name="_AttendanceHistory" model="Model.History" />
-
-    <p><a asp-controller="Account" asp-action="ChangePassword">Change my password</a></p>
-</div>
+<partial name="_AttendanceHistory" model="Model.History" />

@@ -5,6 +5,7 @@ using ASI.Basecode.Data.Models;
 using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.Services.ServiceModels;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace ASI.Basecode.Services.Services
 {
@@ -12,12 +13,17 @@ namespace ASI.Basecode.Services.Services
     {
         private readonly IUserRepository _users;
         private readonly IAttendanceRepository _attendance;
+        private readonly IAccountService _accounts;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public StudentService(IUserRepository users, IAttendanceRepository attendance, IMapper mapper)
+        public StudentService(IUserRepository users, IAttendanceRepository attendance, IAccountService accounts,
+                              IUnitOfWork unitOfWork, IMapper mapper)
         {
             _users = users;
             _attendance = attendance;
+            _accounts = accounts;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
 
@@ -36,6 +42,7 @@ namespace ASI.Basecode.Services.Services
                 var term = search.Trim();
                 query = query.Where(u => u.FirstName.Contains(term)
                                       || u.LastName.Contains(term)
+                                      || (u.FirstName + " " + u.LastName).Contains(term)
                                       || u.StudentNumber.Contains(term)
                                       || u.Course.Contains(term));
             }
@@ -61,18 +68,60 @@ namespace ASI.Basecode.Services.Services
             };
         }
 
+        public List<StudentListItem> Suggest(string term, int take = 6)
+        {
+            if (string.IsNullOrWhiteSpace(term))
+            {
+                return new List<StudentListItem>();
+            }
+
+            term = term.Trim();
+
+            return _users.GetUsers()
+                .Where(u => u.FirstName.Contains(term)
+                         || u.LastName.Contains(term)
+                         || (u.FirstName + " " + u.LastName).Contains(term)
+                         || u.StudentNumber.Contains(term)
+                         || u.Course.Contains(term))
+                .OrderBy(u => u.IsActive ? 0 : 1)
+                .ThenBy(u => u.LastName.StartsWith(term) || u.FirstName.StartsWith(term) || u.StudentNumber.StartsWith(term) ? 0 : 1)
+                .ThenBy(u => u.LastName).ThenBy(u => u.FirstName)
+                .Take(take)
+                .Select(u => new StudentListItem
+                {
+                    Id = u.Id,
+                    StudentNumber = u.StudentNumber,
+                    FullName = u.LastName + ", " + u.FirstName,
+                    Course = u.Course,
+                    YearLevel = u.YearLevel,
+                    Email = u.Email,
+                    IsActive = u.IsActive,
+                })
+                .ToList();
+        }
+
         public StudentDetailViewModel GetStudentDetail(int id)
         {
             var student = GetStudent(id);
+            // Most recent first: the last thing they attended is the first row.
             var history = _attendance.GetAttendanceDetails()
                 .Where(a => a.UserId == id)
-                .OrderByDescending(a => a.EventStart)
+                .OrderByDescending(a => a.TimeIn)
                 .ToList();
+
+            var account = _users.GetUsers()
+                .Where(u => u.Id == id && u.Account != null)
+                .Select(u => new { u.Account.Id, u.Account.Username, u.Account.IsActive, u.Account.LastLogin })
+                .FirstOrDefault();
 
             return new StudentDetailViewModel
             {
                 Student = student,
                 History = history,
+                AccountId = account?.Id,
+                AccountUsername = account?.Username,
+                AccountActive = account?.IsActive ?? false,
+                LastLogin = account?.LastLogin,
                 EventsAttended = history.Count,
                 TimesLate = history.Count(a => a.IsLate == 1),
                 MissingTimeOuts = history.Count(a => a.TimeOut == null),
@@ -85,10 +134,22 @@ namespace ASI.Basecode.Services.Services
             return _mapper.Map<StudentViewModel>(user);
         }
 
-        public void AddStudent(StudentViewModel model, string createdBy)
+        public int AddStudent(StudentViewModel model, string createdBy)
         {
             var user = _mapper.Map<User>(model);
+
+            // A new member and their sign-in are one step: both rows, or neither.
+            using var transaction = _unitOfWork.Database.Database.BeginTransaction();
+
             Run(() => _users.AddUser(user, createdBy));
+            var id = _users.GetUsers()
+                .Where(u => u.StudentNumber == user.StudentNumber)
+                .Select(u => u.Id)
+                .First();
+            _accounts.CreateMemberAccount(id, createdBy);
+
+            transaction.Commit();
+            return id;
         }
 
         public void UpdateStudent(StudentViewModel model, string updatedBy)

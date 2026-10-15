@@ -3,55 +3,85 @@
     ViewData["Title"] = "Events";
     ViewData["Module"] = "Transactions";
 
-    Func<string, string> chip = status => status switch
-    {
-        Const.StatusOngoing => "chip info",
-        Const.StatusUpcoming => "chip idle",
-        _ => "chip ok",
-    };
     Func<string, string> seg = s =>
         string.Equals(Model.Status, s, StringComparison.OrdinalIgnoreCase) ? "is-active" : null;
+    var total = Model.UpcomingCount + Model.OngoingCount + Model.FinishedCount;
 }
 
 @section Actions {
-    <a class="btn-a" asp-action="Create">New event</a>
+    <a class="btn-a" asp-action="Create" data-modal>
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        New event
+    </a>
 }
 
 <div class="stack">
-    <form method="get" class="toolbar">
-        <input type="search" name="search" value="@Model.Search" class="input-a grow" placeholder="Search name, venue, or host…" />
-        <div class="segmented">
-            <a class="@seg(null)" asp-action="Index" asp-route-search="@Model.Search">All</a>
-            <a class="@seg(Const.StatusUpcoming)" asp-action="Index" asp-route-status="@Const.StatusUpcoming" asp-route-search="@Model.Search">Upcoming (@Model.UpcomingCount)</a>
-            <a class="@seg(Const.StatusOngoing)" asp-action="Index" asp-route-status="@Const.StatusOngoing" asp-route-search="@Model.Search">Ongoing (@Model.OngoingCount)</a>
-            <a class="@seg(Const.StatusFinished)" asp-action="Index" asp-route-status="@Const.StatusFinished" asp-route-search="@Model.Search">Finished (@Model.FinishedCount)</a>
+    <form method="get" class="toolbar" role="search">
+        @if (!string.IsNullOrEmpty(Model.Status))
+        {
+            <input type="hidden" name="status" value="@Model.Status" />
+        }
+        <div class="searchbar">
+            <svg class="s-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /></svg>
+            <input type="search" name="search" id="event-search" value="@Model.Search" class="input-a"
+                   placeholder="Search by event name or venue…" aria-label="Search events by name or venue"
+                   data-live-search data-target="#events-table" data-suggest="@Url.Action("Suggest")" />
+            @if (!string.IsNullOrEmpty(Model.Search))
+            {
+                <a class="s-clear" asp-action="Index" asp-route-status="@Model.Status" aria-label="Clear the search" title="Clear">×</a>
+            }
+            <button type="submit" class="btn-a s-go">Search <kbd aria-hidden="true">↵</kbd></button>
         </div>
-        <button type="submit" class="btn-a ghost sm">Search</button>
+        <div class="segmented">
+            <a class="@seg(null)" asp-action="Index" asp-route-search="@Model.Search">All <span class="n">@total</span></a>
+            <a class="@seg(Const.StatusOngoing)" asp-action="Index" asp-route-status="@Const.StatusOngoing" asp-route-search="@Model.Search">Ongoing <span class="n">@Model.OngoingCount</span></a>
+            <a class="@seg(Const.StatusUpcoming)" asp-action="Index" asp-route-status="@Const.StatusUpcoming" asp-route-search="@Model.Search">Upcoming <span class="n">@Model.UpcomingCount</span></a>
+            <a class="@seg(Const.StatusFinished)" asp-action="Index" asp-route-status="@Const.StatusFinished" asp-route-search="@Model.Search">Finished <span class="n">@Model.FinishedCount</span></a>
+        </div>
     </form>
 
     <div class="panel">
         @if (!Model.Events.Any())
         {
             <div class="panel-body">
-                <div class="empty-a"><div class="glyph">▦</div><h4>No events</h4><p>Create one to start taking attendance.</p></div>
+                <div class="empty-a">
+                    <div class="glyph">▦</div>
+                    @if (string.IsNullOrEmpty(Model.Search))
+                    {
+                        <h4>No events yet</h4>
+                        <p>Create one to start taking attendance.</p>
+                    }
+                    else
+                    {
+                        <h4>No events match “@Model.Search”</h4>
+                        <p>Try part of the name or the venue.</p>
+                    }
+                </div>
             </div>
         }
         else
         {
-            <table class="table-a">
+            <table class="table-a" id="events-table" data-paginate="5">
                 <thead>
-                    <tr><th>Event</th><th>Type</th><th>When</th><th>Venue</th><th class="num">Present</th><th>Status</th></tr>
+                    <tr><th>Event</th><th>When</th><th>Venue</th><th class="num">Present</th><th>Status</th></tr>
                 </thead>
                 <tbody>
                 @foreach (var e in Model.Events)
                 {
-                    <tr>
-                        <td><a asp-action="Details" asp-route-id="@e.EventId"><strong>@e.EventName</strong></a></td>
-                        <td>@e.EventType</td>
-                        <td class="mono">@e.EventStart.ToString("yyyy-MM-dd HH:mm")</td>
+                    <tr data-search="@e.EventName @e.Venue">
+                        <td>
+                            <div class="cell-event" data-type="@Ui.TicketType(e.EventType)">
+                                <span class="mini-pad" aria-hidden="true"><b>@e.EventStart.ToString("MMM")</b>@e.EventStart.ToString("dd")</span>
+                                <span>
+                                    <a asp-action="Details" asp-route-id="@e.EventId"><strong>@e.EventName</strong></a>
+                                    <span class="dim">@e.EventType</span>
+                                </span>
+                            </div>
+                        </td>
+                        <td class="mono">@e.EventStart.ToString("ddd, MMM d · h:mm tt")</td>
                         <td>@(string.IsNullOrEmpty(e.Venue) ? "—" : e.Venue)</td>
                         <td class="num">@(e.TotalPresent ?? 0)@(e.EventCapacity.HasValue ? $" / {e.EventCapacity}" : "")</td>
-                        <td><span class="@chip(e.EventStatus)">@e.EventStatus</span></td>
+                        <td><span class="@Ui.StatusChip(e.EventStatus)">@e.EventStatus</span></td>
                     </tr>
                 }
                 </tbody>

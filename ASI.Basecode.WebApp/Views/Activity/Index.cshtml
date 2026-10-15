@@ -1,0 +1,133 @@
+@model ActivityPageViewModel
+@{
+    ViewData["Title"] = "Activity log";
+    ViewData["Module"] = "Administration";
+
+    var f = Model.Filter;
+    var filterCount = (f.Who.HasValue ? 1 : 0) + (string.IsNullOrEmpty(f.Group) ? 0 : 1) + (f.From.HasValue ? 1 : 0) + (f.To.HasValue ? 1 : 0);
+
+    // Where the thing it was done to lives, when it still has a page.
+    string TargetUrl(ActivityRow r) => r.TargetType switch
+    {
+        AuditActions.TargetMember when r.TargetId.HasValue => Url.Action("Details", "Members", new { id = r.TargetId }),
+        AuditActions.TargetEvent when r.TargetId.HasValue && r.Action != AuditActions.EventDeleted => Url.Action("Details", "Events", new { id = r.TargetId }),
+        AuditActions.TargetAttendance when r.TargetId.HasValue => Url.Action("Details", "Events", new { id = r.TargetId }),
+        _ => null,
+    };
+}
+
+<div class="stack-lg">
+    <div class="tiles stagger">
+        <div class="tile accent"><span class="l">Today</span><span class="n">@Model.Today</span><span class="s">action@(Model.Today == 1 ? "" : "s") logged</span></div>
+        <div class="tile"><span class="l">Officers active today</span><span class="n">@Model.Officers</span></div>
+        <div class="tile"><span class="l">Latest</span><span class="n sm">@(Model.Latest?.ToString("h:mm:ss tt") ?? "—")</span><span class="s">@(Model.Latest?.ToString("ddd, MMM d, yyyy") ?? "nothing logged yet")</span></div>
+        <div class="tile"><span class="l">Showing</span><span class="n">@Model.Rows.Count</span><span class="s">@(Model.Total > Model.Rows.Count ? $"newest of {Model.Total} — narrow it with the filters" : "matching entries")</span></div>
+    </div>
+
+    <form method="get" class="report-filters toolbar" aria-label="Filter the activity log">
+        <div class="rf-group" role="group" aria-label="Filter">
+            <span class="rf-legend">Filter</span>
+            <div class="rf-row">
+                <label class="rf-field grow">
+                    <span>Who</span>
+                    <select name="Who" class="input-a" onchange="this.form.submit()">
+                        <option value="">Everyone</option>
+                        @foreach (var p in Model.People)
+                        {
+                            <option value="@p.Id" selected="@(f.Who == p.Id)">@p.Name</option>
+                        }
+                    </select>
+                </label>
+                <label class="rf-field">
+                    <span>What</span>
+                    <select name="Group" class="input-a" onchange="this.form.submit()">
+                        <option value="">All actions</option>
+                        @foreach (var g in AuditActions.Groups)
+                        {
+                            <option value="@g" selected="@(g == f.Group)">@g</option>
+                        }
+                    </select>
+                </label>
+                <label class="rf-field">
+                    <span>From</span>
+                    <input type="date" name="From" class="input-a" value="@f.From?.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
+                </label>
+                <label class="rf-field">
+                    <span>To</span>
+                    <input type="date" name="To" class="input-a" value="@f.To?.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
+                </label>
+            </div>
+        </div>
+        <div class="rf-actions">
+            <noscript><button type="submit" class="btn-a sm">Apply</button></noscript>
+            @if (filterCount > 0)
+            {
+                <a class="btn-a ghost sm" asp-action="Index">Clear @filterCount filter@(filterCount == 1 ? "" : "s")</a>
+            }
+        </div>
+    </form>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h2>Activity</h2>
+            <div class="searchbar compact">
+                <svg class="s-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /></svg>
+                <input type="search" class="input-a" placeholder="Search these entries…" aria-label="Search the activity log"
+                       data-live-search data-target="#activity-table" />
+            </div>
+        </div>
+        <div class="panel-note account-note">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 8v.01M12 11v5" /></svg>
+            Every change in Apilan is written here as it happens, with the time from the database server. Entries cannot be edited or removed.
+        </div>
+
+        @if (!Model.Rows.Any())
+        {
+            <div class="panel-body"><div class="empty-a"><h4>Nothing logged@(filterCount > 0 ? " for these filters" : " yet")</h4><p>Changes appear here the moment they are saved.</p></div></div>
+        }
+        else
+        {
+            <table class="table-a activity-table" id="activity-table" data-paginate="5">
+                <thead>
+                    <tr><th>When</th><th>Who</th><th>Did</th><th>To</th><th>Details</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var r in Model.Rows)
+                {
+                    var info = AuditActions.Describe(r.Action);
+                    var url = TargetUrl(r);
+                    <tr data-search="@r.Actor @r.ActorName @info.Label @r.TargetLabel @r.Details">
+                        <td class="act-when">
+                            <time datetime="@r.OccurredAt.ToString("yyyy-MM-ddTHH:mm:ss.fff")">
+                                <span class="d">@r.OccurredAt.ToString("MMM d, yyyy")</span>
+                                <span class="t">@r.OccurredAt.ToString("h:mm:ss tt")</span>
+                            </time>
+                        </td>
+                        <td>
+                            <div class="cell-person">
+                                <span class="av @(r.ActorRole == Const.RoleOfficer ? "officer" : null)" aria-hidden="true">@Ui.Initials(r.ActorName ?? r.Actor)</span>
+                                <span class="stack-tight">
+                                    <strong>@(r.ActorName ?? r.Actor)</strong>
+                                    <span class="dim">@r.Actor@(r.ActorRole != null ? $" · {r.ActorRole}" : "")</span>
+                                </span>
+                            </div>
+                        </td>
+                        <td><span class="chip @info.Tone">@info.Label</span></td>
+                        <td>
+                            @if (url != null)
+                            {
+                                <a href="@url">@r.TargetLabel</a>
+                            }
+                            else
+                            {
+                                @(string.IsNullOrEmpty(r.TargetLabel) ? "—" : r.TargetLabel)
+                            }
+                        </td>
+                        <td class="act-details" title="@(r.IpAddress != null ? $"From {r.IpAddress}" : null)">@(r.Details ?? "")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

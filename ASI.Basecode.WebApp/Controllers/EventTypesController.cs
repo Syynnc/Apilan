@@ -1,3 +1,4 @@
+using ASI.Basecode.WebApp.Helpers;
 using System.IO;
 using ASI.Basecode.Resources.Constants;
 using ASI.Basecode.Resources.Messages;
@@ -24,14 +25,14 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpGet]
-        public IActionResult Create() => View("Form", new EventTypeViewModel());
+        public IActionResult Create() => FormView(new EventTypeViewModel());
 
         [HttpGet]
         public IActionResult Edit(int id)
         {
             try
             {
-                return View("Form", _eventTypes.GetEventType(id));
+                return FormView(_eventTypes.GetEventType(id));
             }
             catch (InvalidDataException)
             {
@@ -45,19 +46,29 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View("Form", model);
+                return FormView(model, invalid: true);
             }
 
             try
             {
+                var before = model.Id != 0 ? _eventTypes.GetEventType(model.Id) : null;
                 _eventTypes.SaveEventType(model);
+                if (before == null)
+                {
+                    Audit(AuditActions.EventTypeCreated, AuditActions.TargetEventType, null, model.TypeName);
+                }
+                else
+                {
+                    Audit(AuditActions.EventTypeUpdated, AuditActions.TargetEventType, model.Id, model.TypeName,
+                        AuditDiff.Changes(before, model));
+                }
                 TempData["Success"] = string.Format(Common.EventTypeSaved, model.TypeName);
-                return RedirectToAction(nameof(Index));
+                return SavedRedirect(Url.Action(nameof(Index)));
             }
             catch (InvalidDataException ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
-                return View("Form", model);
+                return FormView(model, invalid: true);
             }
         }
     }

@@ -6,7 +6,20 @@
 }
 
 @section Actions {
-    <a class="btn-a ghost" asp-action="Edit" asp-route-id="@st.Id">Edit</a>
+    <a class="btn-a ghost" asp-action="Edit" asp-route-id="@st.Id" data-modal>Edit</a>
+}
+
+@if (!st.IsActive)
+{
+    <div class="flash bad off-banner">
+        <strong>Deactivated.</strong> @st.FirstName cannot sign in or be checked in at the door until restored.
+        <form asp-action="SetActive" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@st.Id" />
+            <input type="hidden" name="isActive" value="true" />
+            <button type="submit" class="btn-a ghost sm">Restore member</button>
+        </form>
+    </div>
 }
 
 <div class="split">
@@ -30,18 +43,55 @@
                 }
                 else
                 {
-                    <span class="chip idle">Inactive</span>
+                    <span class="chip risk">Deactivated</span>
                 }
             </div>
             <div class="panel-body">
                 <dl class="detail-list">
                     <div><dt>Student no.</dt><dd class="mono">@st.StudentNumber</dd></div>
                     <div><dt>Course</dt><dd>@(string.IsNullOrEmpty(st.Course) ? "—" : st.Course)</dd></div>
-                    <div><dt>Year</dt><dd>@(st.YearLevel?.ToString() ?? "—")</dd></div>
+                    <div><dt>Year</dt><dd>@(YearLevels.Label(st.YearLevel) ?? "—")</dd></div>
                     <div><dt>Gender</dt><dd>@(string.IsNullOrEmpty(st.Gender) ? "—" : st.Gender)</dd></div>
                     <div><dt>Email</dt><dd>@(string.IsNullOrEmpty(st.Email) ? "—" : st.Email)</dd></div>
                     <div><dt>Contact</dt><dd class="mono">@(string.IsNullOrEmpty(st.ContactNumber) ? "—" : st.ContactNumber)</dd></div>
                 </dl>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-head">
+                <h3>Sign-in</h3>
+                @if (Model.AccountId == null)
+                {
+                    <span class="chip idle">None</span>
+                }
+                else if (Model.AccountActive)
+                {
+                    <span class="chip ok">Active</span>
+                }
+                else
+                {
+                    <span class="chip risk">Disabled</span>
+                }
+            </div>
+            <div class="panel-body">
+                @if (Model.AccountId == null)
+                {
+                    <p class="muted" style="font-size:var(--fs-sm)">@st.FirstName has no account yet, so they cannot see their own attendance or pass.</p>
+                    <form asp-action="CreateAccount" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@st.Id" />
+                        <button type="submit" class="btn-a sm" @(st.IsActive ? null : "disabled")>Give sign-in access</button>
+                    </form>
+                }
+                else
+                {
+                    <dl class="detail-list">
+                        <div><dt>Username</dt><dd class="mono">@Model.AccountUsername</dd></div>
+                        <div><dt>Last sign-in</dt><dd class="mono">@(Model.LastLogin?.ToString("MMM d, yyyy · h:mm tt") ?? "Never")</dd></div>
+                    </dl>
+                    <p style="margin:var(--s-4) 0 0"><a asp-controller="Account" asp-action="Index">Manage in Accounts →</a></p>
+                }
             </div>
         </div>
 

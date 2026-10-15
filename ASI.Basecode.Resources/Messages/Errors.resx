@@ -16,10 +16,10 @@
     <value>Something went wrong on the server. Please try again.</value>
   </data>
   <data name="InvalidLogin" xml:space="preserve">
-    <value>Incorrect username or password.</value>
+    <value>That student ID and password do not match.</value>
   </data>
   <data name="AccountInactive" xml:space="preserve">
-    <value>This account has been deactivated. Ask an administrator to restore it.</value>
+    <value>This account has been deactivated. Ask an officer to enable it again.</value>
   </data>
   <data name="RecordNotFound" xml:space="preserve">
     <value>That record no longer exists.</value>
@@ -38,5 +38,41 @@
   </data>
   <data name="AlreadyTimedInAndOut" xml:space="preserve">
     <value>{0} has already timed in and out of this event.</value>
+  </data>
+  <data name="MemberDeactivated" xml:space="preserve">
+    <value>Your member record has been deactivated. Ask an officer to restore it.</value>
+  </data>
+  <data name="AccountAlreadyExists" xml:space="preserve">
+    <value>This member already has a sign-in account.</value>
+  </data>
+  <data name="MemberRoleMissing" xml:space="preserve">
+    <value>The Member role is missing from dbo.roles.</value>
+  </data>
+  <data name="NewPasswordIsDefault" xml:space="preserve">
+    <value>Pick a password other than the default one.</value>
+  </data>
+  <data name="InitialOfficerProtected" xml:space="preserve">
+    <value>The initial officer account can only be changed by that officer.</value>
+  </data>
+  <data name="CannotDemoteSelf" xml:space="preserve">
+    <value>You cannot remove your own officer role. Ask another officer to do it.</value>
+  </data>
+  <data name="DisabledCannotBePromoted" xml:space="preserve">
+    <value>Enable this account before making it an officer.</value>
+  </data>
+  <data name="OfficerHasNoMember" xml:space="preserve">
+    <value>This officer is not linked to a member, so they cannot be made a member.</value>
+  </data>
+  <data name="OfficerRoleMissing" xml:space="preserve">
+    <value>The Officer role is missing from dbo.roles.</value>
+  </data>
+  <data name="DoorNotOpen" xml:space="preserve">
+    <value>Time-in opens when the event starts, at {0}.</value>
+  </data>
+  <data name="DoorClosed" xml:space="preserve">
+    <value>Attendance for this event closed at {0}.</value>
+  </data>
+  <data name="WindowLongerThanEvent" xml:space="preserve">
+    <value>The event must last at least as long as its attendance window.</value>
   </data>
 </root>
