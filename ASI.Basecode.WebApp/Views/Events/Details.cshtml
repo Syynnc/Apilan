@@ -6,12 +6,210 @@
 
     var present = s.TotalPresent ?? 0;
     var pct = s.EventCapacity is int cap && cap > 0 ? Math.Min(100, present * 100 / cap) : 0;
-    var isFinished = s.EventStatus == Const.StatusFinished;
+
+    // The door opens by itself: time-in from the start, time-out from the end,
+    // each for the event's window. Attendance is final once time-out closes.
+    var w = Model.Window;
+    var now = DateTime.Now;
+    var phase = w.At(now);
+    var doorOpen = phase == AttendanceWindow.Phase.TimeIn || phase == AttendanceWindow.Phase.LateTimeIn
+                   || phase == AttendanceWindow.Phase.TimeOut;
+    var isFinished = phase == AttendanceWindow.Phase.Closed;
+    var lateIn = phase == AttendanceWindow.Phase.LateTimeIn;
+    var timeIn = phase == AttendanceWindow.Phase.TimeIn || lateIn;
+    // The bar runs over what is open now: the window, the late stretch, or time-out.
+    var opensAt = phase == AttendanceWindow.Phase.TimeIn ? w.TimeInOpens : lateIn ? w.TimeInCloses : w.TimeOutOpens;
+    var closesAt = phase == AttendanceWindow.Phase.TimeIn ? w.TimeInCloses : lateIn ? w.TimeOutOpens : w.TimeOutCloses;
+    var nextChange = w.NextChange(now);
+
+    // The result of the last scan belongs next to the scanner, not at the top
+    // of the page; taking it out of TempData keeps the layout from repeating it.
+    // With no scanner on screen (a window just closed) it stays a page flash.
+    string doorResult = null;
+    var doorResultOk = false;
+    if (TempData["Door"] != null && doorOpen)
+    {
+        doorResult = TempData["Success"] as string ?? TempData["Error"] as string;
+        doorResultOk = TempData["Success"] is string;
+        TempData.Remove("Success");
+        TempData.Remove("Error");
+    }
+
+    var inside = Model.Attendance.Count(a => a.TimeOut == null);
+    var late = s.LateCount ?? 0;
 }
 
 @section Actions {
     <a class="btn-a ghost" asp-controller="Attendance" asp-action="Export" asp-route-eventId="@s.EventId">Export CSV</a>
-    <a class="btn-a ghost" asp-action="Edit" asp-route-id="@s.EventId">Edit</a>
+    <a class="btn-a ghost" asp-action="Edit" asp-route-id="@s.EventId" data-modal>Edit</a>
+}
+
+@if (doorOpen && !isFinished)
+{
+    @*
+        While a window is open the door is the page: a full-width station on
+        top, the list it fills underneath. The clock says whether a scan is a
+        time-in or a time-out; how people are recorded (camera, typed, card) is
+        the one switch, and only that way's controls are on screen.
+    *@
+    <section class="panel door-station @(lateIn ? "is-late" : timeIn ? "is-in" : "is-out")" aria-label="Door">
+        <div class="panel-head">
+            <h2>Door</h2>
+            <span class="door-phase">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    @if (timeIn)
+                    {
+                        <path d="M10 17l5-5-5-5M15 12H3M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" />
+                    }
+                    else
+                    {
+                        <path d="M14 17l5-5-5-5M19 12H7M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4" />
+                    }
+                </svg>
+                @(lateIn ? "Late time-in" : timeIn ? "Time-in window" : "Time-out window")
+            </span>
+            <span class="door-until" data-window-left data-closes="@closesAt.ToString("yyyy-MM-ddTHH:mm:ss")">
+                closes @closesAt.ToString("h:mm tt")
+            </span>
+        </div>
+        <div class="door-window" role="presentation"
+             data-window-bar data-opens="@opensAt.ToString("yyyy-MM-ddTHH:mm:ss")" data-closes="@closesAt.ToString("yyyy-MM-ddTHH:mm:ss")">
+            <i style="width:@(Math.Clamp((now - opensAt).TotalSeconds / Math.Max(1, (closesAt - opensAt).TotalSeconds) * 100, 0, 100).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))%"></i>
+        </div>
+
+        <form asp-controller="Attendance" asp-action="Record" method="post" autocomplete="off"
+              id="scan-form" class="door-grid">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="EventId" value="@s.EventId" />
+
+            <div class="door-main">
+                <div class="door-controls">
+                    <div class="door-modes" role="radiogroup" aria-label="How to record">
+                        @foreach (var m in Model.Modes)
+                        {
+                            var kind = m.Id == Const.QrAttendanceMode ? "camera" : "keyed";
+                            var isCard = kind == "keyed" && m.Id != Const.ManualAttendanceMode;
+                            <input type="radio" name="AttendanceModeId" id="mode-@m.Id" value="@m.Id"
+                                   checked="@(m.Id == Const.QrAttendanceMode)" data-kind="@kind"
+                                   data-label="@(isCard ? "Tap the ID card on the reader" : "Type the student number")"
+                                   data-placeholder="@(isCard ? "Waiting for a card…" : "2022-00101")" />
+                            <label for="mode-@m.Id">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    @if (kind == "camera")
+                                    {
+                                        <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2" />
+                                        <path d="M8 8h3v3H8zM13 13h3v3h-3zM13 8h3M8 16h3" />
+                                    }
+                                    else if (isCard)
+                                    {
+                                        <rect x="3" y="6" width="18" height="12" rx="2" />
+                                        <path d="M7 15h4M15 10.5a2 2 0 0 1 0 3M17.5 9a4.5 4.5 0 0 1 0 6" />
+                                    }
+                                    else
+                                    {
+                                        <rect x="2.5" y="6" width="19" height="12" rx="2" />
+                                        <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8" />
+                                    }
+                                </svg>
+                                @m.Name
+                            </label>
+                        }
+                    </div>
+
+                    <span class="door-records">Every scan records a <strong>@(lateIn ? "late time-in" : timeIn ? "time-in" : "time-out")</strong></span>
+                </div>
+
+                <div class="door-pane" data-pane="camera">
+                    <div class="scan-cam" id="scan-cam" hidden>
+                        <div class="scan-view" id="scan-view" data-state="idle">
+                            <video id="scan-video" playsinline muted></video>
+                            <span class="scan-frame" aria-hidden="true"></span>
+                            <span class="scan-status" id="scan-status" aria-live="polite"></span>
+                        </div>
+                        <div class="scan-controls">
+                            <select class="input-a" id="scan-camera" aria-label="Camera" hidden></select>
+                            <button type="button" class="btn-a ghost sm" id="scan-stop">Stop camera</button>
+                        </div>
+                    </div>
+
+                    <div class="scan-idle" id="scan-start-wrap">
+                        <button type="button" class="btn-a lg scan-start" id="scan-start">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2" />
+                                <path d="M8 8h3v3H8zM13 13h3v3h-3zM13 8h3M8 16h3" />
+                            </svg>
+                            Start the camera
+                        </button>
+                        <p>Members hold up the pass on their phone. A handheld QR scanner works here too.</p>
+                    </div>
+
+                    <p class="scan-note" id="scan-cam-note" hidden></p>
+                </div>
+
+                <div class="door-pane" data-pane="keyed" hidden>
+                    <label class="door-label" for="scan-field" id="scan-label">Type the student number</label>
+                    <div class="door-entry">
+                        <input type="text" name="StudentNumber" id="scan-field" class="input-a mono"
+                               placeholder="2022-00101" required />
+                        <button type="submit" class="btn-a lg">Record</button>
+                    </div>
+                    <p class="door-hint">Press Enter to record. Each entry is stamped with the current time.</p>
+                </div>
+            </div>
+
+            <aside class="door-side">
+                @if (doorResult != null)
+                {
+                    <div class="door-result @(doorResultOk ? "ok" : "bad")" role="status" aria-live="polite">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            @if (doorResultOk)
+                            {
+                                <path d="M5 12.5l4.5 4.5L19 7.5" />
+                            }
+                            else
+                            {
+                                <path d="M7 7l10 10M17 7L7 17" />
+                            }
+                        </svg>
+                        <span>@doorResult</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="door-result idle" role="status" aria-live="polite">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /><path d="M12 8v4l2.5 2" /></svg>
+                        <span>Ready for the next person.</span>
+                    </div>
+                }
+
+                <div class="door-stats">
+                    <div class="rstat accent"><span class="n">@present@(s.EventCapacity.HasValue ? $"/{s.EventCapacity}" : "")</span><span class="l">Present</span></div>
+                    <div class="rstat"><span class="n">@inside</span><span class="l">Still inside</span></div>
+                    <div class="rstat @(late > 0 ? "warn" : "")"><span class="n">@late</span><span class="l">Late</span></div>
+                </div>
+
+                @if (s.EventCapacity.HasValue)
+                {
+                    <div class="meter @(pct >= 100 ? "full" : "")" aria-label="@pct% of capacity"><i style="width:@(pct)%"></i></div>
+                }
+
+                <p class="door-hint">
+                    @if (lateIn)
+                    {
+                        @:The on-time window closed at @w.TimeInCloses.ToString("h:mm tt"), so arrivals now are marked late. Time-out opens at @w.TimeOutOpens.ToString("h:mm tt"), when the event ends.
+                    }
+                    else if (timeIn)
+                    {
+                        @:Arrivals after @w.TimeInCloses.ToString("h:mm tt") are marked late. Time-out opens at @w.TimeOutOpens.ToString("h:mm tt"), when the event ends.
+                    }
+                    else
+                    {
+                        @:Anyone not timed out by @w.TimeOutCloses.ToString("h:mm tt") stays marked as missing a time-out.
+                    }
+                </p>
+            </aside>
+        </form>
+    </section>
 }
 
 <div class="split">
@@ -19,15 +217,15 @@
         <div class="panel">
             <div class="panel-head">
                 <h2>Checked in</h2>
-                <span class="count">@present@(s.EventCapacity.HasValue ? $" / {s.EventCapacity}" : "") present · @(s.LateCount ?? 0) late</span>
+                <span class="count">@present@(s.EventCapacity.HasValue ? $" / {s.EventCapacity}" : "") present · @late late</span>
             </div>
             @if (!Model.Attendance.Any())
             {
-                <div class="panel-body"><div class="empty-a"><h4>No one yet</h4><p>Use the pad to record the first arrival.</p></div></div>
+                <div class="panel-body"><div class="empty-a"><h4>No one yet</h4><p>@(doorOpen || isFinished ? "The first arrival will show up here." : $"Time-in opens {w.TimeInOpens:MMM d, h:mm tt}.")</p></div></div>
             }
             else
             {
-                <table class="table-a">
+                <table class="table-a" id="checked-in-table" data-paginate="5">
                     <thead>
                         <tr><th>Name</th><th>Student no.</th><th>Mode</th><th>Time in</th><th>Time out</th><th></th></tr>
                     </thead>
@@ -60,7 +258,7 @@
         {
             <div class="panel">
                 <div class="panel-head"><h3>Absentees</h3><span class="count">@Model.Absentees.Count</span></div>
-                <table class="table-a">
+                <table class="table-a" id="absentees-table" data-paginate="5">
                     <thead><tr><th>Name</th><th>Student no.</th><th>Course</th></tr></thead>
                     <tbody>
                     @foreach (var a in Model.Absentees)
@@ -74,6 +272,29 @@
     </div>
 
     <div class="rail">
+        @if (!doorOpen)
+        {
+            @* Before the start and after time-out the pad would only be refused, so it is not offered. *@
+            <div class="panel door-closed">
+                <div class="panel-head">
+                    <h3>Door</h3>
+                    <span class="chip idle">@(isFinished ? "Final" : "Closed")</span>
+                </div>
+                <div class="panel-body">
+                    @if (phase == AttendanceWindow.Phase.NotOpen)
+                    {
+                        <p class="door-opens">Time-in opens <strong>@w.TimeInOpens.ToString("MMM d, h:mm tt")</strong></p>
+                        <p class="muted">When the event starts, for @w.Minutes minutes. The scanner appears on this page by itself.</p>
+                    }
+                    else
+                    {
+                        <p class="door-opens">Attendance closed <strong>@w.TimeOutCloses.ToString("MMM d, h:mm tt")</strong></p>
+                        <p class="muted">Time-in and time-out windows are over, so these numbers are final.</p>
+                    }
+                </div>
+            </div>
+        }
+
         <div class="panel">
             <div class="panel-head"><h3>Details</h3><span class="chip @(s.EventStatus == Const.StatusOngoing ? "info" : s.EventStatus == Const.StatusUpcoming ? "idle" : "ok")">@s.EventStatus</span></div>
             <div class="panel-body stack">
@@ -83,7 +304,9 @@
                     <div><dt>Venue</dt><dd>@(string.IsNullOrEmpty(s.Venue) ? "—" : s.Venue)</dd></div>
                     <div><dt>Starts</dt><dd class="mono">@s.EventStart.ToString("yyyy-MM-dd HH:mm")</dd></div>
                     <div><dt>Ends</dt><dd class="mono">@s.EventEnd.ToString("yyyy-MM-dd HH:mm")</dd></div>
-                    <div><dt>Late after</dt><dd>@Model.LateGraceMinutes min</dd></div>
+                    <div><dt>On time</dt><dd class="mono">@w.TimeInOpens.ToString("h:mm") – @w.TimeInCloses.ToString("h:mm tt")</dd></div>
+                    <div><dt>Late after</dt><dd class="mono">@w.TimeInCloses.ToString("h:mm tt")</dd></div>
+                    <div><dt>Time-out</dt><dd class="mono">@w.TimeOutOpens.ToString("h:mm") – @w.TimeOutCloses.ToString("h:mm tt")</dd></div>
                 </dl>
 
                 @if (s.EventCapacity.HasValue)
@@ -101,70 +324,6 @@
             </div>
         </div>
 
-        @if (!isFinished)
-        {
-            <div class="panel">
-                <div class="panel-head"><h3>Door</h3></div>
-                <div class="panel-body">
-                    <form asp-controller="Attendance" asp-action="Record" method="post" autocomplete="off" id="scan-form">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="EventId" value="@s.EventId" />
-
-                        @*
-                            Auto is what a scan means: in if they are outside, out if
-                            they are inside. The explicit two are for fixing things.
-                        *@
-                        <div class="action-toggle three">
-                            <input type="radio" name="Action" id="act-auto" value="Auto" checked />
-                            <label for="act-auto">Auto</label>
-                            <input type="radio" name="Action" id="act-in" value="TimeIn" />
-                            <label for="act-in">Time in</label>
-                            <input type="radio" name="Action" id="act-out" value="TimeOut" />
-                            <label for="act-out">Time out</label>
-                        </div>
-
-                        <div class="field">
-                            <input type="text" name="StudentNumber" id="scan-field" class="input-a scan-input mono"
-                                   placeholder="Student no." aria-label="Student number" autofocus required />
-                        </div>
-
-                        <div class="field">
-                            <label for="mode">Mode</label>
-                            @* Manual by default; the camera switches it to QR Code before it submits. *@
-                            <select name="AttendanceModeId" id="mode" class="input-a">
-                                @foreach (var m in Model.Modes)
-                                {
-                                    <option value="@m.Id" selected="@(m.Id == Const.ManualAttendanceMode)">@m.Name</option>
-                                }
-                            </select>
-                        </div>
-
-                        <div class="form-foot">
-                            <button type="submit" class="btn-a lg" style="width:100%">Record</button>
-                        </div>
-                    </form>
-
-                    <div class="scan-cam" id="scan-cam" hidden>
-                        <div class="scan-view">
-                            <video id="scan-video" playsinline muted></video>
-                            <span class="scan-frame" aria-hidden="true"></span>
-                        </div>
-                        <button type="button" class="btn-a quiet sm" id="scan-stop">Stop the camera</button>
-                    </div>
-
-                    <button type="button" class="btn-a ghost" id="scan-start"
-                            style="width:100%; margin-top:var(--s-3)" hidden>
-                        Scan with the camera
-                    </button>
-
-                    <span class="hint" id="scan-cam-note" hidden></span>
-                </div>
-                <div class="panel-note">
-                    Recorded as now. Scan a member's QR pass, use a handheld scanner, or type the student number.
-                </div>
-            </div>
-        }
-
         <div class="panel">
             <div class="panel-head"><h3>Danger zone</h3></div>
             <div class="panel-body">
@@ -181,34 +340,22 @@
 </div>
 
 @section Scripts {
-    @if (!isFinished)
+    @if (doorOpen)
     {
         <script src="~/lib/jsqr/jsQR.js"></script>
         <script src="~/js/scanner.js" asp-append-version="true"></script>
+        <script src="~/js/door.js" asp-append-version="true"></script>
+    }
+    @if (nextChange.HasValue)
+    {
         <script>
             (function () {
-                // The door is a keyboard-first screen: the field keeps focus
-                // between people so a hardware scanner can fire straight into it.
-                var field = document.getElementById("scan-field");
-                if (!field) { return; }
-
-                document.addEventListener("click", function (e) {
-                    if (e.target.closest("form, a, button, input, select, textarea, label, video")) { return; }
-                    field.focus();
-                });
-
-                window.ApilanScanner.attach({
-                    form: document.getElementById("scan-form"),
-                    field: field,
-                    mode: document.getElementById("mode"),
-                    qrModeId: "@Const.QrAttendanceMode",
-                    manualModeId: "@Const.ManualAttendanceMode",
-                    video: document.getElementById("scan-video"),
-                    shell: document.getElementById("scan-cam"),
-                    start: document.getElementById("scan-start"),
-                    stop: document.getElementById("scan-stop"),
-                    note: document.getElementById("scan-cam-note")
-                });
+                // Windows open and close on their own: when this one changes,
+                // reload so the door shows time-in, time-out or closed as it
+                // should, without the officer doing anything.
+                var at = new Date("@nextChange.Value.ToString("yyyy-MM-ddTHH:mm:ss")");
+                var wait = at - Date.now();
+                if (wait > 0 && wait < 12 * 3600 * 1000) { setTimeout(function () { location.reload(); }, wait + 1000); }
             })();
         </script>
     }

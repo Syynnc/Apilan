@@ -29,6 +29,9 @@ namespace ASI.Basecode.WebApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Record(AttendanceEntryViewModel entry)
         {
+            // Marks the message as a door result, shown beside the scanner.
+            TempData["Door"] = true;
+
             if (!ModelState.IsValid)
             {
                 TempData["Error"] = Errors.StudentNumberRequired;
@@ -55,7 +58,9 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             try
             {
+                var what = _attendance.DescribeAttendance(id);
                 _attendance.DeleteAttendance(id);
+                Audit(AuditActions.AttendanceRemoved, AuditActions.TargetAttendance, eventId, what);
                 TempData["Success"] = Common.AttendanceDeleted;
             }
             catch (InvalidDataException ex)

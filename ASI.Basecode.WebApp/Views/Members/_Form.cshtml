@@ -1,0 +1,130 @@
+@model StudentViewModel
+@*
+    The member form, drawn as the pass it will become: the body takes the
+    details, the stub previews the pass as you type. Opens in the modal from
+    the members list; Form.cshtml wraps it as a page for a direct link.
+*@
+@{
+    var isNew = Model.Id == 0;
+    var genders = new[] { "Female", "Male", "Prefer not to say" };
+}
+
+<form asp-controller="Members" asp-action="Save" method="post" novalidate
+      class="ticket ticket-form" data-modal-form aria-labelledby="member-form-title">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="ticket-body">
+        <header class="tf-head">
+            <div class="ticket-kicker">
+                <span class="ticket-type">@(isNew ? "New member" : "Edit member")</span>
+                <span class="ticket-org">@Apilan.Value.OrganizationName · @Apilan.Value.SchoolShortName</span>
+            </div>
+            <h2 class="ticket-title" id="member-form-title"
+                data-preview="FirstName LastName" data-empty="@(isNew ? "Who are we adding?" : "Edit member")">
+                @(isNew ? "Who are we adding?" : $"{Model.FirstName} {Model.LastName}")
+            </h2>
+            <button type="button" class="tf-close" data-modal-close aria-label="Close">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+        </header>
+
+        <div asp-validation-summary="ModelOnly" class="tf-alert"></div>
+
+        <div class="tf-grid">
+            <div class="field span-2">
+                <label asp-for="StudentNumber" class="req"></label>
+                <input asp-for="StudentNumber" class="input-a mono" placeholder="2026-00001" autofocus />
+                <span asp-validation-for="StudentNumber" class="field-error"></span>
+            </div>
+            <div class="field span-2">
+                <label asp-for="Email"></label>
+                <input asp-for="Email" class="input-a" type="email" placeholder="name@school.edu" />
+                <span asp-validation-for="Email" class="field-error"></span>
+            </div>
+
+            <div class="field span-2">
+                <label asp-for="FirstName" class="req"></label>
+                <input asp-for="FirstName" class="input-a" />
+                <span asp-validation-for="FirstName" class="field-error"></span>
+            </div>
+            <div class="field span-2">
+                <label asp-for="LastName" class="req"></label>
+                <input asp-for="LastName" class="input-a" />
+                <span asp-validation-for="LastName" class="field-error"></span>
+            </div>
+
+            <div class="field span-2">
+                <label asp-for="Course"></label>
+                @* Pick from the school's courses, or type one that is not listed. *@
+                <div class="combo" data-combo>
+                    <input asp-for="Course" class="input-a" placeholder="Search or type a course" autocomplete="off"
+                           role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="course-list" data-combo-input />
+                    <svg class="combo-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5" /></svg>
+                    <ul class="combo-list" id="course-list" role="listbox" hidden data-combo-list>
+                        @foreach (var c in Apilan.Value.Courses)
+                        {
+                            <li role="option" data-value="@c.Code" data-search="@c.Code @c.Name"><b>@c.Code</b><span>@c.Name</span></li>
+                        }
+                    </ul>
+                </div>
+                <span asp-validation-for="Course" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="YearLevel"></label>
+                <select asp-for="YearLevel" class="input-a">
+                    <option value="">—</option>
+                    @for (var y = YearLevels.First; y <= YearLevels.Last; y++)
+                    {
+                        <option value="@y">Year @y</option>
+                    }
+                    <option value="@YearLevels.NonBlocked">@YearLevels.NonBlockedName</option>
+                </select>
+                <span asp-validation-for="YearLevel" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Gender"></label>
+                <select asp-for="Gender" class="input-a">
+                    <option value="">—</option>
+                    @foreach (var g in genders)
+                    {
+                        <option value="@g">@g</option>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Gender) && !genders.Contains(Model.Gender))
+                    {
+                        <option value="@Model.Gender" selected>@Model.Gender</option>
+                    }
+                </select>
+                <span asp-validation-for="Gender" class="field-error"></span>
+            </div>
+
+            <div class="field span-4">
+                <label asp-for="ContactNumber"></label>
+                <input asp-for="ContactNumber" class="input-a mono" placeholder="+639XXXXXXXXX" />
+                <span asp-validation-for="ContactNumber" class="field-error"></span>
+            </div>
+        </div>
+
+        <footer class="tf-foot">
+            <span class="tf-legend"><i aria-hidden="true">*</i> Required</span>
+            <a class="btn-a ghost" asp-action="Index" data-modal-close>Cancel</a>
+            <button type="submit" class="btn-a">@(isNew ? "Create member" : "Save changes")</button>
+        </footer>
+    </div>
+
+    @* The pass this member will carry, filling in as the form does. *@
+    <aside class="ticket-stub tf-stub" aria-hidden="true">
+        <span class="tf-avatar" data-preview="FirstName LastName" data-format="initials" data-empty="?">@Ui.Initials($"{Model.FirstName} {Model.LastName}")</span>
+        <span class="stub-code" data-preview="StudentNumber" data-empty="0000-00000">@(Model.StudentNumber ?? "0000-00000")</span>
+        <span class="stub-note">Member<br />pass</span>
+        @if (isNew)
+        {
+            @* Saving also creates the sign-in (StudentService.AddStudent). *@
+            <span class="tf-signin">
+                <b>Sign-in</b>
+                <span>User: <span data-preview="StudentNumber" data-empty="student no.">student no.</span></span>
+                <span>Pass: <code>@Apilan.Value.DefaultPassword</code></span>
+                <span class="dim">Changed at first sign-in</span>
+            </span>
+        }
+    </aside>
+</form>

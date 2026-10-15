@@ -27,7 +27,8 @@ namespace ASI.Basecode.Data.Repositories
                 @event_name = {evt.EventName}, @event_type_id = {evt.EventTypeId},
                 @event_start = {evt.EventStart}, @event_end = {evt.EventEnd},
                 @description = {evt.Description}, @venue = {evt.Venue}, @event_capacity = {evt.EventCapacity},
-                @event_host = {evt.EventHost}, @late_grace_minutes = {evt.LateGraceMinutes}, @created_by = {createdBy}");
+                @event_host = {evt.EventHost},
+                @attendance_window_minutes = {evt.AttendanceWindowMinutes}, @created_by = {createdBy}");
         }
 
         public void UpdateEvent(Event evt, string updatedBy)
@@ -36,7 +37,8 @@ namespace ASI.Basecode.Data.Repositories
                 @event_name = {evt.EventName}, @event_type_id = {evt.EventTypeId},
                 @event_start = {evt.EventStart}, @event_end = {evt.EventEnd},
                 @description = {evt.Description}, @venue = {evt.Venue}, @event_capacity = {evt.EventCapacity},
-                @event_host = {evt.EventHost}, @late_grace_minutes = {evt.LateGraceMinutes}, @updated_by = {updatedBy}");
+                @event_host = {evt.EventHost},
+                @attendance_window_minutes = {evt.AttendanceWindowMinutes}, @updated_by = {updatedBy}");
         }
 
         public void DeleteEvent(int id)

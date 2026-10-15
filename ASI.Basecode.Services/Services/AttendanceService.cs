@@ -1,8 +1,10 @@
+using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using ASI.Basecode.Data.Interfaces;
+using ASI.Basecode.Resources.Constants;
 using ASI.Basecode.Resources.Messages;
 using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.Services.ServiceModels;
@@ -27,26 +29,42 @@ namespace ASI.Basecode.Services.Services
         {
             var studentNumber = entry.StudentNumber.Trim();
 
-            // A scan does not know which way the student is going: someone still
-            // inside is leaving, anyone else is arriving. One visit per event, so
-            // a student who has already timed out has nothing left to record.
-            recorded = entry.Action;
-            if (recorded == AttendanceAction.Auto)
+            // The clock decides which way a scan goes: time-in opens by itself at
+            // the start and time-out at the end, each for the event's window.
+            var evt = _events.GetEvents()
+                .Where(e => e.Id == entry.EventId)
+                .Select(e => new { e.EventStart, e.EventEnd, e.AttendanceWindowMinutes })
+                .FirstOrDefault() ?? throw NotFound();
+            var window = new AttendanceWindow(evt.EventStart, evt.EventEnd, evt.AttendanceWindowMinutes);
+
+            switch (window.At(entry.RecordedAt ?? DateTime.Now))
             {
-                var existing = _attendance.GetAttendanceDetails()
-                    .Where(a => a.EventId == entry.EventId && a.StudentNumber == studentNumber)
-                    .Select(a => new { a.FullName, a.TimeOut })
-                    .FirstOrDefault();
-
-                if (existing?.TimeOut != null)
-                {
-                    throw new InvalidDataException(string.Format(Errors.AlreadyTimedInAndOut, existing.FullName));
-                }
-
-                recorded = existing != null ? AttendanceAction.TimeOut : AttendanceAction.TimeIn;
+                case AttendanceWindow.Phase.TimeIn:
+                case AttendanceWindow.Phase.LateTimeIn:
+                    // After the window it is still a time-in; the views mark it late.
+                    recorded = AttendanceAction.TimeIn;
+                    break;
+                case AttendanceWindow.Phase.TimeOut:
+                    recorded = AttendanceAction.TimeOut;
+                    break;
+                case AttendanceWindow.Phase.NotOpen:
+                    throw new InvalidDataException(string.Format(Errors.DoorNotOpen, window.TimeInOpens.ToString("h:mm tt")));
+                default:
+                    throw new InvalidDataException(string.Format(Errors.DoorClosed, window.TimeOutCloses.ToString("h:mm tt")));
             }
 
-            // The procedures check the time-in window, duplicates and capacity.
+            // One visit per event: someone already in and out has nothing left.
+            if (recorded == AttendanceAction.TimeOut)
+            {
+                var timedOut = _attendance.GetAttendanceDetails()
+                    .Any(a => a.EventId == entry.EventId && a.StudentNumber == studentNumber && a.TimeOut != null);
+                if (timedOut)
+                {
+                    throw new InvalidDataException(string.Format(Errors.AlreadyTimedInAndOut, StudentName(studentNumber)));
+                }
+            }
+
+            // The procedures check the windows again, duplicates and capacity.
             if (recorded == AttendanceAction.TimeOut)
             {
                 Run(() => _attendance.TimeOut(entry.EventId, studentNumber, entry.RecordedAt, recordedBy));
@@ -56,10 +74,23 @@ namespace ASI.Basecode.Services.Services
                 Run(() => _attendance.TimeIn(entry.EventId, studentNumber, entry.AttendanceModeId, entry.RecordedAt, recordedBy));
             }
 
+            return StudentName(studentNumber);
+        }
+
+        private string StudentName(string studentNumber)
+        {
             return _users.GetUsers()
                 .Where(u => u.StudentNumber == studentNumber)
                 .Select(u => u.FirstName + " " + u.LastName)
                 .FirstOrDefault() ?? studentNumber;
+        }
+
+        public string DescribeAttendance(int id)
+        {
+            return _attendance.GetAttendanceDetails()
+                .Where(a => a.AttendanceId == id)
+                .Select(a => a.FullName + " (" + a.StudentNumber + ") at " + a.EventName)
+                .FirstOrDefault();
         }
 
         public void DeleteAttendance(int id)
@@ -80,7 +111,7 @@ namespace ASI.Basecode.Services.Services
             foreach (var r in rows)
             {
                 csv.AppendLine(string.Join(",",
-                    Cell(r.StudentNumber), Cell(r.FullName), Cell(r.Course), r.YearLevel?.ToString(),
+                    Cell(r.StudentNumber), Cell(r.FullName), Cell(r.Course), YearLevels.Label(r.YearLevel),
                     Cell(r.AttendanceMode),
                     r.TimeIn.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
                     r.TimeOut?.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),

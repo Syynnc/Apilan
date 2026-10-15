@@ -37,8 +37,9 @@ namespace ASI.Basecode.Services.Services
             }
             if (!string.IsNullOrWhiteSpace(search))
             {
+                // Name and venue — what an officer remembers an event by.
                 var term = search.Trim();
-                query = query.Where(e => e.EventName.Contains(term) || e.Venue.Contains(term) || e.EventHost.Contains(term));
+                query = query.Where(e => e.EventName.Contains(term) || e.Venue.Contains(term));
             }
 
             var counts = all.GroupBy(e => e.EventStatus)
@@ -56,6 +57,24 @@ namespace ASI.Basecode.Services.Services
             };
         }
 
+        public List<EventSummary> Suggest(string term, int take = 6)
+        {
+            if (string.IsNullOrWhiteSpace(term))
+            {
+                return new List<EventSummary>();
+            }
+
+            term = term.Trim();
+
+            // Names that start with the term first, then the most recent.
+            return _events.GetEventSummaries()
+                .Where(e => e.EventName.Contains(term) || e.Venue.Contains(term))
+                .OrderBy(e => e.EventName.StartsWith(term) ? 0 : 1)
+                .ThenByDescending(e => e.EventStart)
+                .Take(take)
+                .ToList();
+        }
+
         public EventDetailViewModel GetEventDetail(int id)
         {
             var summary = _events.GetEventSummaries().FirstOrDefault(e => e.EventId == id) ?? throw NotFound();
@@ -66,10 +85,10 @@ namespace ASI.Basecode.Services.Services
             {
                 Summary = summary,
                 Description = evt.Description,
-                LateGraceMinutes = evt.LateGraceMinutes,
+                Window = new AttendanceWindow(evt.EventStart, evt.EventEnd, evt.AttendanceWindowMinutes),
                 Attendance = _attendance.GetAttendanceDetails()
                     .Where(a => a.EventId == id)
-                    .OrderBy(a => a.TimeIn)
+                    .OrderByDescending(a => a.TimeIn)
                     .ToList(),
                 Absentees = _attendance.GetAbsentees()
                     .Where(a => a.EventId == id)

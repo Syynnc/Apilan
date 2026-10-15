@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] · Apilan</title>
-    <meta name="description" content="Apilan is an event attendance system for student organizations. Publish events, scan members in and out with a QR pass, and read the participation report straight from the check-ins." />
+    <meta name="description" content="Apilan is the event attendance system of @Apilan.Value.SchoolName. Officers publish events, scan students in and out with a QR pass, and read the participation report straight from the check-ins." />
     <meta name="theme-color" content="#F7F5EF" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#101210" media="(prefers-color-scheme: dark)" />
 
@@ -54,6 +54,7 @@
             </a>
 
             <ul class="nav-links">
+                <li><a href="#campus">@Apilan.Value.SchoolShortName</a></li>
                 <li><a href="#how">How it works</a></li>
                 <li><a href="#checkin">Check-in</a></li>
                 <li><a href="#reports">Reports</a></li>
@@ -97,9 +98,10 @@
                         Apilan
                     </a>
                     <p>
-                        A web-based attendance system for student organizations — from
-                        setting up an event to scanning people in at the door and reading
-                        the participation report straight from the check-ins.
+                        The event attendance system of @Apilan.Value.SchoolName, run by
+                        @Apilan.Value.OrganizationName — from setting up an event to scanning
+                        students in at the door and reading the participation report straight
+                        from the check-ins.
                     </p>
                 </div>
 
@@ -131,7 +133,7 @@
             </div>
 
             <div class="foot-bar">
-                <span>&copy; @DateTime.Now.Year Apilan · Built for student organizations</span>
+                <span>&copy; @DateTime.Now.Year Apilan · Made for @Apilan.Value.SchoolName</span>
                 <span class="legal">
                     <a href="#how">How it works</a>
                     <button type="button" class="theme-toggle" data-theme-toggle aria-pressed="false" aria-label="Switch theme">

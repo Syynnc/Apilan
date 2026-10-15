@@ -15,7 +15,14 @@ namespace ASI.Basecode.Data.Models
         public int EventTypeId { get; set; }
         public DateTime EventStart { get; set; }
         public DateTime EventEnd { get; set; }
+        /// <summary>Always equal to the window: arriving after it is late (database/06).</summary>
         public int LateGraceMinutes { get; set; }
+
+        /// <summary>
+        /// Minutes (15 to 30) that time-in stays open from the start, and
+        /// time-out from the end.
+        /// </summary>
+        public int AttendanceWindowMinutes { get; set; }
         public string CreatedBy { get; set; }
         public DateTime CreatedTime { get; set; }
         public string UpdatedBy { get; set; }

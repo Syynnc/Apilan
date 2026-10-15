@@ -55,7 +55,7 @@ namespace ASI.Basecode.Resources.Messages {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Incorrect username or password..
+        ///   Looks up a localized string similar to That student ID and password do not match..
         /// </summary>
         public static string InvalidLogin {
             get {
@@ -64,7 +64,7 @@ namespace ASI.Basecode.Resources.Messages {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to This account has been deactivated. Ask an administrator to restore it..
+        ///   Looks up a localized string similar to This account has been deactivated. Ask an officer to enable it again..
         /// </summary>
         public static string AccountInactive {
             get {
@@ -125,5 +125,113 @@ namespace ASI.Basecode.Resources.Messages {
                 return ResourceManager.GetString("AlreadyTimedInAndOut", resourceCulture);
             }
         }
-    }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Your member record has been deactivated. Ask an officer to restore it..
+        /// </summary>
+        public static string MemberDeactivated {
+            get {
+                return ResourceManager.GetString("MemberDeactivated", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to This member already has a sign-in account..
+        /// </summary>
+        public static string AccountAlreadyExists {
+            get {
+                return ResourceManager.GetString("AccountAlreadyExists", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The Member role is missing from dbo.roles..
+        /// </summary>
+        public static string MemberRoleMissing {
+            get {
+                return ResourceManager.GetString("MemberRoleMissing", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Pick a password other than the default one..
+        /// </summary>
+        public static string NewPasswordIsDefault {
+            get {
+                return ResourceManager.GetString("NewPasswordIsDefault", resourceCulture);
+            }
+        }
+    
+        /// <summary>
+        ///   Looks up a localized string similar to The initial officer account can only be changed by that officer..
+        /// </summary>
+        public static string InitialOfficerProtected {
+            get {
+                return ResourceManager.GetString("InitialOfficerProtected", resourceCulture);
+            }
+        }
+    
+        /// <summary>
+        ///   Looks up a localized string similar to You cannot remove your own officer role. Ask another officer to do it..
+        /// </summary>
+        public static string CannotDemoteSelf {
+            get {
+                return ResourceManager.GetString("CannotDemoteSelf", resourceCulture);
+            }
+        }
+    
+        /// <summary>
+        ///   Looks up a localized string similar to Enable this account before making it an officer..
+        /// </summary>
+        public static string DisabledCannotBePromoted {
+            get {
+                return ResourceManager.GetString("DisabledCannotBePromoted", resourceCulture);
+            }
+        }
+    
+        /// <summary>
+        ///   Looks up a localized string similar to This officer is not linked to a member, so they cannot be made a member..
+        /// </summary>
+        public static string OfficerHasNoMember {
+            get {
+                return ResourceManager.GetString("OfficerHasNoMember", resourceCulture);
+            }
+        }
+    
+        /// <summary>
+        ///   Looks up a localized string similar to The Officer role is missing from dbo.roles..
+        /// </summary>
+        public static string OfficerRoleMissing {
+            get {
+                return ResourceManager.GetString("OfficerRoleMissing", resourceCulture);
+            }
+        }
+            /// <summary>
+        ///   Looks up a localized string similar to Time-in opens when the event starts, at {0}..
+        /// </summary>
+        public static string DoorNotOpen {
+            get {
+                return ResourceManager.GetString("DoorNotOpen", resourceCulture);
+            }
+        }
+    
+        /// <summary>
+        ///   Looks up a localized string similar to Attendance for this event closed at {0}..
+        /// </summary>
+        public static string DoorClosed {
+            get {
+                return ResourceManager.GetString("DoorClosed", resourceCulture);
+            }
+        }
+    
+        /// <summary>
+        ///   Looks up a localized string similar to The event must last at least as long as its attendance window..
+        /// </summary>
+        public static string WindowLongerThanEvent {
+            get {
+                return ResourceManager.GetString("WindowLongerThanEvent", resourceCulture);
+            }
+        }
+    
+}
 }

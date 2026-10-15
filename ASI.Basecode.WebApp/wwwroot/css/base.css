@@ -5,6 +5,10 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* The hidden attribute has to win over component display rules (.btn-a is
+   inline-flex, panels are grid), or scripts cannot hide anything. */
+[hidden] { display: none !important; }
+
 html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
@@ -151,4 +155,21 @@ code, kbd, samp,
         animation-iteration-count: 1 !important;
         transition-duration: 0.001ms !important;
     }
+}
+
+/* ---- Page transitions ---------------------------------------------------- */
+/* Same-origin navigations cross-fade instead of flashing white. The chrome
+   that does not change between pages (sidebar, top bars) is named in
+   console.css / screens.css so it holds still while the page underneath
+   changes. The theme toggle uses the same root cross-fade (theme.js). */
+@view-transition { navigation: auto; }
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 240ms;
+    animation-timing-function: var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    @view-transition { navigation: none; }
 }

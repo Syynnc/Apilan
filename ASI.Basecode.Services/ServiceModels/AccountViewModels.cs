@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using ASI.Basecode.Resources.Constants;
 
 namespace ASI.Basecode.Services.ServiceModels
 {
@@ -14,17 +15,24 @@ namespace ASI.Basecode.Services.ServiceModels
 
         /// <summary>The linked student (dbo.users) id, when this is a member account.</summary>
         public int? UserId { get; set; }
+
+        /// <summary>Signed in with the default password, so it has to be changed first.</summary>
+        public bool MustChangePassword { get; set; }
     }
 
     public class ChangePasswordViewModel
     {
-        [Required(ErrorMessage = "Enter your current password.")]
+        /// <summary>
+        /// Not asked for on a first sign-in: the account is still on the
+        /// default password, which the server already knows.
+        /// </summary>
         [DataType(DataType.Password)]
         [Display(Name = "Current password")]
         public string CurrentPassword { get; set; }
 
         [Required(ErrorMessage = "Enter a new password.")]
         [StringLength(100, MinimumLength = 8, ErrorMessage = "Use at least 8 characters.")]
+        [RegularExpression(@"^(?=.*[A-Za-z])(?=.*\d).+$", ErrorMessage = "Mix letters and numbers.")]
         [DataType(DataType.Password)]
         [Display(Name = "New password")]
         public string NewPassword { get; set; }
@@ -34,32 +42,12 @@ namespace ASI.Basecode.Services.ServiceModels
         [DataType(DataType.Password)]
         [Display(Name = "Confirm new password")]
         public string ConfirmPassword { get; set; }
-    }
 
-    public class AccountViewModel
-    {
-        [Required(ErrorMessage = "Username is required.")]
-        [StringLength(50)]
-        [RegularExpression(@"^[A-Za-z0-9._-]+$", ErrorMessage = "Letters, digits, dot, dash and underscore only.")]
-        public string Username { get; set; }
+        /// <summary>Set when the form is the forced first-sign-in prompt.</summary>
+        public bool FirstSignIn { get; set; }
 
-        [Required(ErrorMessage = "Password is required.")]
-        [StringLength(100, MinimumLength = 8, ErrorMessage = "Use at least 8 characters.")]
-        [DataType(DataType.Password)]
-        public string Password { get; set; }
-
-        [Required(ErrorMessage = "Confirm the password.")]
-        [Compare(nameof(Password), ErrorMessage = "The passwords do not match.")]
-        [DataType(DataType.Password)]
-        [Display(Name = "Confirm password")]
-        public string ConfirmPassword { get; set; }
-
-        [Required(ErrorMessage = "Choose a role.")]
-        [Display(Name = "Role")]
-        public int? RoleId { get; set; }
-
-        [Display(Name = "Linked student")]
-        public int? UserId { get; set; }
+        /// <summary>Where to go once the password is changed.</summary>
+        public string ReturnUrl { get; set; }
     }
 
     public class AccountListItem
@@ -67,16 +55,26 @@ namespace ASI.Basecode.Services.ServiceModels
         public int Id { get; set; }
         public string Username { get; set; }
         public string RoleName { get; set; }
+        public int? UserId { get; set; }
         public string StudentName { get; set; }
+        public string StudentNumber { get; set; }
+        public bool StudentActive { get; set; }
         public bool IsActive { get; set; }
         public DateTime? LastLogin { get; set; }
+        public DateTime CreatedTime { get; set; }
+
+        /// <summary>The bootstrap officer: only that officer can change this account.</summary>
+        public bool IsInitialOfficer => Id == Const.InitialOfficerAccountId;
     }
 
     public class AccountsPageViewModel
     {
         public List<AccountListItem> Accounts { get; set; } = new();
-        public AccountViewModel NewAccount { get; set; } = new();
-        public List<LookupItem> Roles { get; set; } = new();
-        public List<LookupItem> Students { get; set; } = new();
+
+        /// <summary>Shown in the reset prompt, so the officer can tell the member what it is.</summary>
+        public string DefaultPassword { get; set; }
+
+        /// <summary>Active members who have no sign-in yet.</summary>
+        public int MembersWithoutAccount { get; set; }
     }
 }

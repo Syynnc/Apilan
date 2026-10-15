@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using ASI.Basecode.Data.Models;
+using ASI.Basecode.Resources.Messages;
 using static ASI.Basecode.Resources.Constants.Enums;
 
 namespace ASI.Basecode.Services.ServiceModels
@@ -32,6 +33,7 @@ namespace ASI.Basecode.Services.ServiceModels
 
         public string Description { get; set; }
 
+        [Required(ErrorMessage = "Venue is required.")]
         [StringLength(255)]
         public string Venue { get; set; }
 
@@ -43,9 +45,9 @@ namespace ASI.Basecode.Services.ServiceModels
         [Display(Name = "Host")]
         public string EventHost { get; set; }
 
-        [Range(0, 240, ErrorMessage = "Grace period is 0 to 240 minutes.")]
-        [Display(Name = "Late after (minutes)")]
-        public int LateGraceMinutes { get; set; } = 15;
+        [Range(15, 30, ErrorMessage = "The window is 15 to 30 minutes.")]
+        [Display(Name = "Time-in / time-out window")]
+        public int AttendanceWindowMinutes { get; set; } = 15;
 
         public List<LookupItem> EventTypes { get; set; } = new();
 
@@ -55,6 +57,13 @@ namespace ASI.Basecode.Services.ServiceModels
             {
                 yield return new ValidationResult("The event must end after it starts.", new[] { nameof(EventEnd) });
             }
+            else if (EventStart.HasValue && EventEnd.HasValue
+                     && (EventEnd.Value - EventStart.Value).TotalMinutes < AttendanceWindowMinutes)
+            {
+                // Otherwise the time-out window would open before time-in closed.
+                yield return new ValidationResult(Errors.WindowLongerThanEvent, new[] { nameof(AttendanceWindowMinutes) });
+            }
+
         }
     }
 
@@ -72,7 +81,7 @@ namespace ASI.Basecode.Services.ServiceModels
     {
         public EventSummary Summary { get; set; }
         public string Description { get; set; }
-        public int LateGraceMinutes { get; set; }
+        public AttendanceWindow Window { get; set; }
         public List<AttendanceDetail> Attendance { get; set; } = new();
         public List<EventAbsentee> Absentees { get; set; } = new();
         public List<LookupItem> Modes { get; set; } = new();
@@ -91,8 +100,6 @@ namespace ASI.Basecode.Services.ServiceModels
 
         [Display(Name = "Mode")]
         public int AttendanceModeId { get; set; }
-
-        public AttendanceAction Action { get; set; } = AttendanceAction.TimeIn;
 
         /// <summary>Leave empty for "now"; set it to record a late-entered paper sign-in.</summary>
         [Display(Name = "Recorded time")]
