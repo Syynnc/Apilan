@@ -15,6 +15,7 @@ namespace ASI.Basecode.Data.Models
         public string TypeName { get; set; }
         public string Description { get; set; }
         public bool IsActive { get; set; }
+        public string Color { get; set; }
     }
 
     /// <summary>dbo.attendance_modes — QR Code, Manual, RFID.</summary>

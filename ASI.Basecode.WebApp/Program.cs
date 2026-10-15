@@ -66,20 +66,22 @@ builder.Services
             }
 
             var accounts = context.HttpContext.RequestServices.GetRequiredService<IAccountService>();
-            var role = accounts.CurrentRole(accountId);
+            var state = accounts.CurrentState(accountId);
 
-            if (role == null)
+            if (state == null)
             {
                 context.RejectPrincipal();
                 await context.HttpContext.SignOutAsync(Const.AuthenticationScheme);
                 return;
             }
 
-            if (!context.Principal.IsInRole(role))
+            var (role, name) = state.Value;
+            if (!context.Principal.IsInRole(role) || context.Principal.FindFirstValue(Const.ClaimDisplayName) != name)
             {
                 var claims = context.Principal.Claims
-                    .Where(c => c.Type != ClaimTypes.Role)
-                    .Append(new Claim(ClaimTypes.Role, role));
+                    .Where(c => c.Type != ClaimTypes.Role && c.Type != Const.ClaimDisplayName)
+                    .Append(new Claim(ClaimTypes.Role, role))
+                    .Append(new Claim(Const.ClaimDisplayName, name));
                 context.ReplacePrincipal(new ClaimsPrincipal(
                     new ClaimsIdentity(claims, Const.AuthenticationScheme, ClaimTypes.Name, ClaimTypes.Role)));
                 context.ShouldRenew = true;
@@ -94,6 +96,12 @@ builder.Services.AddAuthorization(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var types = scope.ServiceProvider.GetRequiredService<IEventTypeService>().GetEventTypes();
+    ASI.Basecode.WebApp.Helpers.Ui.SetChosenTones(types.Select(t => (t.TypeName, t.Color)));
+}
 
 if (!app.Environment.IsDevelopment())
 {

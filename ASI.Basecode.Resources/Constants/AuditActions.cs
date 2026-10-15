@@ -49,7 +49,7 @@ namespace ASI.Basecode.Resources.Constants
             [SignedIn] = new("Signed in", "Sign-ins", "idle"),
             [SignedOut] = new("Signed out", "Sign-ins", "idle"),
             [SignInFailed] = new("Failed sign-in", "Sign-ins", "risk"),
-            [PasswordChanged] = new("Changed own password", "Sign-ins", "idle"),
+            [PasswordChanged] = new("Changed own password", "Accounts", "idle"),
 
             [MemberCreated] = new("Added member", "Members", "ok"),
             [MemberUpdated] = new("Edited member", "Members", "info"),
@@ -72,7 +72,10 @@ namespace ASI.Basecode.Resources.Constants
             [AttendanceRemoved] = new("Removed attendance", "Attendance", "risk"),
         };
 
-        public static readonly IReadOnlyList<string> Groups = new[] { "Members", "Accounts", "Events", "Attendance", "Sign-ins" };
+        public static readonly IReadOnlyList<string> Groups = new[] { "Members", "Accounts", "Events", "Attendance" };
+
+        /// <summary>Still recorded, but kept out of the audit log.</summary>
+        public static readonly IReadOnlyList<string> Hidden = new[] { SignedIn, SignedOut, SignInFailed };
 
         public static Info Describe(string action) =>
             action != null && All.TryGetValue(action, out var info) ? info : new Info(action, "Other", "idle");

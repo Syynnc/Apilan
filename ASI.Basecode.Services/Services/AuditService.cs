@@ -54,7 +54,9 @@ namespace ASI.Basecode.Services.Services
         public ActivityPageViewModel GetPage(ActivityFilter filter)
         {
             filter ??= new ActivityFilter();
-            var query = _logs.GetLogs();
+            var hidden = AuditActions.Hidden.ToList();
+            var all = _logs.GetLogs().Where(l => !hidden.Contains(l.Action));
+            var query = all;
 
             if (filter.Who.HasValue)
             {
@@ -79,7 +81,6 @@ namespace ASI.Basecode.Services.Services
             }
 
             var today = DateTime.Today;
-            var all = _logs.GetLogs();
 
             return new ActivityPageViewModel
             {

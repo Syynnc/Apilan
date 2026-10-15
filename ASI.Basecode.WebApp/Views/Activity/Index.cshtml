@@ -1,10 +1,10 @@
 @model ActivityPageViewModel
 @{
-    ViewData["Title"] = "Activity log";
+    ViewData["Title"] = "Audit log";
     ViewData["Module"] = "Administration";
 
     var f = Model.Filter;
-    var filterCount = (f.Who.HasValue ? 1 : 0) + (string.IsNullOrEmpty(f.Group) ? 0 : 1) + (f.From.HasValue ? 1 : 0) + (f.To.HasValue ? 1 : 0);
+    var filterCount = (f.Who.HasValue ? 1 : 0) + (f.From.HasValue ? 1 : 0) + (f.To.HasValue ? 1 : 0);
 
     // Where the thing it was done to lives, when it still has a page.
     string TargetUrl(ActivityRow r) => r.TargetType switch
@@ -14,23 +14,74 @@
         AuditActions.TargetAttendance when r.TargetId.HasValue => Url.Action("Details", "Events", new { id = r.TargetId }),
         _ => null,
     };
+
+    string link(string group = "keep", int? who = -1, string from = "keep", string to = "keep") => Url.Action("Index", new
+    {
+        Group = group == "keep" ? f.Group : group,
+        Who = who == -1 ? f.Who : who,
+        From = from == "keep" ? f.From?.ToString("yyyy-MM-dd") : from,
+        To = to == "keep" ? f.To?.ToString("yyyy-MM-dd") : to,
+    });
+
+    var chips = new List<(string Label, string Url)>();
+    if (f.Who.HasValue) chips.Add((Model.People.FirstOrDefault(p => p.Id == f.Who)?.Name ?? "Person", link(who: null)));
+    if (f.From.HasValue) chips.Add(("From " + f.From.Value.ToString("MMM d, yyyy"), link(from: null)));
+    if (f.To.HasValue) chips.Add(("To " + f.To.Value.ToString("MMM d, yyyy"), link(to: null)));
 }
 
-<div class="stack-lg">
-    <div class="tiles stagger">
-        <div class="tile accent"><span class="l">Today</span><span class="n">@Model.Today</span><span class="s">action@(Model.Today == 1 ? "" : "s") logged</span></div>
-        <div class="tile"><span class="l">Officers active today</span><span class="n">@Model.Officers</span></div>
-        <div class="tile"><span class="l">Latest</span><span class="n sm">@(Model.Latest?.ToString("h:mm:ss tt") ?? "—")</span><span class="s">@(Model.Latest?.ToString("ddd, MMM d, yyyy") ?? "nothing logged yet")</span></div>
-        <div class="tile"><span class="l">Showing</span><span class="n">@Model.Rows.Count</span><span class="s">@(Model.Total > Model.Rows.Count ? $"newest of {Model.Total} — narrow it with the filters" : "matching entries")</span></div>
-    </div>
+<div class="report-bar">
+    <nav class="report-tabs" aria-label="Action groups">
+        <a class="@(string.IsNullOrEmpty(f.Group) ? "is-active" : null)" href="@link(group: null)">All</a>
+        @foreach (var g in AuditActions.Groups)
+        {
+            <a class="@(g == f.Group ? "is-active" : null)" aria-current="@(g == f.Group ? "page" : null)" href="@link(group: g)">@g</a>
+        }
+    </nav>
 
-    <form method="get" class="report-filters toolbar" aria-label="Filter the activity log">
-        <div class="rf-group" role="group" aria-label="Filter">
-            <span class="rf-legend">Filter</span>
-            <div class="rf-row">
-                <label class="rf-field grow">
-                    <span>Who</span>
-                    <select name="Who" class="input-a" onchange="this.form.submit()">
+    <div class="report-actions">
+        <div class="searchbar compact">
+            <svg class="s-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /></svg>
+            <input type="search" class="input-a" placeholder="Search entries…" aria-label="Search the audit log"
+                   data-live-search data-target="#activity-table" />
+        </div>
+        <button type="button" class="btn-a ghost sm" data-dialog-open="#audit-filters">
+            <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
+            Filters@(filterCount > 0 ? $" · {filterCount}" : "")
+        </button>
+    </div>
+</div>
+
+@if (chips.Any())
+{
+    <div class="filter-chips" aria-label="Filters in force">
+        @foreach (var (label, url) in chips)
+        {
+            <a class="filter-chip" href="@url" title="Remove this filter">@label<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" /></svg></a>
+        }
+        <a class="filter-clear" href="@link(who: null, from: null, to: null)">Clear all</a>
+    </div>
+}
+
+<dialog class="modal" id="audit-filters" aria-labelledby="af-title">
+    <div class="modal-content">
+        <form method="get" class="sheet" aria-label="Filter the audit log"
+              onsubmit="this.querySelectorAll('select, input').forEach(function (f) { if (!f.value) { f.disabled = true; } })">
+            @if (!string.IsNullOrEmpty(f.Group))
+            {
+                <input type="hidden" name="Group" value="@f.Group" />
+            }
+            <header class="sheet-head">
+                <h2 id="af-title">Filter the audit log</h2>
+                <button type="button" class="tf-close" data-modal-close aria-label="Close">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                </button>
+            </header>
+
+            <fieldset class="sheet-group">
+                <legend>Who</legend>
+                <label class="field">
+                    <span>Done by</span>
+                    <select name="Who" class="input-a">
                         <option value="">Everyone</option>
                         @foreach (var p in Model.People)
                         {
@@ -38,43 +89,41 @@
                         }
                     </select>
                 </label>
-                <label class="rf-field">
-                    <span>What</span>
-                    <select name="Group" class="input-a" onchange="this.form.submit()">
-                        <option value="">All actions</option>
-                        @foreach (var g in AuditActions.Groups)
-                        {
-                            <option value="@g" selected="@(g == f.Group)">@g</option>
-                        }
-                    </select>
-                </label>
-                <label class="rf-field">
-                    <span>From</span>
-                    <input type="date" name="From" class="input-a" value="@f.From?.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
-                </label>
-                <label class="rf-field">
-                    <span>To</span>
-                    <input type="date" name="To" class="input-a" value="@f.To?.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
-                </label>
-            </div>
-        </div>
-        <div class="rf-actions">
-            <noscript><button type="submit" class="btn-a sm">Apply</button></noscript>
-            @if (filterCount > 0)
-            {
-                <a class="btn-a ghost sm" asp-action="Index">Clear @filterCount filter@(filterCount == 1 ? "" : "s")</a>
-            }
-        </div>
-    </form>
+            </fieldset>
+
+            <fieldset class="sheet-group">
+                <legend>When</legend>
+                <div class="sheet-row">
+                    <label class="field">
+                        <span>From</span>
+                        <input type="date" name="From" class="input-a" value="@f.From?.ToString("yyyy-MM-dd")" />
+                    </label>
+                    <label class="field">
+                        <span>To</span>
+                        <input type="date" name="To" class="input-a" value="@f.To?.ToString("yyyy-MM-dd")" />
+                    </label>
+                </div>
+            </fieldset>
+
+            <footer class="sheet-foot">
+                <a class="btn-a ghost" href="@link(who: null, from: null, to: null)">Clear all</a>
+                <button type="submit" class="btn-a">Show results</button>
+            </footer>
+        </form>
+    </div>
+</dialog>
+
+<div class="stack-lg">
+    <div class="tiles stagger">
+        <div class="tile accent"><span class="l">Today</span><span class="n">@Model.Today</span><span class="s">change@(Model.Today == 1 ? "" : "s") recorded</span></div>
+        <div class="tile"><span class="l">Officers active today</span><span class="n">@Model.Officers</span></div>
+        <div class="tile"><span class="l">Latest</span><span class="n sm">@(Model.Latest?.ToString("h:mm:ss tt") ?? "—")</span><span class="s">@(Model.Latest?.ToString("ddd, MMM d, yyyy") ?? "nothing recorded yet")</span></div>
+        <div class="tile"><span class="l">Showing</span><span class="n">@Model.Rows.Count</span><span class="s">@(Model.Total > Model.Rows.Count ? $"newest of {Model.Total} — narrow it with the filters" : "matching entries")</span></div>
+    </div>
 
     <div class="panel">
         <div class="panel-head">
-            <h2>Activity</h2>
-            <div class="searchbar compact">
-                <svg class="s-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /></svg>
-                <input type="search" class="input-a" placeholder="Search these entries…" aria-label="Search the activity log"
-                       data-live-search data-target="#activity-table" />
-            </div>
+            <h2>@(string.IsNullOrEmpty(f.Group) ? "All changes" : f.Group)</h2>
         </div>
         <div class="panel-note account-note">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 8v.01M12 11v5" /></svg>
@@ -83,7 +132,7 @@
 
         @if (!Model.Rows.Any())
         {
-            <div class="panel-body"><div class="empty-a"><h4>Nothing logged@(filterCount > 0 ? " for these filters" : " yet")</h4><p>Changes appear here the moment they are saved.</p></div></div>
+            <div class="panel-body"><div class="empty-a"><h4>Nothing recorded@(filterCount > 0 || !string.IsNullOrEmpty(f.Group) ? " for these filters" : " yet")</h4><p>Changes appear here the moment they are saved.</p></div></div>
         }
         else
         {
