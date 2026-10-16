@@ -3,7 +3,8 @@
     A member's attendance pass, drawn as the same ticket the landing page
     shows. The QR carries the student number and nothing else, so the door
     reads exactly what an officer would type.
-    ViewData["PassDownload"] — URL of the PNG copy, when the viewer may save one.
+    ViewData["PassDownload"] — URL of the QR-only PNG, when the viewer may save
+    one. pass.js saves the whole ticket instead and falls back to this URL.
 *@
 @{
     var qr = QrCode.Render(Model.StudentNumber);
@@ -62,7 +63,7 @@
     @if (!string.IsNullOrEmpty(download))
     {
         <div class="pass-actions">
-            <a class="btn-a ghost sm" href="@download">
+            <a class="btn-a ghost sm" href="@download" data-pass-save="apilan-pass-@(Model.StudentNumber).png">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg>
                 Save as image
             </a>
@@ -71,5 +72,7 @@
                 Print
             </button>
         </div>
+        <script src="~/lib/html2canvas/html2canvas.min.js" asp-append-version="true"></script>
+        <script src="~/js/pass.js" asp-append-version="true"></script>
     }
 </div>
