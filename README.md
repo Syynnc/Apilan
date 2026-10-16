@@ -107,12 +107,14 @@ Then open **https://localhost:7133** (or http://localhost:5200).
 
 ### 6. Sign in
 
-Sign in with a **username or student ID**.
+Sign in with your **ID** (student number).
 
-| Who | Username | Password |
+| Who | ID | Password |
 |---|---|---|
-| Officer | `officer` | *ask the team* |
-| Members | their student ID | `Apilan@2026`. They're asked to choose a new one the first time |
+| Initial officer | `2000-00001` | `Password123` |
+| Member | `2022-00101` | `Password123` |
+
+New members added later sign in with their ID and the default password `Apilan@2026`. They're asked to choose a new one the first time.
 
 ---
 
