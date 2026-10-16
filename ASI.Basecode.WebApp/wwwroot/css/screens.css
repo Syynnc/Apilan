@@ -1580,10 +1580,8 @@ a.b-stat.accent:hover { border-color: var(--accent-hover); background: var(--acc
     text-transform: uppercase;
     color: var(--ink-3);
 }
-.live-flag i { width: 9px; height: 9px; border-radius: 50%; background: var(--idle); }
-.live-flag.on { color: var(--risk); }
-.live-flag.on i { background: var(--risk); box-shadow: 0 0 0 0 color-mix(in srgb, var(--risk) 60%, transparent); animation: live-pulse 1.8s var(--ease-out) infinite; }
-@keyframes live-pulse { 70% { box-shadow: 0 0 0 9px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+.live-flag svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; flex: none; }
+.live-flag.on { padding: 3px var(--s-3) 3px var(--s-2); border-radius: var(--r-pill); background: var(--ok-wash); color: var(--ok); }
 
 .live-ticket { flex: 1; box-shadow: var(--shadow-float); }
 .live-ticket .ticket-body { padding: var(--s-6); gap: var(--s-5); }
@@ -1951,7 +1949,29 @@ a.b-stat.accent:hover { border-color: var(--accent-hover); background: var(--acc
 .window-pick input:checked + label { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .window-pick input:focus-visible + label { outline: 2px solid var(--focus); outline-offset: 2px; }
 
-/* ---- Activity log ----------------------------------------------------------- */
+/* ---- Event type form: the ticket colour -------------------------------- */
+.tone-pick { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
+.tone-pick input { position: absolute; opacity: 0; pointer-events: none; }
+.tone-pick label { cursor: pointer; transition: box-shadow var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out); }
+.tone-pick .tone-auto {
+    padding: 6px var(--s-3);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    border: var(--border-strong);
+    border-radius: var(--r-pill);
+    background: var(--surface);
+    color: var(--ink-2);
+}
+.tone-pick .tone-swatch { --tt: var(--accent); width: 30px; height: 30px; border-radius: 50%; background: var(--tt); border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--line); }
+.tone-pick .tone-swatch[data-type="workshop"] { --tt: var(--mango); }
+.tone-pick .tone-swatch[data-type="assembly"] { --tt: var(--gold); }
+.tone-pick .tone-swatch[data-type="service"]  { --tt: var(--rose); }
+.tone-pick .tone-swatch[data-type="training"] { --tt: var(--teal); }
+.tone-pick input:checked + .tone-swatch { box-shadow: 0 0 0 2px var(--ink); }
+.tone-pick input:checked + .tone-auto { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.tone-pick input:focus-visible + label { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* ---- Audit log -------------------------------------------------------------- */
 .tile .n.sm { font-size: 1.35rem; }
 .activity-table .act-when { white-space: nowrap; }
 .activity-table .act-when time { display: grid; line-height: 1.3; }
@@ -1972,6 +1992,9 @@ a.b-stat.accent:hover { border-color: var(--accent-hover); background: var(--acc
     flex-wrap: wrap;
     gap: var(--s-3);
     margin-bottom: var(--s-4);
+    /* Lifts the export menu above the animated tiles that follow. */
+    position: relative;
+    z-index: 30;
 }
 .report-tabs {
     display: inline-flex;

@@ -1,5 +1,6 @@
 using ASI.Basecode.WebApp.Helpers;
 using System.IO;
+using System.Linq;
 using ASI.Basecode.Resources.Constants;
 using ASI.Basecode.Resources.Messages;
 using ASI.Basecode.Services.Interfaces;
@@ -52,7 +53,9 @@ namespace ASI.Basecode.WebApp.Controllers
             try
             {
                 var before = model.Id != 0 ? _eventTypes.GetEventType(model.Id) : null;
+                if (!Ui.Tones.Contains(model.Color)) model.Color = null;
                 _eventTypes.SaveEventType(model);
+                Ui.SetChosenTones(_eventTypes.GetEventTypes().Select(t => (t.TypeName, t.Color)));
                 if (before == null)
                 {
                     Audit(AuditActions.EventTypeCreated, AuditActions.TargetEventType, null, model.TypeName);

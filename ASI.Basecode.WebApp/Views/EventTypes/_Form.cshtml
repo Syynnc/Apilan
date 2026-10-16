@@ -8,8 +8,8 @@
 }
 
 <form asp-controller="EventTypes" asp-action="Save" method="post" novalidate
-      class="ticket ticket-form narrow" data-type="@Ui.TicketType(Model.TypeName)" data-modal-form
-      data-tone-from="TypeName" aria-labelledby="type-form-title">
+      class="ticket ticket-form narrow" data-type="@(Ui.Tones.Contains(Model.Color) ? Model.Color : Ui.TicketType(Model.TypeName))" data-modal-form
+      data-tone-from="TypeName" data-tone-pick="Color" aria-labelledby="type-form-title">
     <input type="hidden" asp-for="Id" />
 
     <div class="ticket-body">
@@ -39,6 +39,18 @@
                 <label asp-for="Description"></label>
                 <textarea asp-for="Description" class="input-a" rows="3" placeholder="What kind of event this is, in a line."></textarea>
                 <span asp-validation-for="Description" class="field-error"></span>
+            </div>
+            <div class="field span-4">
+                <label for="tone-auto">Colour</label>
+                <div class="tone-pick" role="radiogroup" aria-label="Ticket colour">
+                    <input type="radio" name="Color" id="tone-auto" value="" checked="@(!Ui.Tones.Contains(Model.Color))" />
+                    <label for="tone-auto" class="tone-auto" title="Pick from the name">Auto</label>
+                    @foreach (var t in Ui.Tones)
+                    {
+                        <input type="radio" name="Color" id="tone-@t" value="@t" checked="@(Model.Color == t)" />
+                        <label for="tone-@t" class="tone-swatch" data-type="@t" title="@t" aria-label="@t"></label>
+                    }
+                </div>
             </div>
             <div class="field span-4">
                 <label class="switch">

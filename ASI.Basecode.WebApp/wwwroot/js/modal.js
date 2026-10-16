@@ -277,7 +277,11 @@
                 t.classList.toggle("is-empty", !out);
             });
 
-            if (toneFrom && form.elements[toneFrom]) {
+            var pickName = form.getAttribute("data-tone-pick");
+            var picked = pickName && form.elements[pickName] ? form.elements[pickName].value : "";
+            if (picked) {
+                form.setAttribute("data-type", picked);
+            } else if (toneFrom && form.elements[toneFrom]) {
                 var f = form.elements[toneFrom];
                 var opt = f.tagName === "SELECT" ? f.options[f.selectedIndex] : null;
                 var next = opt && opt.getAttribute("data-tone") ? opt.getAttribute("data-tone") : (f.tagName === "SELECT" ? null : tone(f.value));

@@ -212,14 +212,20 @@ namespace ASI.Basecode.Services.Services
             return account.Username;
         }
 
-        public string CurrentRole(int accountId)
+        public (string Role, string DisplayName)? CurrentState(int accountId)
         {
             var state = _accounts.GetAccounts()
                 .Where(a => a.Id == accountId)
-                .Select(a => new { a.IsActive, MemberActive = a.User == null || a.User.IsActive, a.Role.RoleName })
+                .Select(a => new
+                {
+                    a.IsActive,
+                    MemberActive = a.User == null || a.User.IsActive,
+                    a.Role.RoleName,
+                    DisplayName = a.User != null ? a.User.FirstName + " " + a.User.LastName : a.Username,
+                })
                 .FirstOrDefault();
 
-            return state != null && state.IsActive && state.MemberActive ? state.RoleName : null;
+            return state != null && state.IsActive && state.MemberActive ? (state.RoleName, state.DisplayName) : null;
         }
 
         /// <summary>Only the initial officer may change the initial officer's account.</summary>
