@@ -120,5 +120,9 @@ namespace ASI.Basecode.Services.ServiceModels
 
         [Display(Name = "Active")]
         public bool IsActive { get; set; } = true;
+
+        [StringLength(20)]
+        [Display(Name = "Colour")]
+        public string Color { get; set; }
     }
 }

@@ -30,7 +30,7 @@
     @* ---------------------------------------------------- Happening now *@
     <section class="bento-cell b-live @(live == null ? "is-quiet" : null)" aria-labelledby="live-title">
         <header class="bento-head">
-            <span class="live-flag @(live != null ? "on" : null)"><i aria-hidden="true"></i><span id="live-title">Happening now</span></span>
+            <span class="live-flag @(live != null ? "on" : null)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></svg><span id="live-title">@(live != null ? "Ongoing" : "Happening now")</span></span>
             <span class="bento-count">@Model.Ongoing.Count live</span>
         </header>
 
