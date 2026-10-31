@@ -18,12 +18,11 @@
         <div asp-validation-summary="ModelOnly" class="auth-alert"></div>
 
         <div class="field">
-            <label asp-for="Identifier"></label>
-            <input asp-for="Identifier" class="input-a mono" autocomplete="username" spellcheck="false"
-                   placeholder="2022-00101" aria-describedby="id-hint" autofocus />
-            <span class="hint" id="id-hint">The number on your school ID, with the dash.</span>
-            <span asp-validation-for="Identifier" class="field-error"></span>
-        </div>
+             <label asp-for="Identifier"></label>
+             <input asp-for="Identifier" class="input-a mono" autocomplete="username" spellcheck="false"
+                    placeholder="2022-00101" autofocus />
+             <span asp-validation-for="Identifier" class="field-error"></span>
+         </div>
 
         <div class="field">
             <label asp-for="Password"></label>
