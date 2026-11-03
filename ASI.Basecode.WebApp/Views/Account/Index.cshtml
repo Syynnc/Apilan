@@ -51,11 +51,11 @@
                         <td>
                             <div class="cell-person">
                                 <span class="av @(a.RoleName == Const.RoleOfficer ? "officer" : null)" aria-hidden="true">@Ui.Initials(a.StudentName != null ? a.StudentName.Split(',').Last() + " " + a.StudentName.Split(',').First() : a.Username)</span>
-                                <span class="stack-tight">
+                                <div class="account-cell-info">
                                     <strong class="mono">@a.Username</strong>
                                     @if (isMe)
                                     {
-                                        <span class="dim">You</span>
+                                        <span class="account-you-tag">You</span>
                                     }
                                     @if (a.IsInitialOfficer)
                                     {
@@ -64,7 +64,7 @@
                                             Initial officer
                                         </span>
                                     }
-                                </span>
+                                </div>
                             </div>
                         </td>
                         <td><span class="role-tag @(a.RoleName == Const.RoleOfficer ? "officer" : null)">@a.RoleName</span></td>
