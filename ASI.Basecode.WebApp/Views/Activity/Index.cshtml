@@ -96,11 +96,11 @@
                 <div class="sheet-row">
                     <label class="field">
                         <span>From</span>
-                        <input type="date" name="From" class="input-a" value="@f.From?.ToString("yyyy-MM-dd")" />
+                        <input type="text" name="From" class="input-a mono" data-date value="@Ui.DateBox(f.From ?? Ui.DefaultFrom)" />
                     </label>
                     <label class="field">
                         <span>To</span>
-                        <input type="date" name="To" class="input-a" value="@f.To?.ToString("yyyy-MM-dd")" />
+                        <input type="text" name="To" class="input-a mono" data-date value="@Ui.DateBox(f.To ?? Ui.DefaultTo)" />
                     </label>
                 </div>
             </fieldset>

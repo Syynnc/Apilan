@@ -618,14 +618,36 @@ textarea.input-a {
 .pw-eye.is-on { color: var(--accent); }
 .pw-eye svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
-/* ---- Toasts: notices across the top of the page ---------------------------- */
+/* ---- Date boxes: MM/DD/YYYY with a calendar button (dates.js) ------------- */
+.date-field { position: relative; }
+.date-field .input-a { padding-right: 44px; }
+.date-pick {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    width: 32px;
+    height: 32px;
+    transform: translateY(-50%);
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--ink-3);
+    cursor: pointer;
+}
+.date-pick:hover { background: var(--surface-sunken); color: var(--ink); }
+.date-pick svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+/* The browser's picker opens from here, so it sits under the button, unseen. */
+.date-native { position: absolute; right: 6px; bottom: 0; width: 32px; height: 1px; padding: 0; border: 0; opacity: 0; pointer-events: none; }
+
+/* ---- Toasts: notices in the bottom-right corner ------------------------------ */
 .toasts {
     position: fixed;
-    top: var(--s-4);
-    left: 50%;
+    right: var(--s-4);
+    bottom: var(--s-4);
     z-index: 90;
-    width: min(440px, calc(100vw - 2rem));
-    transform: translateX(-50%);
+    width: min(400px, calc(100vw - 2rem));
     display: grid;
     gap: var(--s-2);
     pointer-events: none;
