@@ -233,13 +233,11 @@
                             <td class="mono">@a.TimeIn.ToString("HH:mm")</td>
                             <td class="mono">@(a.TimeOut?.ToString("HH:mm") ?? "—")</td>
                             <td>
-                                <form asp-controller="Attendance" asp-action="Delete" method="post"
-                                      onsubmit="return confirm('Remove @a.FullName from this event?');">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@a.AttendanceId" />
-                                    <input type="hidden" name="eventId" value="@s.EventId" />
-                                    <button type="submit" class="btn-a quiet sm">Remove</button>
-                                </form>
+                                <button type="button" class="btn-a quiet sm danger-text" data-dialog-open="#remove-dialog"
+                                        data-attendance-id="@a.AttendanceId" data-member="@a.FullName"
+                                        data-student="@a.StudentNumber" data-time-in="@a.TimeIn.ToString("h:mm tt")">
+                                    Remove
+                                </button>
                             </td>
                         </tr>
                     }
@@ -322,18 +320,104 @@
             <div class="panel-head"><h3>Danger zone</h3></div>
             <div class="panel-body">
                 <p class="muted" style="margin-bottom:var(--s-3);font-size:var(--fs-sm)">An event can only be deleted while it has no attendance.</p>
-                <form asp-action="Delete" method="post"
-                      onsubmit="return confirm('Delete “@s.EventName”? This cannot be undone.');">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="id" value="@s.EventId" />
-                    <button type="submit" class="btn-a danger sm">Delete event</button>
-                </form>
+                <button type="button" class="btn-a danger sm" data-dialog-open="#delete-dialog">Delete event</button>
             </div>
         </div>
     </div>
 </div>
 
+@* Removing a check-in: one dialog, filled in by whichever row opened it. *@
+<dialog class="modal" id="remove-dialog" aria-labelledby="remove-title">
+    <div class="modal-content">
+        <form asp-controller="Attendance" asp-action="Delete" method="post" class="ticket ticket-form narrow confirm-ticket" data-type="service">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="" data-bind="id" />
+            <input type="hidden" name="eventId" value="@s.EventId" />
+
+            <div class="ticket-body">
+                <header class="tf-head">
+                    <div class="ticket-kicker">
+                        <span class="ticket-type">Remove check-in</span>
+                        <span class="ticket-org">@s.EventName</span>
+                    </div>
+                    <h2 class="ticket-title" id="remove-title">Remove <span data-bind="member">this member</span>?</h2>
+                    <button type="button" class="tf-close" data-modal-close aria-label="Close">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                    </button>
+                </header>
+
+                <div class="confirm-copy">
+                    <p>
+                        Their time-in at <strong class="mono" data-bind="time"></strong>, and any time-out, come off this event.
+                        They count as absent unless they are recorded again.
+                    </p>
+                    <p class="dim">Use this for a scan made by mistake. The removal is kept in the audit log.</p>
+                </div>
+
+                <footer class="tf-foot">
+                    <button type="button" class="btn-a ghost" data-modal-close>Cancel</button>
+                    <button type="submit" class="btn-a danger">Remove check-in</button>
+                </footer>
+            </div>
+
+            <aside class="ticket-stub tf-stub" aria-hidden="true">
+                <svg class="tf-key" viewBox="0 0 48 48"><circle cx="24" cy="18" r="7" /><path d="M11 40c1.5-7 7-11 13-11s11.5 4 13 11" /><path d="M34 10l8 8M42 10l-8 8" /></svg>
+                <span class="stub-code" data-bind="student"></span>
+                <span class="stub-note">Off this<br />event</span>
+            </aside>
+        </form>
+    </div>
+</dialog>
+
+<dialog class="modal" id="delete-dialog" aria-labelledby="delete-title">
+    <div class="modal-content">
+        <form asp-action="Delete" method="post" class="ticket ticket-form narrow confirm-ticket" data-type="@Ui.TicketType(s.EventType)">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@s.EventId" />
+
+            <div class="ticket-body">
+                <header class="tf-head">
+                    <div class="ticket-kicker">
+                        <span class="ticket-type">Delete event</span>
+                        <span class="ticket-org">@s.EventType</span>
+                    </div>
+                    <h2 class="ticket-title" id="delete-title">Delete “@s.EventName”?</h2>
+                    <button type="button" class="tf-close" data-modal-close aria-label="Close">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                    </button>
+                </header>
+
+                <div class="confirm-copy">
+                    <p>The event and its details are gone for good. This cannot be undone.</p>
+                    <p class="dim">Only an event with no attendance can be deleted.</p>
+                </div>
+
+                <footer class="tf-foot">
+                    <button type="button" class="btn-a ghost" data-modal-close>Cancel</button>
+                    <button type="submit" class="btn-a danger">Delete event</button>
+                </footer>
+            </div>
+
+            <aside class="ticket-stub tf-stub" aria-hidden="true">
+                <svg class="tf-key" viewBox="0 0 48 48"><rect x="9" y="12" width="30" height="28" rx="3" /><path d="M9 20h30M17 8v7M31 8v7M19 27l10 8M29 27l-10 8" /></svg>
+                <span class="stub-code">@s.EventStart.ToString("MMM d")</span>
+                <span class="stub-note">Gone for<br />good</span>
+            </aside>
+        </form>
+    </div>
+</dialog>
+
 @section Scripts {
+    <script>
+        // Fill the remove prompt from the row that opened it.
+        window.Apilan.onDialogOpen = function (dialog, opener) {
+            if (dialog.id !== "remove-dialog") { return; }
+            dialog.querySelector("[data-bind=id]").value = opener.getAttribute("data-attendance-id");
+            dialog.querySelector("[data-bind=member]").textContent = opener.getAttribute("data-member");
+            dialog.querySelector("[data-bind=student]").textContent = opener.getAttribute("data-student");
+            dialog.querySelector("[data-bind=time]").textContent = opener.getAttribute("data-time-in");
+        };
+    </script>
     @if (doorOpen)
     {
         <script src="~/lib/jsqr/jsQR.js"></script>

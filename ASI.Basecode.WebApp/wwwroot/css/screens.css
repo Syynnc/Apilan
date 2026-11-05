@@ -1304,13 +1304,16 @@ label.req::after { content: " *"; color: var(--risk); font-weight: 700; }
     display: flex;
     align-items: center;
     gap: var(--s-2);
-    flex-wrap: wrap;
+    white-space: nowrap;
 }
+.role-cell { display: flex; align-items: center; gap: var(--s-2); white-space: nowrap; }
 
 .account-you-tag {
     display: inline-flex;
     align-items: center;
     padding: 1px 7px;
+    border: var(--border);
+    border-radius: var(--r-xs);
     color: var(--ink-2);
     font-family: var(--font-mono);
     font-size: var(--fs-3xs);
