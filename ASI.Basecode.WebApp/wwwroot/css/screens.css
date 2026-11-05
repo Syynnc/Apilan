@@ -1375,13 +1375,15 @@ label.req::after { content: " *"; color: var(--risk); font-weight: 700; }
 .icon-act.danger:hover, .icon-act.danger:focus-visible { background: var(--risk-wash); color: var(--risk); }
 .icon-act.ok:hover, .icon-act.ok:focus-visible { background: var(--ok-wash); color: var(--ok); }
 .icon-act.is-static { cursor: help; }
-/* The label: what the icon does, above it on hover or keyboard focus. */
+/* The label: what the icon does, to its left on hover or keyboard focus.
+   Not above it: the table clips its edges and the sticky header row would
+   cover the label on the first row. */
 .icon-act::after {
     content: attr(data-label);
     position: absolute;
-    bottom: calc(100% + 6px);
-    right: 50%;
-    transform: translate(50%, 4px);
+    top: 50%;
+    right: calc(100% + 6px);
+    transform: translate(4px, -50%);
     padding: 4px 8px;
     border-radius: var(--r-xs);
     background: var(--ink);
@@ -1394,14 +1396,7 @@ label.req::after { content: " *"; color: var(--risk); font-weight: 700; }
     transition: opacity 120ms ease, transform 160ms ease;
     z-index: 5;
 }
-.icon-act:hover::after, .icon-act:focus-visible::after { opacity: 1; transform: translate(50%, 0); }
-/* The last icon's label hugs the right edge instead of spilling past it. */
-.icon-acts > .icon-act:last-child::after,
-.icon-acts > form:last-child .icon-act::after { right: 0; transform: translateY(4px); }
-.icon-acts > .icon-act:last-child:hover::after,
-.icon-acts > .icon-act:last-child:focus-visible::after,
-.icon-acts > form:last-child .icon-act:hover::after,
-.icon-acts > form:last-child .icon-act:focus-visible::after { transform: none; }
+.icon-act:hover::after, .icon-act:focus-visible::after { opacity: 1; transform: translate(0, -50%); }
 .default-pass {
     display: flex;
     align-items: center;
