@@ -39,14 +39,15 @@
         }
         else
         {
-            <table class="table-a" id="accounts-table" data-paginate="5">
+            <table class="table-a accounts-table" id="accounts-table" data-paginate="5">
                 <thead>
-                    <tr><th>Account</th><th>Role</th><th>Member</th><th>Last sign-in</th><th>Status</th><th></th></tr>
+                    <tr><th>Account</th><th>Member</th><th>Role</th><th>Status</th><th class="acts-head"><span class="visually-hidden">Actions</span></th></tr>
                 </thead>
                 <tbody>
                 @foreach (var a in Model.Accounts)
                 {
                     var isMe = User.Identity?.Name == a.Username;
+                    var who = a.StudentName ?? a.Username;
                     <tr class="@(a.IsActive ? null : "is-off")" data-search="@a.Username @a.StudentName @a.StudentNumber @a.RoleName">
                         <td>
                             <div class="cell-person">
@@ -58,19 +59,6 @@
                                         <span class="account-you-tag">You</span>
                                     }
                                 </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="role-cell">
-                                <span class="role-tag @(a.RoleName == Const.RoleOfficer ? "officer" : null)">@a.RoleName</span>
-                                @if (a.IsInitialOfficer)
-                                {
-                                    @* Beside the role rather than under the name, so the row stays one line tall. *@
-                                    <span class="initial-tag" title="Initial officer: only this officer can disable it, reset its password or change its role.">
-                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" /></svg>
-                                        Initial
-                                    </span>
-                                }
                             </div>
                         </td>
                         <td>
@@ -87,7 +75,19 @@
                                 <span class="dim">—</span>
                             }
                         </td>
-                        <td class="mono">@(a.LastLogin?.ToString("MMM d, yyyy · h:mm tt") ?? "Never")</td>
+                        <td>
+                            <div class="role-cell">
+                                <span class="role-tag @(a.RoleName == Const.RoleOfficer ? "officer" : null)">@a.RoleName</span>
+                                @if (a.IsInitialOfficer)
+                                {
+                                    @* Beside the role rather than under the name, so the row stays one line tall. *@
+                                    <span class="initial-tag" title="Initial officer: only this officer can disable it, reset its password or change its role.">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" /></svg>
+                                        Initial
+                                    </span>
+                                }
+                            </div>
+                        </td>
                         <td>
                             @if (a.IsActive)
                             {
@@ -98,44 +98,67 @@
                                 <span class="chip risk">Disabled</span>
                             }
                         </td>
-                        <td>
+                        <td class="acts-cell">
                             @if (a.IsInitialOfficer && !isMe)
                             {
                                 @* Nobody but the initial officer touches the initial officer. *@
-                                <span class="protected-note">Protected</span>
+                                <div class="icon-acts">
+                                    <span class="icon-act is-static" tabindex="0" data-label="Protected" aria-label="Protected: only the initial officer can change this account">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+                                    </span>
+                                </div>
                             }
                             else
                             {
-                            <div class="row-actions">
-                                <button type="button" class="btn-a quiet sm" data-dialog-open="#reset-dialog"
-                                        data-account-id="@a.Id" data-account-name="@a.Username"
-                                        data-account-who="@(a.StudentName ?? a.Username)">
-                                    Change password
+                            @* Three fixed slots (password, role, access) so the icons line up down the table. *@
+                            <div class="icon-acts">
+                                <button type="button" class="icon-act" data-dialog-open="#reset-dialog" data-label="Change password" aria-label="Change password for @who"
+                                        data-account-id="@a.Id" data-account-name="@a.Username" data-account-who="@who">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4" /><path d="M10.8 12.2L20 3M16 7l3 3M14 9l2 2" /></svg>
                                 </button>
+
                                 @if (a.RoleName == Const.RoleMember && a.IsActive)
                                 {
-                                    <button type="button" class="btn-a quiet sm" data-dialog-open="#role-dialog"
-                                            data-account-id="@a.Id" data-account-name="@a.Username"
-                                            data-account-who="@(a.StudentName ?? a.Username)" data-make-officer="true">
-                                        Make officer
+                                    <button type="button" class="icon-act" data-dialog-open="#role-dialog" data-label="Make officer" aria-label="Make @who an officer"
+                                            data-account-id="@a.Id" data-account-name="@a.Username" data-account-who="@who" data-make-officer="true">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" /><path d="M12 15V9M9.5 11.5L12 9l2.5 2.5" /></svg>
                                     </button>
                                 }
                                 else if (a.RoleName == Const.RoleOfficer && !isMe && !a.IsInitialOfficer && a.UserId.HasValue)
                                 {
-                                    <button type="button" class="btn-a quiet sm" data-dialog-open="#role-dialog"
-                                            data-account-id="@a.Id" data-account-name="@a.Username"
-                                            data-account-who="@(a.StudentName ?? a.Username)" data-make-officer="false">
-                                        Make member
+                                    <button type="button" class="icon-act" data-dialog-open="#role-dialog" data-label="Make member" aria-label="Make @who a member"
+                                            data-account-id="@a.Id" data-account-name="@a.Username" data-account-who="@who" data-make-officer="false">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" /><path d="M12 9v6M9.5 12.5L12 15l2.5-2.5" /></svg>
                                     </button>
                                 }
+                                else
+                                {
+                                    <span class="icon-slot" aria-hidden="true"></span>
+                                }
+
                                 @if (!isMe)
                                 {
                                     <form asp-action="SetActive" method="post">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@a.Id" />
                                         <input type="hidden" name="isActive" value="@((!a.IsActive).ToString().ToLower())" />
-                                        <button type="submit" class="btn-a quiet sm @(a.IsActive ? "danger-text" : null)">@(a.IsActive ? "Disable" : "Enable")</button>
+                                        @if (a.IsActive)
+                                        {
+                                            <button type="submit" class="icon-act danger" data-label="Disable" aria-label="Disable @a.Username">
+                                                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M5.6 5.6l12.8 12.8" /></svg>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="submit" class="icon-act ok" data-label="Enable" aria-label="Enable @a.Username">
+                                                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M8 12.5l3 3 5-6" /></svg>
+                                            </button>
+                                        }
                                     </form>
+                                }
+                                else
+                                {
+                                    <span class="icon-slot" aria-hidden="true"></span>
                                 }
                             </div>
                             }
