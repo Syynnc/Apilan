@@ -2076,9 +2076,10 @@ a.b-stat.accent:hover { border-color: var(--accent-hover); background: var(--acc
     flex-wrap: wrap;
     gap: var(--s-3);
     margin-bottom: var(--s-4);
-    /* Lifts the export menu above the animated tiles that follow. */
+    /* Lifts the export menu above the animated tiles that follow, but stays
+       under the sticky .console-bar (z-index 20) when the page scrolls. */
     position: relative;
-    z-index: 30;
+    z-index: 15;
 }
 .report-tabs {
     display: inline-flex;
