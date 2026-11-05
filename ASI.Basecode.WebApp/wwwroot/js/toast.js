@@ -1,5 +1,5 @@
 /* Apilan — toasts.
-   Notices across the top of the page. Each one slides in, a bar along its
+   Notices in the bottom-right corner. Each one slides in, a bar along its
    bottom runs down how long it has left, and it slides out when the bar is
    empty. Hovering or focusing a toast holds its timer; × closes it at once.
 

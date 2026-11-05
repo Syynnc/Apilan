@@ -669,13 +669,13 @@ textarea.input-a {
 /* Only once script runs do they start hidden and slide in. */
 .toasts[data-js] .toast {
     opacity: 0;
-    transform: translateY(-14px) scale(0.98);
+    transform: translateX(24px) scale(0.98);
     transition: opacity 200ms var(--ease-out), transform 320ms var(--ease-glide);
 }
 .toasts[data-js] .toast.is-in { opacity: 1; transform: none; }
 .toasts[data-js] .toast.is-leaving {
     opacity: 0;
-    transform: translateY(-10px) scale(0.98);
+    transform: translateX(24px) scale(0.98);
     transition: opacity 180ms var(--ease-exit), transform 220ms var(--ease-exit);
 }
 
