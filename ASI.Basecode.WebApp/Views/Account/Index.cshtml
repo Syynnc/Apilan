@@ -57,17 +57,22 @@
                                     {
                                         <span class="account-you-tag">You</span>
                                     }
-                                    @if (a.IsInitialOfficer)
-                                    {
-                                        <span class="initial-tag" title="Only this officer can disable it, reset its password or change its role.">
-                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" /></svg>
-                                            Initial officer
-                                        </span>
-                                    }
                                 </div>
                             </div>
                         </td>
-                        <td><span class="role-tag @(a.RoleName == Const.RoleOfficer ? "officer" : null)">@a.RoleName</span></td>
+                        <td>
+                            <div class="role-cell">
+                                <span class="role-tag @(a.RoleName == Const.RoleOfficer ? "officer" : null)">@a.RoleName</span>
+                                @if (a.IsInitialOfficer)
+                                {
+                                    @* Beside the role rather than under the name, so the row stays one line tall. *@
+                                    <span class="initial-tag" title="Initial officer: only this officer can disable it, reset its password or change its role.">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" /></svg>
+                                        Initial
+                                    </span>
+                                }
+                            </div>
+                        </td>
                         <td>
                             @if (a.UserId.HasValue)
                             {
