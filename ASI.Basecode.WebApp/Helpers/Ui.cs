@@ -81,6 +81,20 @@ namespace ASI.Basecode.WebApp.Helpers
             return span.TotalDays < 14 ? $"{(int)span.TotalDays} days ago" : $"{(int)(span.TotalDays / 7)} weeks ago";
         }
 
+        /// <summary>
+        /// A date as the From/To boxes show it: MM/DD/YYYY, the same order as
+        /// "Oct 25, 2026" everywhere else. Query strings bind with the invariant
+        /// culture, which reads it back month first.
+        /// </summary>
+        public static string DateBox(DateTime? date) =>
+            date?.ToString("MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+
+        /// <summary>Where an empty From starts: a month back.</summary>
+        public static DateTime DefaultFrom => DateTime.Today.AddMonths(-1);
+
+        /// <summary>Where an empty To ends: three days ahead.</summary>
+        public static DateTime DefaultTo => DateTime.Today.AddDays(3);
+
         /// <summary>"5:00 – 8:00 PM", or with both meridiems when they differ.</summary>
         public static string TimeRange(DateTime start, DateTime end)
         {
