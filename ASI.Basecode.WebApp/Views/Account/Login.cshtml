@@ -18,12 +18,11 @@
         <div asp-validation-summary="ModelOnly" class="auth-alert"></div>
 
         <div class="field">
-            <label asp-for="Identifier"></label>
-            <input asp-for="Identifier" class="input-a mono" autocomplete="username" spellcheck="false"
-                   placeholder="2022-00101" aria-describedby="id-hint" autofocus />
-            <span class="hint" id="id-hint">The number on your school ID, with the dash.</span>
-            <span asp-validation-for="Identifier" class="field-error"></span>
-        </div>
+             <label asp-for="Identifier"></label>
+             <input asp-for="Identifier" class="input-a mono" autocomplete="username" spellcheck="false"
+                    placeholder="2022-00101" autofocus />
+             <span asp-validation-for="Identifier" class="field-error"></span>
+         </div>
 
         <div class="field">
             <label asp-for="Password"></label>
@@ -39,7 +38,6 @@
             <ul class="pw-hints" id="pw-hints">
                 <li><strong>First time here?</strong> Use the default password your officer gave you. You will choose your own right after.</li>
                 <li><strong>Forgot it?</strong> Ask an officer to reset it for you.</li>
-                <li>Passwords are case-sensitive.</li>
             </ul>
             <span asp-validation-for="Password" class="field-error"></span>
         </div>

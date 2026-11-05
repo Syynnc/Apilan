@@ -1299,19 +1299,54 @@ label.req::after { content: " *"; color: var(--risk); font-weight: 700; }
 .role-list li { display: flex; gap: var(--s-2); align-items: baseline; color: var(--ink); }
 .role-list li::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-bright); transform: translateY(-1px); }
 
+/* Account cell layout and tags */
+.account-cell-info {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    flex-wrap: wrap;
+}
+
+.account-you-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 7px;
+    color: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
 /* The bootstrap officer's account: marked, and closed to everyone else. */
 .initial-tag {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    width: fit-content;
+    gap: 5px;
+    padding: 1px 8px 1px 6px;
+    color: var(--accent);
     font-family: var(--font-mono);
     font-size: var(--fs-3xs);
+    font-weight: 500;
     letter-spacing: var(--tracking-wide);
     text-transform: uppercase;
-    color: var(--accent);
+    line-height: 1.4;
+    white-space: nowrap;
+    width: fit-content;
 }
-.initial-tag svg { width: 12px; height: 12px; fill: var(--accent-wash); stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+.initial-tag svg {
+    width: 11px;
+    height: 11px;
+    fill: currentColor;
+    fill-opacity: 0.18;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    flex: none;
+}
 .protected-note { display: block; text-align: right; font-size: var(--fs-2xs); color: var(--ink-3); }
 .default-pass {
     display: flex;

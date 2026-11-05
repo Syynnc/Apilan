@@ -9,7 +9,7 @@
 }
 
 @section Actions {
-    <a class="btn-a ghost" asp-controller="Members" asp-action="Create" data-modal>
+    <a class="btn-a" asp-controller="Members" asp-action="Create" data-modal>
         <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
         New member
     </a>
@@ -32,11 +32,6 @@
                        aria-label="Filter accounts" data-live-search data-target="#accounts-table" />
             </div>
         </div>
-        <div class="panel-note account-note">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 8v.01M12 11v5" /></svg>
-            Accounts are made with <a asp-controller="Members" asp-action="Create" data-modal>New member</a>: the student number
-            is the username and the first password is the default. Members are asked to change it the first time they sign in.
-        </div>
 
         @if (!Model.Accounts.Any())
         {
@@ -56,11 +51,11 @@
                         <td>
                             <div class="cell-person">
                                 <span class="av @(a.RoleName == Const.RoleOfficer ? "officer" : null)" aria-hidden="true">@Ui.Initials(a.StudentName != null ? a.StudentName.Split(',').Last() + " " + a.StudentName.Split(',').First() : a.Username)</span>
-                                <span class="stack-tight">
+                                <div class="account-cell-info">
                                     <strong class="mono">@a.Username</strong>
                                     @if (isMe)
                                     {
-                                        <span class="dim">You</span>
+                                        <span class="account-you-tag">You</span>
                                     }
                                     @if (a.IsInitialOfficer)
                                     {
@@ -69,7 +64,7 @@
                                             Initial officer
                                         </span>
                                     }
-                                </span>
+                                </div>
                             </div>
                         </td>
                         <td><span class="role-tag @(a.RoleName == Const.RoleOfficer ? "officer" : null)">@a.RoleName</span></td>
