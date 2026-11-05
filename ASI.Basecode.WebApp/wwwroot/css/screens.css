@@ -1351,6 +1351,57 @@ label.req::after { content: " *"; color: var(--risk); font-weight: 700; }
     flex: none;
 }
 .protected-note { display: block; text-align: right; font-size: var(--fs-2xs); color: var(--ink-3); }
+
+/* ---- Accounts: icon actions with a label on hover ------------------------ */
+.accounts-table td { padding-top: var(--s-3); padding-bottom: var(--s-3); }
+.accounts-table .acts-head, .accounts-table .acts-cell { width: 1%; white-space: nowrap; }
+.icon-acts { display: flex; justify-content: flex-end; gap: 2px; }
+.icon-acts form { display: contents; }
+.icon-act, .icon-slot { width: 34px; height: 34px; flex: none; }
+.icon-act {
+    position: relative;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--ink-3);
+    cursor: pointer;
+    transition: background var(--t-fast) ease, color var(--t-fast) ease;
+}
+.icon-act svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.icon-act:hover, .icon-act:focus-visible { background: var(--surface-sunken); color: var(--ink); }
+.icon-act:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.icon-act.danger:hover, .icon-act.danger:focus-visible { background: var(--risk-wash); color: var(--risk); }
+.icon-act.ok:hover, .icon-act.ok:focus-visible { background: var(--ok-wash); color: var(--ok); }
+.icon-act.is-static { cursor: help; }
+/* The label: what the icon does, above it on hover or keyboard focus. */
+.icon-act::after {
+    content: attr(data-label);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    right: 50%;
+    transform: translate(50%, 4px);
+    padding: 4px 8px;
+    border-radius: var(--r-xs);
+    background: var(--ink);
+    color: var(--surface);
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms ease, transform 160ms ease;
+    z-index: 5;
+}
+.icon-act:hover::after, .icon-act:focus-visible::after { opacity: 1; transform: translate(50%, 0); }
+/* The last icon's label hugs the right edge instead of spilling past it. */
+.icon-acts > .icon-act:last-child::after,
+.icon-acts > form:last-child .icon-act::after { right: 0; transform: translateY(4px); }
+.icon-acts > .icon-act:last-child:hover::after,
+.icon-acts > .icon-act:last-child:focus-visible::after,
+.icon-acts > form:last-child .icon-act:hover::after,
+.icon-acts > form:last-child .icon-act:focus-visible::after { transform: none; }
 .default-pass {
     display: flex;
     align-items: center;
