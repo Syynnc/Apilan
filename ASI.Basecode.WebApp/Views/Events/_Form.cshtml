@@ -2,6 +2,12 @@
 @*
     The event form, drawn as the event's ticket: details on the body, and a
     stub whose tear-off date, colour and time fill in as the form does.
+
+    Where the data goes: each asp-for input is named after an EventViewModel
+    property, so on submit (posted by modal.js, or as a normal form without
+    JavaScript) MVC binds the fields straight back into an EventViewModel for
+    EventsController.Save. The hidden Id tells Save whether it is a new event
+    (0) or an edit.
 *@
 @{
     var isNew = Model.Id == 0;

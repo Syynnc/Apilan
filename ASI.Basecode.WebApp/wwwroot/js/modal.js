@@ -182,6 +182,9 @@
             }
             e.preventDefault();
 
+            // Post the form's fields as multipart form data, exactly as a normal
+            // submit would (anti-forgery token included), flagged as a modal
+            // request so the controller answers with JSON or a partial view.
             var submit = form.querySelector("[type=submit]");
             if (submit) { submit.disabled = true; submit.classList.add("is-busy"); }
 
@@ -192,6 +195,8 @@
                 credentials: "same-origin"
             })
                 .then(function (r) {
+                    // JSON { redirect } = saved; go there. HTML (status 422) = the
+                    // same form re-rendered with its validation errors.
                     var type = r.headers.get("Content-Type") || "";
                     if (type.indexOf("application/json") >= 0) {
                         return r.json().then(function (data) {

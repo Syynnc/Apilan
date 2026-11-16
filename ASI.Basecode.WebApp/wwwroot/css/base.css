@@ -109,8 +109,8 @@ code, kbd, samp,
 .eyebrow::before {
     content: "";
     width: 22px;
-    height: 1px;
-    background: var(--line-strong);
+    height: 2px;
+    background: var(--brand-yellow);
 }
 
 /* ---- Layout helpers ------------------------------------------------------ */

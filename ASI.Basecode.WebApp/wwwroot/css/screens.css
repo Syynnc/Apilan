@@ -341,7 +341,7 @@
     position: relative;
     overflow: hidden;
     aspect-ratio: 4 / 3;
-    background: #0d0f0d;
+    background: #0A0F1C;
     border-radius: var(--r-md);
 }
 .scan-view video { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -1768,15 +1768,15 @@ a.b-stat.accent:hover { border-color: var(--accent-hover); background: var(--acc
 /* ==========================================================================
    PARTICIPATION — filters in one row, the headline figures, then the charts.
    Chart colours are checked for colour-blind separation (dataviz
-   validator) in both themes: leaf green = on time, rose = late. Text never
+   validator) in both themes: UC blue = on time, rose = late. Text never
    wears a series colour; a swatch beside it carries identity.
    ========================================================================== */
 :root, [data-theme="light"] {
-    --c-ontime: #5FA524;
+    --c-ontime: #2D6CDF;
     --c-late: #A62E55;
 }
 [data-theme="dark"] {
-    --c-ontime: #5E9E2E;
+    --c-ontime: #6E9BFF;
     --c-late: #D8668F;
 }
 
