@@ -46,7 +46,7 @@
                         <span class="ticket-type">@live.EventType</span>
                         <span class="ticket-org">Ends @Ui.Until(live.EventEnd)</span>
                     </div>
-                    <h2 class="ticket-title"><a asp-controller="Events" asp-action="Details" asp-route-id="@live.EventId">@live.EventName</a></h2>
+                    <h2 class="ticket-title"><a asp-controller="Events" asp-action="Details" asp-route-id="@EventSlug.For(live.EventName, live.EventStart)">@live.EventName</a></h2>
                     <div class="ticket-main">
                         <div class="datepad" aria-hidden="true">
                             <span class="m">@live.EventStart.ToString("MMM")</span>
@@ -73,7 +73,7 @@
                         <div class="meter @(pct >= 100 ? "full" : null)"><i style="width:@(pct)%"></i></div>
                     }
                     <span class="live-late">@(live.LateCount ?? 0) late</span>
-                    <a class="btn-a sm" asp-controller="Events" asp-action="Details" asp-route-id="@live.EventId">Open the door</a>
+                    <a class="btn-a sm" asp-controller="Events" asp-action="Details" asp-route-id="@EventSlug.For(live.EventName, live.EventStart)">Open the door</a>
                 </div>
             </article>
 
@@ -83,7 +83,7 @@
                     @foreach (var e in alsoLive)
                     {
                         <li>
-                            <a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId" class="cell-event" data-type="@Ui.TicketType(e.EventType)">
+                            <a asp-controller="Events" asp-action="Details" asp-route-id="@EventSlug.For(e.EventName, e.EventStart)" class="cell-event" data-type="@Ui.TicketType(e.EventType)">
                                 <span class="type-dot" aria-hidden="true"></span>
                                 <strong>@e.EventName</strong>
                                 <span class="dim">@(e.TotalPresent ?? 0) in · ends @e.EventEnd.ToString("h:mm tt")</span>
@@ -105,7 +105,7 @@
                     @if (next != null)
                     {
                         <p>
-                            Next up is <a asp-controller="Events" asp-action="Details" asp-route-id="@next.EventId"><strong>@next.EventName</strong></a>,
+                            Next up is <a asp-controller="Events" asp-action="Details" asp-route-id="@EventSlug.For(next.EventName, next.EventStart)"><strong>@next.EventName</strong></a>,
                             @next.EventStart.ToString("dddd, MMM d 'at' h:mm tt") — <span class="chip idle">@Ui.Until(next.EventStart)</span>
                         </p>
                         <p class="dim">The door opens an hour before it starts.</p>
@@ -158,7 +158,7 @@
                 @foreach (var e in Model.Upcoming)
                 {
                     <li>
-                        <a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId" class="up-item" data-type="@Ui.TicketType(e.EventType)">
+                        <a asp-controller="Events" asp-action="Details" asp-route-id="@EventSlug.For(e.EventName, e.EventStart)" class="up-item" data-type="@Ui.TicketType(e.EventType)">
                             <span class="mini-pad" aria-hidden="true"><b>@e.EventStart.ToString("MMM")</b>@e.EventStart.ToString("dd")</span>
                             <span class="up-main">
                                 <strong>@e.EventName</strong>
@@ -189,7 +189,7 @@
                 {
                     var t = turnout(e);
                     <li>
-                        <a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId" class="done-item" data-type="@Ui.TicketType(e.EventType)">
+                        <a asp-controller="Events" asp-action="Details" asp-route-id="@EventSlug.For(e.EventName, e.EventStart)" class="done-item" data-type="@Ui.TicketType(e.EventType)">
                             <span class="done-ring" style="--p:@t" aria-hidden="true"><b>@t<small>%</small></b></span>
                             <span class="up-main">
                                 <strong>@e.EventName</strong>

@@ -19,10 +19,12 @@ namespace ASI.Basecode.WebApp.Controllers
     public class AttendanceController : BaseController
     {
         private readonly IAttendanceService _attendance;
+        private readonly IEventService _events;
 
-        public AttendanceController(IAttendanceService attendance)
+        public AttendanceController(IAttendanceService attendance, IEventService events)
         {
             _attendance = attendance;
+            _events = events;
         }
 
         [HttpPost]
@@ -86,6 +88,6 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         private IActionResult BackToEvent(int eventId) =>
-            RedirectToAction("Details", "Events", new { id = eventId });
+            RedirectToAction("Details", "Events", new { id = _events.GetSlug(eventId) });
     }
 }

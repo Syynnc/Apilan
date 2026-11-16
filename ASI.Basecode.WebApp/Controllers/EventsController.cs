@@ -33,7 +33,7 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             var items = _events.Suggest(term).Select(e => new
             {
-                url = Url.Action(nameof(Details), new { id = e.EventId }),
+                url = Url.Action(nameof(Details), new { id = EventSlug.For(e.EventName, e.EventStart) }),
                 title = e.EventName,
                 subtitle = string.Join(" · ", new[] { e.Venue, e.EventType }.Where(x => !string.IsNullOrWhiteSpace(x))),
                 meta = e.EventStart.ToString("MMM d, yyyy"),
@@ -43,11 +43,15 @@ namespace ASI.Basecode.WebApp.Controllers
             return Json(items);
         }
 
-        public IActionResult Details(int id)
+        /// <param name="id">The event's slug (name and date), not its row id.</param>
+        public IActionResult Details(string id)
         {
+            var eventId = _events.FindBySlug(id);
+            if (eventId == null) return NotFound();
+
             try
             {
-                return View(_events.GetEventDetail(id));
+                return View(_events.GetEventDetail(eventId.Value));
             }
             catch (InvalidDataException)
             {
@@ -108,7 +112,7 @@ namespace ASI.Basecode.WebApp.Controllers
                 TempData["Success"] = string.Format(Common.EventSaved, model.EventName);
 
                 // An edit made from the event's own page goes back there.
-                var back = model.Id != 0 ? Url.Action(nameof(Details), new { id = model.Id }) : Url.Action(nameof(Index));
+                var back = model.Id != 0 ? Url.Action(nameof(Details), new { id = _events.GetSlug(model.Id) }) : Url.Action(nameof(Index));
                 return SavedRedirect(back);
             }
             catch (InvalidDataException ex)

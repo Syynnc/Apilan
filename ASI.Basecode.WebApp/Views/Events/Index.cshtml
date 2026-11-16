@@ -73,7 +73,7 @@
                             <div class="cell-event" data-type="@Ui.TicketType(e.EventType)">
                                 <span class="mini-pad" aria-hidden="true"><b>@e.EventStart.ToString("MMM")</b>@e.EventStart.ToString("dd")</span>
                                 <span>
-                                    <a asp-action="Details" asp-route-id="@e.EventId"><strong>@e.EventName</strong></a>
+                                    <a asp-action="Details" asp-route-id="@EventSlug.For(e.EventName, e.EventStart)"><strong>@e.EventName</strong></a>
                                     <span class="dim">@e.EventType</span>
                                 </span>
                             </div>
