@@ -485,7 +485,7 @@ else if (view == "events")
                     <td>
                         <div class="cell-event" data-type="@Ui.TicketType(e.Type)">
                             <span class="mini-pad" aria-hidden="true"><b>@e.Start.ToString("MMM")</b>@e.Start.ToString("dd")</span>
-                            <span><a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId"><strong>@e.Name</strong></a><span class="dim">@e.Type</span></span>
+                            <span><a asp-controller="Events" asp-action="Details" asp-route-id="@EventSlug.For(e.Name, e.Start)"><strong>@e.Name</strong></a><span class="dim">@e.Type</span></span>
                         </div>
                     </td>
                     <td class="mono">@e.Start.ToString("MMM d, yyyy")</td>

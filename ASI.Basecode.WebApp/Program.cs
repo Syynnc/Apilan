@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Security.Claims;
 using ASI.Basecode.Data;
@@ -10,6 +11,7 @@ using ASI.Basecode.WebApp.MappingConfiguration;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -116,6 +118,12 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// The participation report used to live at /Reports; old links still land.
+app.MapGet("/Reports/{action?}", (HttpContext ctx, string action) =>
+    Results.Redirect("/participation"
+        + (string.Equals(action, "Export", StringComparison.OrdinalIgnoreCase) ? "/export" : "")
+        + ctx.Request.QueryString, permanent: true));
 
 app.MapControllerRoute(
     name: "default",

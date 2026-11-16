@@ -67,6 +67,12 @@ namespace ASI.Basecode.Services.Interfaces
         /// <summary>The closest few events by name or venue, for the live search box.</summary>
         List<EventSummary> Suggest(string term, int take = 6);
         EventDetailViewModel GetEventDetail(int id);
+
+        /// <summary>The event a URL slug names; null when none does.</summary>
+        int? FindBySlug(string slug);
+
+        /// <summary>The URL slug for an event; null when it doesn't exist.</summary>
+        string GetSlug(int id);
         EventViewModel GetEvent(int id);
         EventViewModel NewEvent();
         void PopulateLookups(EventViewModel model);
