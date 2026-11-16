@@ -31,6 +31,10 @@ namespace ASI.Basecode.WebApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Record(AttendanceEntryViewModel entry)
         {
+            // Posted by the door form on the event page (typed student number,
+            // or filled in by the QR scanner): EventId, StudentNumber and mode.
+            // The service decides time-in vs time-out; the outcome travels back
+            // to the event page as a TempData toast across the redirect.
             // Marks the message as a door result, shown beside the scanner.
             TempData["Door"] = true;
 

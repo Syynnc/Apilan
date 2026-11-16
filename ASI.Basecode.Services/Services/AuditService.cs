@@ -9,6 +9,10 @@ using Microsoft.Extensions.Logging;
 
 namespace ASI.Basecode.Services.Services
 {
+    /// <summary>
+    /// The activity log: records an AuditEntry from a controller and pages and
+    /// filters the log for the Activity screen.
+    /// </summary>
     public class AuditService : IAuditService
     {
         /// <summary>The page lists this many of the newest matches.</summary>

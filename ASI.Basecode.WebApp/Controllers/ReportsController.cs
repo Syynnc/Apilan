@@ -8,6 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
+    /// <summary>
+    /// The participation report at /participation. The filter form submits by
+    /// GET, so ReportFilter binds from the query string and the URL can be
+    /// bookmarked; IReportService does all the figures.
+    /// </summary>
     [Authorize(Policy = Const.OfficerOnlyPolicy)]
     public class ReportsController : BaseController
     {
