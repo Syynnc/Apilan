@@ -103,6 +103,25 @@ namespace ASI.Basecode.Services.Services
             };
         }
 
+        public int? FindBySlug(string slug)
+        {
+            if (string.IsNullOrWhiteSpace(slug)) return null;
+
+            // Two events with the same name on the same day: the older one wins.
+            return _events.GetEventSummaries()
+                .AsEnumerable()
+                .Where(e => string.Equals(EventSlug.For(e.EventName, e.EventStart), slug, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(e => e.EventId)
+                .Select(e => (int?)e.EventId)
+                .FirstOrDefault();
+        }
+
+        public string GetSlug(int id)
+        {
+            var e = _events.GetEventSummaries().FirstOrDefault(x => x.EventId == id);
+            return e == null ? null : EventSlug.For(e.EventName, e.EventStart);
+        }
+
         public EventViewModel GetEvent(int id)
         {
             var evt = _events.GetEvents().FirstOrDefault(e => e.Id == id) ?? throw NotFound();
