@@ -10,6 +10,11 @@ using ASI.Basecode.Services.ServiceModels;
 
 namespace ASI.Basecode.Services.Services
 {
+    /// <summary>
+    /// The participation report. Reads the attendance and summary views, applies
+    /// the ReportFilter (dates, type, course, year), and computes every section's
+    /// figures in memory; also renders the same figures as a CSV export.
+    /// </summary>
     public class ReportService : ServiceBase, IReportService
     {
         private readonly IEventRepository _events;

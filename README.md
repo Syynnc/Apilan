@@ -40,6 +40,49 @@ Apilan.sln
 └── database/                → SQL change scripts (01–07)
 ```
 
+### How data moves through the app
+
+Every screen follows the same path. Each layer only talks to the one below it.
+
+```
+Browser ──► Controller ──► Service ──► Repository ──► AllianceDB
+ (Razor     (WebApp)       (Services)  (Data)         (tables, views,
+  view, JS)                                            stored procedures)
+   ▲                                                        │
+   └──────── view model ◄── view model ◄── entity / view row ┘
+```
+
+1. **Browser.** A Razor view renders a form whose inputs are named after a
+   view-model property (`asp-for`). Plain forms post or GET normally. Add/edit
+   forms open in a modal: `modal.js` fetches the form and posts it with
+   `X-Requested-With`. Live search (`/Events/Suggest`) fetches JSON.
+2. **Controller** (`ASI.Basecode.WebApp/Controllers`). MVC model-binds the
+   request into a view model (e.g. `EventViewModel`) and validates it through
+   `ModelState`. The controller adds who is signed in (`CurrentUserName` from
+   the cookie) and calls a service. It never touches the database directly.
+3. **Service** (`ASI.Basecode.Services/Services`). Applies the business rules
+   (e.g. whether a scan is a time-in or time-out) and maps view models to
+   entities with AutoMapper (`MappingProfile`). Writes are wrapped in
+   `ServiceBase.Run`, which turns a database rule violation into an
+   `InvalidDataException` carrying the database's message.
+4. **Repository** (`ASI.Basecode.Data/Repositories`). **Reads** return
+   `IQueryable` over tables and views (`vw_EventAttendanceSummary`, ...), so
+   the service's filters run as SQL. **Writes** call stored procedures
+   (`sp_Event_Create`, `sp_Attendance_TimeIn`, ...) with parameterized SQL.
+5. **AllianceDB** enforces the hard rules (unique student numbers, the
+   attendance window, capacity) and raises `THROW 50xxx` when one is broken.
+
+On the way back, the service turns rows into a view model and the controller
+returns one of these:
+- a **view** (a full page, or just `_Form` for the modal);
+- **JSON** (`{ redirect }` after a modal save, or search suggestions);
+- a **redirect**, with a toast message carried in `TempData`.
+
+Example, saving an event: `Views/Events/_Form.cshtml` → `modal.js` →
+`EventsController.Save` → `EventService.AddEvent` →
+`EventRepository.AddEvent` → `dbo.sp_Event_Create`. Each step is commented in
+the code.
+
 ---
 
 ## Setup

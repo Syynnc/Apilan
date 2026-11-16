@@ -11,6 +11,11 @@ using static ASI.Basecode.Resources.Constants.Enums;
 
 namespace ASI.Basecode.Services.Services
 {
+    /// <summary>
+    /// Sign-in and accounts: checks passwords (hashed by PasswordManager),
+    /// creates member sign-ins, changes passwords, roles and active state, and
+    /// reports an account's current role for the cookie check in Program.cs.
+    /// </summary>
     public class AccountService : ServiceBase, IAccountService
     {
         private readonly IAccountRepository _accounts;

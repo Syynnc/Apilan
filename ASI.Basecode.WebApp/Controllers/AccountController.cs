@@ -17,6 +17,11 @@ using static ASI.Basecode.Resources.Constants.Enums;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
+    /// <summary>
+    /// Sign-in, sign-out and passwords, plus the officer Accounts screen. A
+    /// successful sign-in builds the claims (account id, role, display name,
+    /// linked member) into the auth cookie that later requests are read from.
+    /// </summary>
     public class AccountController : BaseController
     {
         private readonly IAccountService _accountService;

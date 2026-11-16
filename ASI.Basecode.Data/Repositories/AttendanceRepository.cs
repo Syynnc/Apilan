@@ -5,6 +5,11 @@ using ASI.Basecode.Data.Models;
 
 namespace ASI.Basecode.Data.Repositories
 {
+    /// <summary>
+    /// Attendance. Reads the attendance, absentee and per-student summary views
+    /// and the attendance modes; writes are sp_Attendance_TimeIn / _TimeOut /
+    /// _Delete, which enforce one visit per member per event and the capacity.
+    /// </summary>
     public class AttendanceRepository : BaseRepository, IAttendanceRepository
     {
         public AttendanceRepository(IUnitOfWork unitOfWork) : base(unitOfWork)

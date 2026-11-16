@@ -12,6 +12,11 @@ using static ASI.Basecode.Resources.Constants.Enums;
 
 namespace ASI.Basecode.Services.Services
 {
+    /// <summary>
+    /// Business logic for the door. Decides from the event's window whether a
+    /// scan is a time-in or a time-out, records it through AttendanceRepository,
+    /// and builds the per-event CSV export.
+    /// </summary>
     public class AttendanceService : ServiceBase, IAttendanceService
     {
         private readonly IAttendanceRepository _attendance;
