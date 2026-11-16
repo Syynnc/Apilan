@@ -19,6 +19,7 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         /// <param name="view">The sub-page: overview (default), events, members or punctuality.</param>
+        [Route("participation")]
         public IActionResult Index(ReportFilter filter, string view = null)
         {
             Tidy(filter);
@@ -27,6 +28,7 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         /// <summary>The report's analytics as a CSV, for the same filters.</summary>
+        [Route("participation/export")]
         public IActionResult Export(ReportFilter filter)
         {
             Tidy(filter);
