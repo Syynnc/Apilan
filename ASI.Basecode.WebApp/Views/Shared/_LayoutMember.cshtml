@@ -1,0 +1,117 @@
+@using System.Security.Claims
+@{
+    var displayName = User.FindFirstValue(Const.ClaimDisplayName) ?? User.Identity?.Name ?? "Member";
+    var initials = string.Concat(displayName
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .Take(2)
+        .Select(w => char.ToUpperInvariant(w[0])));
+}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] · Apilan</title>
+    <meta name="theme-color" content="#F7F5EF" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#101210" media="(prefers-color-scheme: dark)" />
+
+    <script>
+        (function () {
+            try {
+                var s = localStorage.getItem("apilan-theme");
+                var t = s || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+                document.documentElement.setAttribute("data-theme", t);
+            } catch (e) { }
+        })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&display=swap" />
+
+    <link rel="stylesheet" href="~/css/tokens.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/base.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/screens.css" asp-append-version="true" />
+</head>
+<body>
+    @await Html.PartialAsync("_CalendarBackdrop")
+
+    <header class="member-top">
+        <div class="shell inner">
+            <a class="brand" asp-controller="Home" asp-action="Index">
+                <svg class="tally" viewBox="0 0 26 24" aria-hidden="true">
+                    <line x1="4"  y1="5" x2="4"  y2="19" />
+                    <line x1="9"  y1="5" x2="9"  y2="19" />
+                    <line x1="14" y1="5" x2="14" y2="19" />
+                    <line x1="19" y1="5" x2="19" y2="19" />
+                    <line class="slash" x1="1.5" y1="18.5" x2="21.5" y2="5.5" />
+                </svg>
+                Apilan
+                <span class="brand-school">@Apilan.Value.SchoolShortName</span>
+            </a>
+
+            <button type="button" class="member-who" popovertarget="member-menu"
+                    aria-haspopup="true" aria-expanded="false" title="Your account">
+                <span class="av" aria-hidden="true">@initials</span>
+                <span class="nm">@displayName</span>
+                <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5" /></svg>
+            </button>
+
+            <button type="button" class="theme-toggle" data-theme-toggle aria-pressed="false" aria-label="Switch theme">
+                <svg class="tt-icon tt-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+                </svg>
+                <svg class="tt-icon tt-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+                </svg>
+                <span class="tt-label"></span>
+            </button>
+        </div>
+    </header>
+
+    <div class="account-pop" id="member-menu" popover role="menu" aria-label="Your account">
+        <div class="ap-head">
+            <span class="av" aria-hidden="true">@initials</span>
+            <span class="who">
+                <span class="nm">@displayName</span>
+                <span class="un">@User.Identity?.Name</span>
+            </span>
+        </div>
+        <div class="ap-actions">
+            <a class="ap-item" role="menuitem" asp-controller="Account" asp-action="ChangePassword">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v2"/></svg>
+                <span>Change password</span>
+                <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 7l5 5-5 5"/></svg>
+            </a>
+            <form asp-controller="Account" asp-action="Logout" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="ap-item" role="menuitem">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 8l-4 4 4 4M6 12h10"/></svg>
+                    <span>Sign out</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <main class="shell member-main stack-lg" data-skeleton-host data-skeleton-member>
+        @RenderBody()
+    </main>
+
+    <partial name="_Toasts" />
+    <partial name="_FirstPasswordPrompt" />
+
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/theme.js" asp-append-version="true"></script>
+    <script src="~/js/toast.js" asp-append-version="true"></script>
+    <script src="~/js/app.js" asp-append-version="true"></script>
+    <script src="~/js/skeleton.js" asp-append-version="true"></script>
+    <script src="~/js/member-menu.js" asp-append-version="true"></script>
+    <script src="~/js/tables.js" asp-append-version="true"></script>
+    <script src="~/js/modal.js" asp-append-version="true"></script>
+    <script src="~/js/password.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,10 @@
+@model EventTypeViewModel
+@{
+    ViewData["Title"] = Model.Id == 0 ? "New event type" : "Edit event type";
+    ViewData["Module"] = "Event types";
+}
+@* The page form, for a direct link or no JavaScript; the list opens _Form in a modal. *@
+
+<div class="form-page">
+    <partial name="_Form" model="Model" />
+</div>

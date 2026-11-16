@@ -1,150 +1,280 @@
-﻿using ASI.Basecode.Data.Models;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using ASI.Basecode.Resources.Constants;
+using ASI.Basecode.Resources.Messages;
 using ASI.Basecode.Services.Interfaces;
-using ASI.Basecode.Services.Manager;
 using ASI.Basecode.Services.ServiceModels;
-using ASI.Basecode.WebApp.Authentication;
 using ASI.Basecode.WebApp.Models;
-using ASI.Basecode.WebApp.Mvc;
-using AutoMapper;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using static ASI.Basecode.Resources.Constants.Enums;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    public class AccountController : ControllerBase<AccountController>
+    public class AccountController : BaseController
     {
-        private readonly SessionManager _sessionManager;
-        private readonly SignInManager _signInManager;
-        private readonly TokenValidationParametersFactory _tokenValidationParametersFactory;
-        private readonly TokenProviderOptionsFactory _tokenProviderOptionsFactory;
-        private readonly IConfiguration _appConfiguration;
-        private readonly IUserService _userService;
+        private readonly IAccountService _accountService;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AccountController"/> class.
-        /// </summary>
-        /// <param name="signInManager">The sign in manager.</param>
-        /// <param name="localizer">The localizer.</param>
-        /// <param name="userService">The user service.</param>
-        /// <param name="httpContextAccessor">The HTTP context accessor.</param>
-        /// <param name="loggerFactory">The logger factory.</param>
-        /// <param name="configuration">The configuration.</param>
-        /// <param name="mapper">The mapper.</param>
-        /// <param name="tokenValidationParametersFactory">The token validation parameters factory.</param>
-        /// <param name="tokenProviderOptionsFactory">The token provider options factory.</param>
-        public AccountController(
-                            SignInManager signInManager,
-                            IHttpContextAccessor httpContextAccessor,
-                            ILoggerFactory loggerFactory,
-                            IConfiguration configuration,
-                            IMapper mapper,
-                            IUserService userService,
-                            TokenValidationParametersFactory tokenValidationParametersFactory,
-                            TokenProviderOptionsFactory tokenProviderOptionsFactory) : base(httpContextAccessor, loggerFactory, configuration, mapper)
+        public AccountController(IAccountService accountService)
         {
-            this._sessionManager = new SessionManager(this._session);
-            this._signInManager = signInManager;
-            this._tokenProviderOptionsFactory = tokenProviderOptionsFactory;
-            this._tokenValidationParametersFactory = tokenValidationParametersFactory;
-            this._appConfiguration = configuration;
-            this._userService = userService;
+            _accountService = accountService;
         }
 
-        /// <summary>
-        /// Login Method
-        /// </summary>
-        /// <returns>Created response view</returns>
+        /* ----------------------------- Sign in ----------------------------- */
+
+        [AllowAnonymous]
         [HttpGet]
-        [AllowAnonymous]
-        public ActionResult Login()
+        public IActionResult Login(string returnUrl = null)
         {
-            TempData["returnUrl"] = System.Net.WebUtility.UrlDecode(HttpContext.Request.Query["ReturnUrl"]);
-            this._sessionManager.Clear();
-            this._session.SetString("SessionId", System.Guid.NewGuid().ToString());
-            return this.View();
-        }
-
-        /// <summary>
-        /// Authenticate user and signs the user in when successful.
-        /// </summary>
-        /// <param name="model">The model.</param>
-        /// <param name="returnUrl">The return URL.</param>
-        /// <returns> Created response view </returns>
-        [HttpPost]
-        [AllowAnonymous]
-        public async Task<IActionResult> Login(LoginViewModel model, string returnUrl)
-        {
-            this._session.SetString("HasSession", "Exist");
-
-            //User user = null;
-
-            User user = new() { Id = 0, UserId = "0", Name = "Name", Password = "Password" };
-            
-            await this._signInManager.SignInAsync(user);
-            this._session.SetString("UserName", model.UserId);
-
-            return RedirectToAction("Index", "Home");
-
-            /*var loginResult = _userService.AuthenticateUser(model.UserId, model.Password, ref user);
-            if (loginResult == LoginResult.Success)
+            if (User.Identity?.IsAuthenticated == true)
             {
-                // 認証OK
-                await this._signInManager.SignInAsync(user);
-                this._session.SetString("UserName", user.Name);
                 return RedirectToAction("Index", "Home");
             }
-            else
-            {
-                // 認証NG
-                TempData["ErrorMessage"] = "Incorrect UserId or Password";
-                return View();
-            }
-            return View();*/
+
+            return View(new LoginViewModel { ReturnUrl = returnUrl });
         }
 
-        [HttpGet]
         [AllowAnonymous]
-        public IActionResult Register()
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
-            return View();
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var result = _accountService.AuthenticateUser(model.Identifier, model.Password, out var account);
+
+            if (result != LoginResult.Success)
+            {
+                // Nobody is signed in, so the log names what was typed.
+                var typed = (model.Identifier ?? string.Empty).Trim();
+                var reason = result == LoginResult.Inactive ? "Account disabled"
+                    : result == LoginResult.MemberInactive ? "Member deactivated"
+                    : "Wrong student ID, username or password";
+                Audit(AuditActions.SignInFailed, AuditActions.TargetSession, null, typed, reason, actor: typed);
+
+                ModelState.AddModelError(string.Empty,
+                    result == LoginResult.Inactive ? Errors.AccountInactive
+                    : result == LoginResult.MemberInactive ? Errors.MemberDeactivated
+                    : Errors.InvalidLogin);
+                return View(model);
+            }
+
+            await SignInAsync(account);
+            Audit(AuditActions.SignedIn, AuditActions.TargetSession, account.Id, account.DisplayName,
+                account.MustChangePassword ? "Still on the default password" : null,
+                accountId: account.Id, actor: account.Username);
+
+            if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
+            {
+                return Redirect(model.ReturnUrl);
+            }
+
+            return RedirectToAction("Index", "Home");
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
+        {
+            Audit(AuditActions.SignedOut, AuditActions.TargetSession, AccountId, DisplayName);
+            await HttpContext.SignOutAsync(Const.AuthenticationScheme);
+            return RedirectToAction(nameof(Login));
+        }
+
         [AllowAnonymous]
-        public IActionResult Register(UserViewModel model)
+        public IActionResult Denied() => View();
+
+        /* ------------------------- Change password -------------------------- */
+
+        [Authorize]
+        [HttpGet]
+        public IActionResult ChangePassword(string returnUrl = null)
+        {
+            // From the account menu it opens in the modal and comes back to
+            // the page it was opened on; as a page it stands on its own.
+            var model = new ChangePasswordViewModel
+            {
+                FirstSignIn = MustChangePassword,
+                ReturnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : null,
+            };
+            return IsModalRequest ? PartialView("_PasswordForm", model) : View(model);
+        }
+
+        /// <summary>
+        /// Both the change-password page and the first-sign-in prompt post here;
+        /// the prompt posts from the modal script and gets the form back (422)
+        /// or JSON naming the page to carry on to.
+        /// </summary>
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!model.FirstSignIn && string.IsNullOrEmpty(model.CurrentPassword))
+            {
+                ModelState.AddModelError(nameof(model.CurrentPassword), "Enter your current password.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return PasswordView(model, invalid: true);
+            }
+
+            try
+            {
+                _accountService.ChangePassword(AccountId, model, CurrentUserName);
+                Audit(AuditActions.PasswordChanged, AuditActions.TargetAccount, AccountId, CurrentUserName,
+                    model.FirstSignIn ? "Replaced the default password at first sign-in" : null);
+            }
+            catch (InvalidDataException ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                return PasswordView(model, invalid: true);
+            }
+
+            // Re-issue the cookie without the must-change flag, so the prompt stops.
+            if (MustChangePassword)
+            {
+                var claims = User.Claims.Where(c => c.Type != Const.ClaimMustChangePassword);
+                await SignInAsync(new ClaimsIdentity(claims, Const.AuthenticationScheme, ClaimTypes.Name, ClaimTypes.Role));
+            }
+
+            TempData["Success"] = Common.PasswordChanged;
+            var next = !string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl)
+                ? model.ReturnUrl
+                : Url.Action("Index", "Home");
+            return SavedRedirect(next);
+        }
+
+        private IActionResult PasswordView(ChangePasswordViewModel model, bool invalid)
+        {
+            // Never send a typed password back down to the browser.
+            ModelState.Remove(nameof(model.CurrentPassword));
+            ModelState.Remove(nameof(model.NewPassword));
+            ModelState.Remove(nameof(model.ConfirmPassword));
+            model.CurrentPassword = model.NewPassword = model.ConfirmPassword = null;
+
+            if (!IsModalRequest)
+            {
+                return View(nameof(ChangePassword), model);
+            }
+
+            if (invalid)
+            {
+                Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+            }
+            return PartialView("_PasswordForm", model);
+        }
+
+        /* -------------------- Account management (officer) ------------------ */
+
+        [Authorize(Policy = Const.OfficerOnlyPolicy)]
+        public IActionResult Index()
+        {
+            return View(_accountService.GetAccountsPage());
+        }
+
+        [Authorize(Policy = Const.OfficerOnlyPolicy)]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SetActive(int id, bool isActive)
         {
             try
             {
-                _userService.AddUser(model);
-                return RedirectToAction("Login", "Account");
+                var username = _accountService.SetActive(id, isActive, AccountId, CurrentUserName);
+                Audit(isActive ? AuditActions.AccountEnabled : AuditActions.AccountDisabled,
+                    AuditActions.TargetAccount, id, username);
+                TempData["Success"] = string.Format(Common.AccountStatusChanged, username, isActive ? "active" : "disabled");
             }
-            catch(InvalidDataException ex)
+            catch (InvalidDataException ex)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                TempData["Error"] = ex.Message;
             }
-            catch(Exception ex)
-            {
-                TempData["ErrorMessage"] = Resources.Messages.Errors.ServerError;
-            }
-            return View();
+
+            return RedirectToAction(nameof(Index));
         }
 
-        /// <summary>
-        /// Sign Out current account and return login view.
-        /// </summary>
-        /// <returns>Created response view</returns>
-        [AllowAnonymous]
-        public async Task<IActionResult> SignOutUser()
+        [Authorize(Policy = Const.OfficerOnlyPolicy)]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ResetPassword(int id)
         {
-            await this._signInManager.SignOutAsync();
-            return RedirectToAction("Login", "Account");
+            // Back to the default, never to a password the officer chose: the
+            // member is then made to pick their own at the next sign-in.
+            try
+            {
+                var username = _accountService.ResetPassword(id, AccountId, CurrentUserName);
+                Audit(AuditActions.PasswordReset, AuditActions.TargetAccount, id, username, "Back to the default password");
+                TempData["Success"] = string.Format(Common.PasswordReset, username);
+            }
+            catch (InvalidDataException ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [Authorize(Policy = Const.OfficerOnlyPolicy)]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SetOfficer(int id, bool makeOfficer)
+        {
+            try
+            {
+                var username = _accountService.SetOfficer(id, makeOfficer, AccountId, CurrentUserName);
+                Audit(makeOfficer ? AuditActions.MadeOfficer : AuditActions.MadeMember,
+                    AuditActions.TargetAccount, id, username,
+                    makeOfficer ? "Member → Officer" : "Officer → Member");
+                TempData["Success"] = string.Format(Common.RoleChanged, username,
+                    makeOfficer ? "an officer" : "a member");
+            }
+            catch (InvalidDataException ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        /* -------------------------------------------------------------------- */
+
+        private async Task SignInAsync(SignedInAccount account)
+        {
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, account.Id.ToString()),
+                new(ClaimTypes.Name, account.Username),
+                new(ClaimTypes.Role, account.RoleName),
+                new(Const.ClaimDisplayName, account.DisplayName ?? account.Username),
+            };
+
+            if (account.UserId.HasValue)
+            {
+                claims.Add(new Claim(Const.ClaimUserId, account.UserId.Value.ToString()));
+            }
+
+            if (account.MustChangePassword)
+            {
+                claims.Add(new Claim(Const.ClaimMustChangePassword, "true"));
+            }
+
+            await SignInAsync(new ClaimsIdentity(claims, Const.AuthenticationScheme, ClaimTypes.Name, ClaimTypes.Role));
+        }
+
+        private async Task SignInAsync(ClaimsIdentity identity)
+        {
+            var properties = new AuthenticationProperties { IsPersistent = true };
+            await HttpContext.SignInAsync(Const.AuthenticationScheme, new ClaimsPrincipal(identity), properties);
         }
     }
 }
