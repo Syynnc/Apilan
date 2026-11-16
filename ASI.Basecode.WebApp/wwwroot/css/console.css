@@ -139,6 +139,7 @@
 .side-link:hover { background: var(--surface-sunken); color: var(--ink); }
 .side-link.is-active {
     background: var(--accent-wash);
+    box-shadow: inset 3px 0 0 var(--brand-yellow);
     color: var(--accent);
     font-weight: 600;
 }

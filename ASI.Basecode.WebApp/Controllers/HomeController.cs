@@ -5,6 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
+    /// <summary>
+    /// The public landing page, and for a signed-in member their own attendance
+    /// page (officers are sent on to the dashboard).
+    /// </summary>
     public class HomeController : BaseController
     {
         private readonly IStudentService _students;
