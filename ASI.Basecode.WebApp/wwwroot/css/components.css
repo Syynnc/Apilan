@@ -75,7 +75,7 @@
     stroke-linecap: round;
 }
 .tally .slash {
-    stroke: var(--accent);
+    stroke: var(--brand-yellow);
     stroke-width: 2.6;
     stroke-dasharray: 26;
     stroke-dashoffset: 0;
@@ -85,8 +85,8 @@
 
 /* Footer / kiosk variants */
 .tally.sm { width: 19px; height: 17px; }
-.tally.on-dark line { stroke: #F1F0E9; }
-.tally.on-dark .slash { stroke: #9BD04A; }
+.tally.on-dark line { stroke: #EEF1F7; }
+.tally.on-dark .slash { stroke: #FFC933; }
 
 /* ---- Status chips — colour is never the only signal ---------------------- */
 .chip {
