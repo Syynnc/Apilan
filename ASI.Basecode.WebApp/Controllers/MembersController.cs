@@ -11,6 +11,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace ASI.Basecode.WebApp.Controllers
 {
     /// <summary>Members are the students in dbo.users.</summary>
+    /// <summary>
+    /// Officer screens for members: list and search, detail with history, and
+    /// the add/edit form (modal or page). Forms bind to StudentViewModel and are
+    /// passed to IStudentService; each saved change is written to the activity log.
+    /// </summary>
     [Authorize(Policy = Const.OfficerOnlyPolicy)]
     public class MembersController : BaseController
     {

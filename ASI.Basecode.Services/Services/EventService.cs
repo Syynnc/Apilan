@@ -10,6 +10,14 @@ using AutoMapper;
 
 namespace ASI.Basecode.Services.Services
 {
+    /// <summary>
+    /// Business logic for events, between EventsController and EventRepository.
+    /// Reads: queries the repository and shapes the rows into view models
+    /// (lists with counts, the detail page, the form with its dropdowns).
+    /// Writes: maps the posted EventViewModel to an Event entity with AutoMapper
+    /// and hands it to the repository inside <see cref="ServiceBase.Run"/>, so a
+    /// rule the database rejects comes back as an InvalidDataException.
+    /// </summary>
     public class EventService : ServiceBase, IEventService
     {
         private readonly IEventRepository _events;
@@ -151,6 +159,9 @@ namespace ASI.Basecode.Services.Services
 
         public void AddEvent(EventViewModel model, string createdBy)
         {
+            // View model (what the form posted) → entity (what the table holds),
+            // per MappingProfile. Run turns a database rule violation into an
+            // InvalidDataException for the controller to show.
             var evt = _mapper.Map<Event>(model);
             Run(() => _events.AddEvent(evt, createdBy));
         }

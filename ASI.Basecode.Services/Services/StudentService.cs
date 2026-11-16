@@ -9,6 +9,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ASI.Basecode.Services.Services
 {
+    /// <summary>
+    /// Business logic for members: the searchable list, the detail page with
+    /// attendance history, and add/edit/(de)activate through UserRepository.
+    /// </summary>
     public class StudentService : ServiceBase, IStudentService
     {
         private readonly IUserRepository _users;

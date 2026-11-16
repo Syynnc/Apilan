@@ -5,6 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ASI.Basecode.Data.Repositories
 {
+    /// <summary>
+    /// The activity log. Reads dbo.audit_log with the account (and role) that
+    /// acted, untracked since it is only ever displayed; appends via sp_AuditLog_Add.
+    /// </summary>
     public class AuditLogRepository : BaseRepository, IAuditLogRepository
     {
         public AuditLogRepository(IUnitOfWork unitOfWork) : base(unitOfWork)
