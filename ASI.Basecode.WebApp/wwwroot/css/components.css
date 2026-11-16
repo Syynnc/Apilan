@@ -776,3 +776,75 @@ textarea.input-a {
 .combo-list [role=option]:hover,
 .combo-list [role=option].is-active { background: var(--accent-wash); }
 .combo-list [role=option].is-active b { color: var(--accent); }
+
+/* ---- Account menu (a popover in the top layer) -------------------------- */
+.account-pop {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    padding: 0;
+    width: 248px;
+    border: var(--border);
+    border-radius: var(--r-lg);
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--shadow-lift), var(--shadow-float);
+    overflow: hidden;
+}
+.account-pop:popover-open { animation: ap-in 220ms var(--ease-glide) both; }
+.account-pop[data-from="below"] { transform-origin: bottom left; --ap-from: translateY(6px); }
+.account-pop[data-from="above"] { transform-origin: top left; --ap-from: translateY(-6px); }
+.account-pop[data-from="left"]  { transform-origin: bottom left; --ap-from: translateX(-6px); }
+@keyframes ap-in { from { opacity: 0; transform: var(--ap-from, translateY(6px)) scale(0.98); } }
+
+.ap-head { display: flex; align-items: center; gap: var(--s-3); padding: var(--s-4); background: var(--surface-sunken); border-bottom: var(--border); }
+.ap-head .av {
+    width: 40px; height: 40px; flex: none;
+    display: grid; place-items: center;
+    border-radius: var(--r-md);
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 600;
+}
+.ap-head .who { min-width: 0; }
+.ap-head .nm { display: block; font-size: var(--fs-sm); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ap-head .un { display: block; font-family: var(--font-mono); font-size: var(--fs-3xs); color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.ap-meta { display: grid; gap: var(--s-2); margin: 0; padding: var(--s-3) var(--s-4); border-bottom: var(--border); }
+.ap-meta div { display: flex; justify-content: space-between; gap: var(--s-3); font-size: var(--fs-2xs); }
+.ap-meta dt { color: var(--ink-3); }
+.ap-meta dd { margin: 0; color: var(--ink); text-align: right; }
+
+.ap-actions { padding: var(--s-2); }
+.ap-item {
+    width: 100%;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-2) var(--s-3);
+    border-radius: var(--r-sm);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+    transition: background-color var(--t-fast) var(--ease-out);
+}
+.ap-item:hover, .ap-item:focus-visible { background: var(--surface-sunken); outline: none; }
+.ap-item svg { width: 17px; height: 17px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ap-item .go { margin-left: auto; width: 14px; height: 14px; color: var(--ink-3); transition: transform var(--t-fast) var(--ease-out); }
+.ap-item:hover .go { transform: translateX(2px); }
+
+@media (prefers-reduced-motion: reduce) {
+    .account-pop:popover-open { animation: none; }
+}
+.ap-actions form { margin: 0; }
+
+/* The member's name in the top bar opens the same menu. */
+button.member-who { border: 0; background: none; color: inherit; font: inherit; padding: var(--s-1) var(--s-2); border-radius: var(--r-pill, 999px); cursor: pointer; }
+button.member-who:hover, button.member-who.is-open { background: var(--surface-sunken); }
+button.member-who .chev { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; color: var(--ink-3); transition: transform var(--t-fast) var(--ease-out); }
+button.member-who.is-open .chev { transform: rotate(180deg); }
