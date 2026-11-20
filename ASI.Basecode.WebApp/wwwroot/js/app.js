@@ -110,3 +110,43 @@
     });
     window.addEventListener("scroll", function () { hide(); }, { passive: true });
 }());
+
+/* ---- Drop-down menus: <details class="menu"> ------------------------------ */
+/* A <details> shuts the instant it loses [open], so play the closing animation
+   first, then close it. Also closes on a click elsewhere, on picking an item, or Esc. */
+(function () {
+    "use strict";
+
+    function close(menu) {
+        if (!menu.open || menu.classList.contains("is-closing")) { return; }
+        var list = menu.querySelector(".menu-list");
+        var done = function () {
+            menu.classList.remove("is-closing");
+            menu.open = false;
+        };
+        if (!list) { done(); return; }
+        menu.classList.add("is-closing");
+        list.addEventListener("animationend", done, { once: true });
+        // In case the animation never runs (a hidden tab, an old browser).
+        setTimeout(function () { if (menu.classList.contains("is-closing")) { done(); } }, 300);
+    }
+
+    document.addEventListener("click", function (e) {
+        var summary = e.target.closest("details.menu > summary");
+        if (summary && summary.parentElement.open) {
+            e.preventDefault();
+            close(summary.parentElement);
+        }
+        document.querySelectorAll("details.menu[open]").forEach(function (menu) {
+            if (!menu.contains(e.target) || e.target.closest("[role=menuitem]")) { close(menu); }
+        });
+    });
+
+    document.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape") { return; }
+        document.querySelectorAll("details.menu[open]").forEach(function (menu) {
+            close(menu);
+            menu.querySelector("summary").focus();
+        });
+    });
+}());

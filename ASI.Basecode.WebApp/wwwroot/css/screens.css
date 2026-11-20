@@ -1988,6 +1988,11 @@ a.b-stat.accent:hover { border-color: var(--accent-hover); background: var(--acc
     box-shadow: var(--shadow-lift);
     font-size: var(--fs-2xs);
     pointer-events: none;
+    transition: opacity 120ms ease-out, display 120ms allow-discrete;
+}
+.chart-tip[hidden] { opacity: 0; }
+@starting-style {
+    .chart-tip { opacity: 0; }
 }
 .chart-tip strong { font-size: var(--fs-xs); margin-bottom: 2px; }
 .chart-tip span { font-family: var(--font-mono); opacity: 0.85; }
@@ -2122,6 +2127,9 @@ a.b-stat.accent:hover { border-color: var(--accent-hover); background: var(--acc
     animation: menu-in 160ms var(--ease-glide);
 }
 @keyframes menu-in { from { opacity: 0; transform: translateY(-4px); } }
+/* app.js plays this before it lets the <details> close. */
+.menu.is-closing .menu-list { animation: menu-out 120ms ease-in forwards; }
+@keyframes menu-out { to { opacity: 0; transform: translateY(-4px); } }
 .menu-list a, .menu-list button {
     display: grid;
     gap: 2px;
