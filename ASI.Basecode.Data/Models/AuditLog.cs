@@ -2,12 +2,12 @@ using System;
 
 namespace ASI.Basecode.Data.Models
 {
-    /// <summary>dbo.audit_logs — one row per change, added and never edited.</summary>
+    // dbo.audit_logs — one row per change, added and never edited.
     public partial class AuditLog
     {
         public long Id { get; set; }
 
-        /// <summary>Set by the database (SYSDATETIME), to the millisecond.</summary>
+        // Set by the database (SYSDATETIME), to the millisecond.
         public DateTime OccurredAt { get; set; }
 
         public int? AccountId { get; set; }

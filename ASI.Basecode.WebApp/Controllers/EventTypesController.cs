@@ -10,10 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    /// <summary>
-    /// Officer screen for event types and their colours. Saving a type refreshes
-    /// the in-memory colour map in Ui so every screen picks the change up.
-    /// </summary>
+    /* Officer screen for event types and their colours. Saving a type refreshes
+       the in-memory colour map in Ui so every screen picks the change up. */
     [Authorize(Policy = Const.OfficerOnlyPolicy)]
     public class EventTypesController : BaseController
     {

@@ -11,11 +11,9 @@ using static ASI.Basecode.Resources.Constants.Enums;
 
 namespace ASI.Basecode.Services.Services
 {
-    /// <summary>
-    /// Sign-in and accounts: checks passwords (hashed by PasswordManager),
-    /// creates member sign-ins, changes passwords, roles and active state, and
-    /// reports an account's current role for the cookie check in Program.cs.
-    /// </summary>
+    /* Sign-in and accounts: checks passwords (hashed by PasswordManager),
+       creates member sign-ins, changes passwords, roles and active state, and
+       reports an account's current role for the cookie check in Program.cs. */
     public class AccountService : ServiceBase, IAccountService
     {
         private readonly IAccountRepository _accounts;
@@ -35,8 +33,8 @@ namespace ASI.Basecode.Services.Services
 
             var identifier = (username ?? string.Empty).Trim();
 
-            // Sign in with a student ID (the linked member's student number) or
-            // a username. Email is not accepted. The database keeps both unique.
+            /* Sign in with a student ID (the linked member's student number) or
+               a username. Email is not accepted. The database keeps both unique. */
             var found = _accounts.GetAccounts().FirstOrDefault(a =>
                 a.Username == identifier
                 || (a.User != null && a.User.StudentNumber == identifier));
@@ -51,8 +49,8 @@ namespace ASI.Basecode.Services.Services
                 return LoginResult.Inactive;
             }
 
-            // Deactivating a member is meant to shut them out, but it only flips
-            // dbo.users — the account row stays enabled — so check both.
+            /* Deactivating a member is meant to shut them out, but it only flips
+               dbo.users — the account row stays enabled — so check both. */
             if (found.User != null && !found.User.IsActive)
             {
                 return LoginResult.MemberInactive;
@@ -67,8 +65,8 @@ namespace ASI.Basecode.Services.Services
                 RoleName = found.Role.RoleName,
                 DisplayName = found.User != null ? $"{found.User.FirstName} {found.User.LastName}" : found.Username,
                 UserId = found.UserId,
-                // The password just verified, so comparing the plain text is enough —
-                // no second bcrypt round needed to know it is still the default.
+                /* The password just verified, so comparing the plain text is enough —
+                   no second bcrypt round needed to know it is still the default. */
                 MustChangePassword = password == _settings.DefaultPassword,
             };
             return LoginResult.Success;
@@ -78,8 +76,8 @@ namespace ASI.Basecode.Services.Services
         {
             var account = _accounts.GetAccounts().FirstOrDefault(a => a.Id == accountId) ?? throw NotFound();
 
-            // A first sign-in proves itself with the default password instead of
-            // asking the member to type back the one they were just given.
+            /* A first sign-in proves itself with the default password instead of
+               asking the member to type back the one they were just given. */
             var current = model.FirstSignIn ? _settings.DefaultPassword : model.CurrentPassword;
             if (!PasswordManager.VerifyPassword(current, account.PasswordHash))
             {
@@ -112,7 +110,6 @@ namespace ASI.Basecode.Services.Services
                         UserId = a.UserId,
                         StudentName = a.User != null ? a.User.LastName + ", " + a.User.FirstName : null,
                         StudentNumber = a.User != null ? a.User.StudentNumber : null,
-                        StudentActive = a.User == null || a.User.IsActive,
                         IsActive = a.IsActive,
                         LastLogin = a.LastLogin,
                         CreatedTime = a.CreatedTime,
@@ -139,8 +136,8 @@ namespace ASI.Basecode.Services.Services
                 .Select(r => (int?)r.Id)
                 .FirstOrDefault() ?? throw new InvalidDataException(Errors.MemberRoleMissing);
 
-            // The student number is the username: it is what members already
-            // sign in with, and dbo.users keeps it unique.
+            /* The student number is the username: it is what members already
+               sign in with, and dbo.users keeps it unique. */
             var hash = PasswordManager.HashPassword(_settings.DefaultPassword);
             Run(() => _accounts.AddAccount(user.StudentNumber, hash, roleId, user.Id, createdBy));
 
@@ -162,8 +159,8 @@ namespace ASI.Basecode.Services.Services
 
         public string ResetPassword(int id, int currentAccountId, string updatedBy)
         {
-            // Resetting it to the known default would hand the account to
-            // whoever reset it, so the initial officer is covered here too.
+            /* Resetting it to the known default would hand the account to
+               whoever reset it, so the initial officer is covered here too. */
             GuardInitialOfficer(id, currentAccountId);
 
             var username = UsernameOf(id);
@@ -199,8 +196,8 @@ namespace ASI.Basecode.Services.Services
                     throw new InvalidDataException(Errors.CannotDemoteSelf);
                 }
 
-                // A member account without a member behind it has no pass and
-                // no attendance page to land on.
+                /* A member account without a member behind it has no pass and
+                   no attendance page to land on. */
                 if (account.UserId == null)
                 {
                     throw new InvalidDataException(Errors.OfficerHasNoMember);
@@ -233,7 +230,7 @@ namespace ASI.Basecode.Services.Services
             return state != null && state.IsActive && state.MemberActive ? (state.RoleName, state.DisplayName) : null;
         }
 
-        /// <summary>Only the initial officer may change the initial officer's account.</summary>
+        // Only the initial officer may change the initial officer's account.
         private static void GuardInitialOfficer(int id, int currentAccountId)
         {
             if (id == Const.InitialOfficerAccountId && currentAccountId != Const.InitialOfficerAccountId)

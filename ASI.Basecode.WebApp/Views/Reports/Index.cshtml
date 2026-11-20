@@ -485,7 +485,7 @@ else if (view == "events")
                     <td>
                         <div class="cell-event" data-type="@Ui.TicketType(e.Type)">
                             <span class="mini-pad" aria-hidden="true"><b>@e.Start.ToString("MMM")</b>@e.Start.ToString("dd")</span>
-                            <span><a asp-controller="Events" asp-action="Details" asp-route-id="@EventSlug.For(e.Name, e.Start)"><strong>@e.Name</strong></a><span class="dim">@e.Type</span></span>
+                            <span><a data-row-link asp-controller="Events" asp-action="Details" asp-route-id="@EventSlug.For(e.Name, e.Start)"><strong>@e.Name</strong></a><span class="dim">@e.Type</span></span>
                         </div>
                     </td>
                     <td class="mono">@e.Start.ToString("MMM d, yyyy")</td>
@@ -615,7 +615,7 @@ else if (view == "members")
             @foreach (var m in Model.Members)
             {
                 <tr data-search="@m.FullName @m.StudentNumber @m.Course">
-                    <td><a asp-controller="Members" asp-action="Details" asp-route-id="@m.UserId"><strong>@m.FullName</strong></a></td>
+                    <td><a data-row-link asp-controller="Members" asp-action="Details" asp-route-id="@m.UserId"><strong>@m.FullName</strong></a></td>
                     <td class="mono">@m.StudentNumber</td>
                     <td>@(m.Course ?? "—")</td>
                     <td class="num">@YearLevels.Short(m.YearLevel)</td>

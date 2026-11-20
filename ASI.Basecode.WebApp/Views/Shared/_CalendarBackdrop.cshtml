@@ -23,8 +23,8 @@
         rules.Append($"M0 {r * cell}H{width}");
     }
 
-    // Razor reserves <text> as its own transition tag, so the numerals are
-    // assembled as markup and written out in one go.
+    /* Razor reserves <text> as its own transition tag, so the numerals are
+       assembled as markup and written out in one go. */
     var numerals = new System.Text.StringBuilder();
     var day = 1;
     for (var r = 0; r < rows; r++)

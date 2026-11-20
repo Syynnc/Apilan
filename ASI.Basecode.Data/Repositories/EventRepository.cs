@@ -5,11 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ASI.Basecode.Data.Repositories
 {
-    /// <summary>
-    /// Events. Reads dbo.events (with its type) and the vw_EventAttendanceSummary
-    /// view; writes go through sp_Event_Create / _Update / _Delete. The entity
-    /// arrives already mapped from EventViewModel by EventService.
-    /// </summary>
+    /* Events. Reads dbo.events (with its type) and the vw_EventAttendanceSummary
+       view; writes go through sp_Event_Create / _Update / _Delete. The entity
+       arrives already mapped from EventViewModel by EventService. */
     public class EventRepository : BaseRepository, IEventRepository
     {
         public EventRepository(IUnitOfWork unitOfWork) : base(unitOfWork)
@@ -28,8 +26,8 @@ namespace ASI.Basecode.Data.Repositories
 
         public void AddEvent(Event evt, string createdBy)
         {
-            // Interpolated SQL: EF sends each {value} as a SQL parameter, never
-            // pasted into the text, so form input can't inject SQL.
+            /* Interpolated SQL: EF sends each {value} as a SQL parameter, never
+               pasted into the text, so form input can't inject SQL. */
             Execute($@"EXEC dbo.sp_Event_Create
                 @event_name = {evt.EventName}, @event_type_id = {evt.EventTypeId},
                 @event_start = {evt.EventStart}, @event_end = {evt.EventEnd},

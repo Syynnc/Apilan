@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ASI.Basecode.Data.Interfaces;
 using ASI.Basecode.Data.Models;
+using ASI.Basecode.Resources.Messages;
 using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.Services.ServiceModels;
 using AutoMapper;
@@ -9,10 +10,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ASI.Basecode.Services.Services
 {
-    /// <summary>
-    /// Business logic for members: the searchable list, the detail page with
-    /// attendance history, and add/edit/(de)activate through UserRepository.
-    /// </summary>
+    /* Business logic for members: the searchable list, the detail page with
+       attendance history, and add/edit/(de)activate through UserRepository. */
     public class StudentService : ServiceBase, IStudentService
     {
         private readonly IUserRepository _users;
@@ -145,7 +144,7 @@ namespace ASI.Basecode.Services.Services
             // A new member and their sign-in are one step: both rows, or neither.
             using var transaction = _unitOfWork.Database.Database.BeginTransaction();
 
-            Run(() => _users.AddUser(user, createdBy));
+            Run(() => _users.AddUser(user, createdBy), Taken(user.StudentNumber));
             var id = _users.GetUsers()
                 .Where(u => u.StudentNumber == user.StudentNumber)
                 .Select(u => u.Id)
@@ -156,10 +155,26 @@ namespace ASI.Basecode.Services.Services
             return id;
         }
 
+        public string StudentNumberOwner(string studentNumber, int exceptId)
+        {
+            var number = (studentNumber ?? string.Empty).Trim();
+            return _users.GetUsers()
+                .Where(u => u.StudentNumber == number && u.Id != exceptId)
+                .Select(u => u.FirstName + " " + u.LastName)
+                .FirstOrDefault();
+        }
+
+        /* The message for a save the database refused as a duplicate: someone
+           else took the number between the check and the save. */
+        private string Taken(string studentNumber)
+        {
+            return string.Format(Errors.StudentNumberTaken, studentNumber, "another member");
+        }
+
         public void UpdateStudent(StudentViewModel model, string updatedBy)
         {
             var user = _mapper.Map<User>(model);
-            Run(() => _users.UpdateUser(user, updatedBy));
+            Run(() => _users.UpdateUser(user, updatedBy), Taken(user.StudentNumber));
         }
 
         public string SetActive(int id, bool isActive, string updatedBy)

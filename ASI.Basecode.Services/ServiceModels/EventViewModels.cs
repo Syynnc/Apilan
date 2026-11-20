@@ -7,10 +7,14 @@ using static ASI.Basecode.Resources.Constants.Enums;
 
 namespace ASI.Basecode.Services.ServiceModels
 {
-    /// <summary>The add/edit form for an event. Limits mirror dbo.events.</summary>
+    // The add/edit form for an event. Limits mirror dbo.events.
     public class EventViewModel : IValidatableObject
     {
         public int Id { get; set; }
+
+        /* Who hosts an event, or what a type is called: letters (ñ and accents
+           too) with spaces and - & . ' (Alliance Executive Board, Team-building). */
+        public const string GroupNamePattern = @"^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ .&'-]*$";
 
         [Required(ErrorMessage = "Event name is required.")]
         [StringLength(255)]
@@ -42,6 +46,7 @@ namespace ASI.Basecode.Services.ServiceModels
         public int? EventCapacity { get; set; }
 
         [StringLength(255)]
+        [RegularExpression(GroupNamePattern, ErrorMessage = "Use letters only (spaces and - & . ' are fine).")]
         [Display(Name = "Host")]
         public string EventHost { get; set; }
 
@@ -88,20 +93,22 @@ namespace ASI.Basecode.Services.ServiceModels
         public AttendanceEntryViewModel Entry { get; set; } = new();
     }
 
-    /// <summary>One time-in or time-out typed or scanned at the door.</summary>
+    // One time-in or time-out typed or scanned at the door.
     public class AttendanceEntryViewModel
     {
         public int EventId { get; set; }
 
         [Required(ErrorMessage = "Enter or scan a student number.")]
         [StringLength(20)]
+        // A handheld scanner may add a space or newline; the service trims it.
+        [RegularExpression(@"^\s*\d{4}-\d{5}\s*$", ErrorMessage = "Student numbers look like 2026-00001.")]
         [Display(Name = "Student number")]
         public string StudentNumber { get; set; }
 
         [Display(Name = "Mode")]
         public int AttendanceModeId { get; set; }
 
-        /// <summary>Leave empty for "now"; set it to record a late-entered paper sign-in.</summary>
+        // Leave empty for "now"; set it to record a late-entered paper sign-in.
         [Display(Name = "Recorded time")]
         public DateTime? RecordedAt { get; set; }
     }
@@ -112,6 +119,7 @@ namespace ASI.Basecode.Services.ServiceModels
 
         [Required(ErrorMessage = "Name is required.")]
         [StringLength(50)]
+        [RegularExpression(EventViewModel.GroupNamePattern, ErrorMessage = "Use letters only (spaces and - & . ' are fine).")]
         [Display(Name = "Name")]
         public string TypeName { get; set; }
 

@@ -1,50 +1,44 @@
 namespace ASI.Basecode.Resources.Constants
 {
-    /// <summary>
-    /// Class for variables with constant values
-    /// </summary>
+    // Class for variables with constant values
     public class Const
     {
-        /// <summary>Cookie authentication scheme name</summary>
+        // Cookie authentication scheme name
         public const string AuthenticationScheme = "Apilan";
 
-        /// <summary>Claims issuer</summary>
+        // Claims issuer
         public const string Issuer = "apilan";
 
-        /// <summary>Role names, exactly as stored in dbo.roles</summary>
+        // Role names, exactly as stored in dbo.roles
         public const string RoleOfficer = "Officer";
         public const string RoleMember = "Member";
 
-        /// <summary>
-        /// accounts.id of the initial officer, the bootstrap account that
-        /// database/01_RolesAndAccounts.sql sets up. Other officers cannot
-        /// disable it, reset its password or take its officer role away, so the
-        /// organization can never be locked out of its own console.
-        /// </summary>
+        /* accounts.id of the initial officer, the bootstrap account that
+           database/01_RolesAndAccounts.sql sets up. Other officers cannot
+           disable it, reset its password or take its officer role away, so the
+           organization can never be locked out of its own console. */
         public const int InitialOfficerAccountId = 1;
 
-        /// <summary>Authorization policy guarding the console: Officer role only</summary>
+        // Authorization policy guarding the console: Officer role only
         public const string OfficerOnlyPolicy = "OfficerOnly";
 
-        /// <summary>Custom claim carrying the linked student's id, when the account has one</summary>
+        // Custom claim carrying the linked student's id, when the account has one
         public const string ClaimUserId = "UserId";
 
-        /// <summary>Custom claim carrying the linked student's display name</summary>
+        // Custom claim carrying the linked student's display name
         public const string ClaimDisplayName = "DisplayName";
 
-        /// <summary>
-        /// Present while the account is still on the default password: every page
-        /// then opens the change-password prompt before anything else.
-        /// </summary>
+        /* Present while the account is still on the default password: every page
+           then opens the change-password prompt before anything else. */
         public const string ClaimMustChangePassword = "MustChangePassword";
 
-        /// <summary>attendance_modes.id for a member pass read by the door camera</summary>
+        // attendance_modes.id for a member pass read by the door camera
         public const int QrAttendanceMode = 1;
 
-        /// <summary>attendance_modes.id for an officer typing a student in by hand</summary>
+        // attendance_modes.id for an officer typing a student in by hand
         public const int ManualAttendanceMode = 2;
 
-        /// <summary>Event status values produced by vw_EventAttendanceSummary</summary>
+        // Event status values produced by vw_EventAttendanceSummary
         public const string StatusUpcoming = "Upcoming";
         public const string StatusOngoing = "Ongoing";
         public const string StatusFinished = "Finished";

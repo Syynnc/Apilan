@@ -12,14 +12,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    /// <summary>
-    /// Officer screens for events. The request flow for every action is:
-    /// browser (link, form or modal fetch) → this controller, which model-binds
-    /// the query/form into a view model and checks ModelState → IEventService
-    /// (business rules) → IEventRepository (EF Core reads, stored-procedure
-    /// writes) → AllianceDB. The result comes back as a view model and is
-    /// rendered by a Razor view, or as JSON for the modal and search scripts.
-    /// </summary>
+    /* Officer screens for events. The request flow for every action is:
+       browser (link, form or modal fetch) → this controller, which model-binds
+       the query/form into a view model and checks ModelState → IEventService
+       (business rules) → IEventRepository (EF Core reads, stored-procedure
+       writes) → AllianceDB. The result comes back as a view model and is
+       rendered by a Razor view, or as JSON for the modal and search scripts. */
     [Authorize(Policy = Const.OfficerOnlyPolicy)]
     public class EventsController : BaseController
     {
@@ -35,7 +33,7 @@ namespace ASI.Basecode.WebApp.Controllers
             return View(_events.GetEvents(status, search));
         }
 
-        /// <summary>JSON for the live search box: the closest few events by name or venue.</summary>
+        // JSON for the live search box: the closest few events by name or venue.
         [HttpGet]
         public IActionResult Suggest(string term)
         {
@@ -51,7 +49,7 @@ namespace ASI.Basecode.WebApp.Controllers
             return Json(items);
         }
 
-        /// <param name="id">The event's slug (name and date), not its row id.</param>
+        // id: The event's slug (name and date), not its row id.
         public IActionResult Details(string id)
         {
             var eventId = _events.FindBySlug(id);
@@ -87,10 +85,10 @@ namespace ASI.Basecode.WebApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Save(EventViewModel model)
         {
-            // 1. MVC has bound the posted form fields into `model` and run its
-            //    [Required]/[Range] attributes and Validate(); failures land in
-            //    ModelState. On failure the form is sent back with its errors
-            //    (refilling the dropdowns, which are not posted).
+            /* 1. MVC has bound the posted form fields into `model` and run its
+                  [Required]/[Range] attributes and Validate(); failures land in
+                  ModelState. On failure the form is sent back with its errors
+                  (refilling the dropdowns, which are not posted). */
             if (!ModelState.IsValid)
             {
                 _events.PopulateLookups(model);
@@ -99,9 +97,9 @@ namespace ASI.Basecode.WebApp.Controllers
 
             try
             {
-                // 2. The service maps the view model to an Event entity and the
-                //    repository calls the stored procedure. CurrentUserName (from
-                //    the sign-in cookie) is recorded as created_by / updated_by.
+                /* 2. The service maps the view model to an Event entity and the
+                      repository calls the stored procedure. CurrentUserName (from
+                      the sign-in cookie) is recorded as created_by / updated_by. */
                 if (model.Id == 0)
                 {
                     _events.AddEvent(model, CurrentUserName);
@@ -124,8 +122,8 @@ namespace ASI.Basecode.WebApp.Controllers
                         }));
                 }
 
-                // 3. Saved: TempData carries the toast across the redirect, and
-                //    SavedRedirect answers the modal with JSON or a page with a 302.
+                /* 3. Saved: TempData carries the toast across the redirect, and
+                      SavedRedirect answers the modal with JSON or a page with a 302. */
                 TempData["Success"] = string.Format(Common.EventSaved, model.EventName);
 
                 // An edit made from the event's own page goes back there.
@@ -134,8 +132,8 @@ namespace ASI.Basecode.WebApp.Controllers
             }
             catch (InvalidDataException ex)
             {
-                // A rule the database enforced (THROW 50xxx in the procedure),
-                // shown at the top of the form in the database's own words.
+                /* A rule the database enforced (THROW 50xxx in the procedure),
+                   shown at the top of the form in the database's own words. */
                 ModelState.AddModelError(string.Empty, ex.Message);
                 _events.PopulateLookups(model);
                 return FormView(model, invalid: true);

@@ -1,6 +1,6 @@
 namespace ASI.Basecode.Data.Models
 {
-    /// <summary>dbo.roles — Admin and Officer.</summary>
+    // dbo.roles — Admin and Officer.
     public partial class Role
     {
         public int Id { get; set; }
@@ -8,7 +8,7 @@ namespace ASI.Basecode.Data.Models
         public string Description { get; set; }
     }
 
-    /// <summary>dbo.event_types — General Assembly, Seminar, Workshop, ...</summary>
+    // dbo.event_types — General Assembly, Seminar, Workshop, ...
     public partial class EventType
     {
         public int Id { get; set; }
@@ -18,7 +18,7 @@ namespace ASI.Basecode.Data.Models
         public string Color { get; set; }
     }
 
-    /// <summary>dbo.attendance_modes — QR Code, Manual, RFID.</summary>
+    // dbo.attendance_modes — QR Code, Manual, RFID.
     public partial class AttendanceMode
     {
         public int Id { get; set; }

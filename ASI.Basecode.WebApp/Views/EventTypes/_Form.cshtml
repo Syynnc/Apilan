@@ -32,7 +32,7 @@
         <div class="tf-grid">
             <div class="field span-4">
                 <label asp-for="TypeName" class="req"></label>
-                <input asp-for="TypeName" class="input-a" placeholder="Seminar, Workshop, Outreach…" autofocus />
+                <input asp-for="TypeName" class="input-a" placeholder="Seminar, Workshop, Outreach…" autofocus data-allow="A-Za-zÀ-ÖØ-öø-ÿ .&amp;'-" />
                 <span asp-validation-for="TypeName" class="field-error"></span>
             </div>
             <div class="field span-4">

@@ -8,11 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    /// <summary>
-    /// The participation report at /participation. The filter form submits by
-    /// GET, so ReportFilter binds from the query string and the URL can be
-    /// bookmarked; IReportService does all the figures.
-    /// </summary>
+    /* The participation report at /participation. The filter form submits by
+       GET, so ReportFilter binds from the query string and the URL can be
+       bookmarked; IReportService does all the figures. */
     [Authorize(Policy = Const.OfficerOnlyPolicy)]
     public class ReportsController : BaseController
     {
@@ -23,7 +21,7 @@ namespace ASI.Basecode.WebApp.Controllers
             _reports = reports;
         }
 
-        /// <param name="view">The sub-page: overview (default), events, members or punctuality.</param>
+        // view: The sub-page: overview (default), events, members or punctuality.
         [Route("participation")]
         public IActionResult Index(ReportFilter filter, string view = null)
         {
@@ -32,7 +30,7 @@ namespace ASI.Basecode.WebApp.Controllers
             return View(_reports.GetReport(filter));
         }
 
-        /// <summary>The report's analytics as a CSV, for the same filters.</summary>
+        // The report's analytics as a CSV, for the same filters.
         [Route("participation/export")]
         public IActionResult Export(ReportFilter filter)
         {

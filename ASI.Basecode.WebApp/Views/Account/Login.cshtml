@@ -19,7 +19,7 @@
 
         <div class="field">
              <label asp-for="Identifier"></label>
-             <input asp-for="Identifier" class="input-a mono" autocomplete="username" spellcheck="false"
+             <input asp-for="Identifier" class="input-a mono" autocomplete="username" spellcheck="false" data-allow="A-Za-z0-9._-"
                     placeholder="2022-00101" autofocus />
              <span asp-validation-for="Identifier" class="field-error"></span>
          </div>

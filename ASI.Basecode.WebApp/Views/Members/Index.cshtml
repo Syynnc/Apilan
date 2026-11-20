@@ -49,7 +49,7 @@
                         <td>
                             <div class="cell-person">
                                 <span class="av" aria-hidden="true">@Ui.Initials(m.FullName.Contains(',') ? m.FullName.Split(',')[1] + " " + m.FullName.Split(',')[0] : m.FullName)</span>
-                                <a asp-action="Details" asp-route-id="@m.Id"><strong>@m.FullName</strong></a>
+                                <a data-row-link asp-action="Details" asp-route-id="@m.Id"><strong>@m.FullName</strong></a>
                             </div>
                         </td>
                         <td class="mono">@m.StudentNumber</td>

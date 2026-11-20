@@ -173,6 +173,8 @@
 .table-a tbody tr:last-child td { border-bottom: 0; }
 .table-a tbody tr { transition: background-color var(--t-fast) var(--ease-out); }
 .table-a tbody tr:hover { background: var(--accent-wash); }
+/* The whole row opens its page (tables.js); only those rows get the hand. */
+.table-a tbody tr:has(a[data-row-link]) { cursor: pointer; }
 .table-a td.num, .table-a th.num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .table-a td strong { color: var(--ink); font-weight: 600; }
 
@@ -760,6 +762,13 @@ textarea.input-a {
     border-radius: var(--r-sm);
     background: var(--surface-raised);
     box-shadow: var(--shadow-float);
+    /* Fades in under the field and back out when it is picked from or left. */
+    transition: opacity 160ms var(--ease-glide), transform 160ms var(--ease-glide),
+                display 160ms allow-discrete;
+}
+.combo-list[hidden] { opacity: 0; transform: translateY(-4px); transition-duration: 110ms; transition-timing-function: ease-in; }
+@starting-style {
+    .combo-list { opacity: 0; transform: translateY(-4px); }
 }
 .combo-list.is-empty { display: none; }
 .combo-list [role=option] {
@@ -772,7 +781,8 @@ textarea.input-a {
     cursor: pointer;
 }
 .combo-list [role=option] b { flex: none; min-width: 72px; font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--ink); }
-.combo-list [role=option] span { color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Long names wrap under themselves instead of being cut off with an ellipsis. */
+.combo-list [role=option] span { color: var(--ink-2); min-width: 0; overflow-wrap: anywhere; line-height: 1.35; }
 .combo-list [role=option]:hover,
 .combo-list [role=option].is-active { background: var(--accent-wash); }
 .combo-list [role=option].is-active b { color: var(--accent); }
@@ -790,12 +800,25 @@ textarea.input-a {
     color: var(--ink);
     box-shadow: var(--shadow-lift), var(--shadow-float);
     overflow: hidden;
+    /* Closing: it slips back toward the button and fades. display and
+       overlay are kept until the fade ends, so it does not just vanish. */
+    opacity: 0;
+    transform: var(--ap-from, translateY(6px)) scale(0.98);
+    transition: opacity var(--t-fast) ease-in, transform var(--t-fast) ease-in,
+                display var(--t-fast) allow-discrete, overlay var(--t-fast) allow-discrete;
 }
-.account-pop:popover-open { animation: ap-in 220ms var(--ease-glide) both; }
+.account-pop:popover-open {
+    opacity: 1;
+    transform: none;
+    transition: opacity 220ms var(--ease-glide), transform 220ms var(--ease-glide),
+                display 220ms allow-discrete, overlay 220ms allow-discrete;
+}
+@starting-style {
+    .account-pop:popover-open { opacity: 0; transform: var(--ap-from, translateY(6px)) scale(0.98); }
+}
 .account-pop[data-from="below"] { transform-origin: bottom left; --ap-from: translateY(6px); }
 .account-pop[data-from="above"] { transform-origin: top left; --ap-from: translateY(-6px); }
 .account-pop[data-from="left"]  { transform-origin: bottom left; --ap-from: translateX(-6px); }
-@keyframes ap-in { from { opacity: 0; transform: var(--ap-from, translateY(6px)) scale(0.98); } }
 
 .ap-head { display: flex; align-items: center; gap: var(--s-3); padding: var(--s-4); background: var(--surface-sunken); border-bottom: var(--border); }
 .ap-head .av {
@@ -839,7 +862,7 @@ textarea.input-a {
 .ap-item:hover .go { transform: translateX(2px); }
 
 @media (prefers-reduced-motion: reduce) {
-    .account-pop:popover-open { animation: none; }
+    .account-pop, .account-pop:popover-open { transition: none; }
 }
 .ap-actions form { margin: 0; }
 

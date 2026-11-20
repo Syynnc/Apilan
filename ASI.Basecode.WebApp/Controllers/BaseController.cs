@@ -9,11 +9,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    /// <summary>
-    /// Shared helpers for reading the signed-in account out of the cookie.
-    /// The username is what the stored procedures record as created_by /
-    /// updated_by, so a change is always stamped with who made it.
-    /// </summary>
+    /* Shared helpers for reading the signed-in account out of the cookie.
+       The username is what the stored procedures record as created_by /
+       updated_by, so a change is always stamped with who made it. */
     public abstract class BaseController : Controller
     {
         protected int AccountId =>
@@ -25,24 +23,22 @@ namespace ASI.Basecode.WebApp.Controllers
         protected string DisplayName =>
             User.FindFirstValue(Const.ClaimDisplayName) ?? CurrentUserName;
 
-        /// <summary>The linked student's id for a member account, if any.</summary>
+        // The linked student's id for a member account, if any.
         protected int? LinkedUserId =>
             int.TryParse(User.FindFirstValue(Const.ClaimUserId), out var id) ? id : (int?)null;
 
         protected bool IsOfficer => User.IsInRole(Const.RoleOfficer);
 
-        /// <summary>Still on the default password: the prompt to change it is showing.</summary>
+        // Still on the default password: the prompt to change it is showing.
         protected bool MustChangePassword => User.HasClaim(c => c.Type == Const.ClaimMustChangePassword);
 
-        /// <summary>
-        /// True when the request came from the modal script rather than a full
-        /// page load. The add/edit forms open in a modal, but every one of them
-        /// still works as a plain page for a direct link or without JavaScript.
-        /// </summary>
+        /* True when the request came from the modal script rather than a full
+           page load. The add/edit forms open in a modal, but every one of them
+           still works as a plain page for a direct link or without JavaScript. */
         protected bool IsModalRequest =>
             string.Equals(Request.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
 
-        /// <summary>The form on its own for the modal, or wrapped in its page otherwise.</summary>
+        // The form on its own for the modal, or wrapped in its page otherwise.
         protected IActionResult FormView(object model, bool invalid = false)
         {
             if (!IsModalRequest)
@@ -58,11 +54,9 @@ namespace ASI.Basecode.WebApp.Controllers
             return PartialView("_Form", model);
         }
 
-        /// <summary>
-        /// Writes to the activity log: the signed-in account did this, now. The
-        /// time is stamped by the database. Called only after the change saved.
-        /// Pass accountId/actor when nobody is signed in yet (a sign-in).
-        /// </summary>
+        /* Writes to the activity log: the signed-in account did this, now. The
+           time is stamped by the database. Called only after the change saved.
+           Pass accountId/actor when nobody is signed in yet (a sign-in). */
         protected void Audit(string action, string targetType = null, int? targetId = null,
             string targetLabel = null, string details = null, int? accountId = null, string actor = null)
         {
@@ -79,7 +73,7 @@ namespace ASI.Basecode.WebApp.Controllers
             });
         }
 
-        /// <summary>After a successful save: a redirect for a page, JSON naming it for the modal.</summary>
+        // After a successful save: a redirect for a page, JSON naming it for the modal.
         protected IActionResult SavedRedirect(string url)
         {
             return IsModalRequest ? Json(new { redirect = url }) : Redirect(url);

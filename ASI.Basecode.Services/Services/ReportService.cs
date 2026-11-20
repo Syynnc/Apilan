@@ -10,11 +10,9 @@ using ASI.Basecode.Services.ServiceModels;
 
 namespace ASI.Basecode.Services.Services
 {
-    /// <summary>
-    /// The participation report. Reads the attendance and summary views, applies
-    /// the ReportFilter (dates, type, course, year), and computes every section's
-    /// figures in memory; also renders the same figures as a CSV export.
-    /// </summary>
+    /* The participation report. Reads the attendance and summary views, applies
+       the ReportFilter (dates, type, course, year), and computes every section's
+       figures in memory; also renders the same figures as a CSV export. */
     public class ReportService : ServiceBase, IReportService
     {
         private readonly IEventRepository _events;
@@ -104,7 +102,7 @@ namespace ASI.Basecode.Services.Services
             return csv.ToString();
         }
 
-        /// <summary>A CSV cell: quoted when it has to be, and never read as a formula.</summary>
+        // A CSV cell: quoted when it has to be, and never read as a formula.
         private static string Cell(string value)
         {
             if (string.IsNullOrEmpty(value)) { return string.Empty; }
@@ -139,12 +137,10 @@ namespace ASI.Basecode.Services.Services
             };
         }
 
-        /// <summary>
-        /// The participation report. Members are narrowed by course and year,
-        /// events by type, a single event, and a date range on their start.
-        /// Only events that have started count — an upcoming event has had no
-        /// chance to be attended, so it would only drag every rate down.
-        /// </summary>
+        /* The participation report. Members are narrowed by course and year,
+           events by type, a single event, and a date range on their start.
+           Only events that have started count — an upcoming event has had no
+           chance to be attended, so it would only drag every rate down. */
         public ReportViewModel GetReport(ReportFilter filter)
         {
             filter ??= new ReportFilter();
@@ -191,8 +187,8 @@ namespace ASI.Basecode.Services.Services
             var memberIds = members.Select(m => m.Id).ToHashSet();
 
             /* ---- Check-ins: those events × those members ---------------- */
-            // Deactivated members' past check-ins are left out too, so every
-            // figure on the page is about the same group of people.
+            /* Deactivated members' past check-ins are left out too, so every
+               figure on the page is about the same group of people. */
             var rows = _attendance.GetAttendanceDetails()
                 .Where(a => eventIds.Contains(a.EventId))
                 .ToList()

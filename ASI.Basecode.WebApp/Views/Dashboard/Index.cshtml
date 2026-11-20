@@ -8,8 +8,8 @@
     var alsoLive = Model.Ongoing.Skip(1).ToList();
     var next = Model.Upcoming.FirstOrDefault();
 
-    // Turnout for a finished event: against its capacity when it had one,
-    // otherwise against the members who could have come.
+    /* Turnout for a finished event: against its capacity when it had one,
+       otherwise against the members who could have come. */
     Func<EventSummary, int> turnout = e =>
     {
         var present = e.TotalPresent ?? 0;

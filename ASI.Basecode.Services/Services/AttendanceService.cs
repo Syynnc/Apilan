@@ -12,11 +12,9 @@ using static ASI.Basecode.Resources.Constants.Enums;
 
 namespace ASI.Basecode.Services.Services
 {
-    /// <summary>
-    /// Business logic for the door. Decides from the event's window whether a
-    /// scan is a time-in or a time-out, records it through AttendanceRepository,
-    /// and builds the per-event CSV export.
-    /// </summary>
+    /* Business logic for the door. Decides from the event's window whether a
+       scan is a time-in or a time-out, records it through AttendanceRepository,
+       and builds the per-event CSV export. */
     public class AttendanceService : ServiceBase, IAttendanceService
     {
         private readonly IAttendanceRepository _attendance;
@@ -34,8 +32,8 @@ namespace ASI.Basecode.Services.Services
         {
             var studentNumber = entry.StudentNumber.Trim();
 
-            // The clock decides which way a scan goes: time-in opens by itself at
-            // the start and time-out at the end, each for the event's window.
+            /* The clock decides which way a scan goes: time-in opens by itself at
+               the start and time-out at the end, each for the event's window. */
             var evt = _events.GetEvents()
                 .Where(e => e.Id == entry.EventId)
                 .Select(e => new { e.EventStart, e.EventEnd, e.AttendanceWindowMinutes })

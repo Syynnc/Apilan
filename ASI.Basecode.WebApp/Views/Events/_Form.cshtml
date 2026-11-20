@@ -57,7 +57,7 @@
             </div>
             <div class="field span-2">
                 <label asp-for="EventHost"></label>
-                <input asp-for="EventHost" class="input-a" placeholder="Executive Board" />
+                <input asp-for="EventHost" class="input-a" placeholder="Executive Board" data-allow="A-Za-zÀ-ÖØ-öø-ÿ .&amp;'-" />
                 <span asp-validation-for="EventHost" class="field-error"></span>
             </div>
 
@@ -79,7 +79,8 @@
             </div>
             <div class="field">
                 <label asp-for="EventCapacity"></label>
-                <input asp-for="EventCapacity" class="input-a" type="number" min="1" placeholder="No limit" />
+                <input asp-for="EventCapacity" class="input-a" type="text" inputmode="numeric" maxlength="6"
+                       data-allow="0-9" placeholder="No limit" />
                 <span asp-validation-for="EventCapacity" class="field-error"></span>
             </div>
 

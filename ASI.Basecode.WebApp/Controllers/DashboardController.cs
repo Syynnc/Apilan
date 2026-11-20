@@ -5,10 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    /// <summary>
-    /// The officer dashboard: live, upcoming and finished events and the headline
-    /// figures, all built by IReportService.GetDashboard.
-    /// </summary>
+    /* The officer dashboard: live, upcoming and finished events and the headline
+       figures, all built by IReportService.GetDashboard. */
     [Authorize(Policy = Const.OfficerOnlyPolicy)]
     public class DashboardController : BaseController
     {

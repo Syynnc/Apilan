@@ -5,10 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ASI.Basecode.Data
 {
-    /// <summary>
-    /// Database-first context over AllianceDB. The schema, triggers, views and
-    /// stored procedures live in the database; this class only maps onto them.
-    /// </summary>
+    /* Database-first context over AllianceDB. The schema, triggers, views and
+       stored procedures live in the database; this class only maps onto them. */
     public partial class AllianceDbContext : DbContext
     {
         public AllianceDbContext()
@@ -37,8 +35,8 @@ namespace ASI.Basecode.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Tables. The triggers are declared so EF does not use OUTPUT
-            // clauses, which SQL Server rejects on tables with triggers.
+            /* Tables. The triggers are declared so EF does not use OUTPUT
+               clauses, which SQL Server rejects on tables with triggers. */
             modelBuilder.Entity<User>(entity =>
             {
                 entity.ToTable("users", tb => tb.HasTrigger("trg_users_updated_time"));

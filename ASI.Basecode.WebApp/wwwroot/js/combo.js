@@ -49,8 +49,8 @@
 
     function choose(input, list, option) {
         input.value = option.getAttribute("data-value");
-        // Let validation and the ticket preview see the new value, without
-        // the list taking that echo as more typing and opening again.
+        /* Let validation and the ticket preview see the new value, without
+           the list taking that echo as more typing and opening again. */
         input._choosing = true;
         input.dispatchEvent(new Event("input", { bubbles: true }));
         input.dispatchEvent(new Event("change", { bubbles: true }));
