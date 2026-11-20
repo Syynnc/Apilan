@@ -24,6 +24,15 @@ builder.Services.Configure<ApilanSettings>(builder.Configuration.GetSection(Apil
 builder.Services.AddDbContext<AllianceDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+/* Squeeze stylesheets, scripts and icons before they go out, which matters
+   for phones on the venue Wi-Fi. Pages themselves are left alone: they carry
+   the anti-forgery token, and compressing secrets alongside user input leaks them. */
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.MimeTypes = new[] { "text/css", "text/javascript", "application/javascript", "image/svg+xml" };
+});
+
 // AutoMapper — the services depend on IMapper.
 builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 
@@ -112,7 +121,27 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+app.UseResponseCompression();
+
+/* Let the browser keep static files instead of fetching them on every page.
+   Files linked with asp-append-version carry ?v=<hash>, which changes whenever
+   the file does, so they can be kept for a year. The vendored libraries and
+   fonts never change, so a month is safe. Anything else keeps the default. */
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        var request = ctx.Context.Request;
+        if (request.Query.ContainsKey("v"))
+        {
+            ctx.Context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+        }
+        else if (request.Path.StartsWithSegments("/lib"))
+        {
+            ctx.Context.Response.Headers.CacheControl = "public, max-age=2592000";
+        }
+    }
+});
 
 app.UseRouting();
 
