@@ -12,6 +12,10 @@ namespace ASI.Basecode.Services.ServiceModels
     {
         public int Id { get; set; }
 
+        /* Who hosts an event, or what a type is called: letters (ñ and accents
+           too) with spaces and - & . ' (Alliance Executive Board, Team-building). */
+        public const string GroupNamePattern = @"^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ .&'-]*$";
+
         [Required(ErrorMessage = "Event name is required.")]
         [StringLength(255)]
         [Display(Name = "Event name")]
@@ -42,6 +46,7 @@ namespace ASI.Basecode.Services.ServiceModels
         public int? EventCapacity { get; set; }
 
         [StringLength(255)]
+        [RegularExpression(GroupNamePattern, ErrorMessage = "Use letters only (spaces and - & . ' are fine).")]
         [Display(Name = "Host")]
         public string EventHost { get; set; }
 
@@ -95,6 +100,8 @@ namespace ASI.Basecode.Services.ServiceModels
 
         [Required(ErrorMessage = "Enter or scan a student number.")]
         [StringLength(20)]
+        // A handheld scanner may add a space or newline; the service trims it.
+        [RegularExpression(@"^\s*\d{4}-\d{5}\s*$", ErrorMessage = "Student numbers look like 2026-00001.")]
         [Display(Name = "Student number")]
         public string StudentNumber { get; set; }
 
@@ -112,6 +119,7 @@ namespace ASI.Basecode.Services.ServiceModels
 
         [Required(ErrorMessage = "Name is required.")]
         [StringLength(50)]
+        [RegularExpression(EventViewModel.GroupNamePattern, ErrorMessage = "Use letters only (spaces and - & . ' are fine).")]
         [Display(Name = "Name")]
         public string TypeName { get; set; }
 

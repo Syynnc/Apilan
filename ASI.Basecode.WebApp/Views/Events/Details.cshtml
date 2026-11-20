@@ -144,7 +144,8 @@
                     <label class="door-label" for="scan-field" id="scan-label">Type the student number</label>
                     <div class="door-entry">
                         <input type="text" name="StudentNumber" id="scan-field" class="input-a mono"
-                               placeholder="2022-00101" required />
+                               placeholder="2022-00101" required inputmode="numeric" maxlength="10"
+                               data-mask="####-#####" pattern="\d{4}-\d{5}" title="Student numbers look like 2026-00001." />
                         <button type="submit" class="btn-a lg">Record</button>
                     </div>
                     <p class="door-hint">Press Enter to record. Each entry is stamped with the current time.</p>

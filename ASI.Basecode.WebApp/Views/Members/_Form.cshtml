@@ -33,7 +33,8 @@
         <div class="tf-grid">
             <div class="field span-2">
                 <label asp-for="StudentNumber" class="req"></label>
-                <input asp-for="StudentNumber" class="input-a mono" placeholder="2026-00001" autofocus />
+                <input asp-for="StudentNumber" class="input-a mono" placeholder="2026-00001" autofocus
+                       inputmode="numeric" maxlength="10" data-mask="####-#####" />
                 <span asp-validation-for="StudentNumber" class="field-error"></span>
             </div>
             <div class="field span-2">
@@ -44,12 +45,12 @@
 
             <div class="field span-2">
                 <label asp-for="FirstName" class="req"></label>
-                <input asp-for="FirstName" class="input-a" />
+                <input asp-for="FirstName" class="input-a" autocomplete="off" data-allow="A-Za-zÀ-ÖØ-öø-ÿ .'-" />
                 <span asp-validation-for="FirstName" class="field-error"></span>
             </div>
             <div class="field span-2">
                 <label asp-for="LastName" class="req"></label>
-                <input asp-for="LastName" class="input-a" />
+                <input asp-for="LastName" class="input-a" autocomplete="off" data-allow="A-Za-zÀ-ÖØ-öø-ÿ .'-" />
                 <span asp-validation-for="LastName" class="field-error"></span>
             </div>
 
@@ -58,7 +59,7 @@
                 @* Pick from the school's courses, or type one that is not listed. *@
                 <div class="combo" data-combo>
                     <input asp-for="Course" class="input-a" placeholder="Search or type a course" autocomplete="off"
-                           role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="course-list" data-combo-input />
+                           role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="course-list" data-combo-input data-allow="A-Za-z .&amp;-" />
                     <svg class="combo-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5" /></svg>
                     <ul class="combo-list" id="course-list" role="listbox" hidden data-combo-list>
                         @foreach (var c in Apilan.Value.Courses)
@@ -99,7 +100,8 @@
 
             <div class="field span-4">
                 <label asp-for="ContactNumber"></label>
-                <input asp-for="ContactNumber" class="input-a mono" placeholder="+639XXXXXXXXX" />
+                <input asp-for="ContactNumber" class="input-a mono" placeholder="+639XXXXXXXXX"
+                       inputmode="tel" maxlength="13" data-allow="0-9+" />
                 <span asp-validation-for="ContactNumber" class="field-error"></span>
             </div>
         </div>

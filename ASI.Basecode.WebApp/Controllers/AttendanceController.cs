@@ -38,7 +38,10 @@ namespace ASI.Basecode.WebApp.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["Error"] = Errors.StudentNumberRequired;
+                // Missing or not shaped like a student number: say which.
+                TempData["Error"] = ModelState.Values.SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage).FirstOrDefault(m => !string.IsNullOrEmpty(m))
+                    ?? Errors.StudentNumberRequired;
                 return BackToEvent(entry.EventId);
             }
 
