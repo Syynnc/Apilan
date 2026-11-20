@@ -57,6 +57,21 @@
         setTimeout(finish, 260);
     }
 
+    /* How long the closing slide takes (dialog.modal.is-closing in screens.css). */
+    var CLOSE_MS = 170;
+
+    /* Confirm and filter dialogs post (or GET) a normal page load. Let the
+       dialog animate out first, then send the form. The modal forms that post
+       in place (data-modal-form) have already stopped the submit by now. */
+    document.addEventListener("submit", function (e) {
+        var form = e.target;
+        var dialog = form.closest("dialog.modal");
+        if (!dialog || e.defaultPrevented || REDUCED) { return; }
+        e.preventDefault();
+        close(dialog);
+        setTimeout(function () { form.submit(); }, CLOSE_MS);
+    });
+
     document.addEventListener("click", function (e) {
         var closer = e.target.closest("[data-modal-close]");
         if (closer && closer.closest("dialog")) {
@@ -200,7 +215,12 @@
                     var type = r.headers.get("Content-Type") || "";
                     if (type.indexOf("application/json") >= 0) {
                         return r.json().then(function (data) {
-                            window.location.href = data.redirect || window.location.href;
+                            // Let the modal animate out before the next page replaces it.
+                            var dialog = form.closest("dialog");
+                            if (dialog) { close(dialog); }
+                            setTimeout(function () {
+                                window.location.href = data.redirect || window.location.href;
+                            }, dialog && !REDUCED ? CLOSE_MS : 0);
                         });
                     }
                     return r.text().then(function (html) {

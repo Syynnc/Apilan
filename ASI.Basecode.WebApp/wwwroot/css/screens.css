@@ -1013,6 +1013,13 @@ dialog.modal {
     opacity: 0;
     transform: translateY(14px) scale(0.985);
     transition: opacity 180ms var(--ease-out), transform 260ms var(--ease-glide);
+    /* A dialog written straight into the page is a child of .console-body.
+       Its spacing (margin-top between blocks) would pin the dialog near the
+       top instead of centring it, and its rise-in animation would hold it at
+       full opacity so it never fades out. Dialogs centre on the auto margin
+       and move by the transitions here alone. */
+    margin: auto;
+    animation: none;
 }
 dialog.modal[open] { will-change: transform, opacity; }
 dialog.modal.is-shown { opacity: 1; transform: none; }
@@ -1044,7 +1051,11 @@ dialog.modal.is-closing::backdrop { opacity: 0; transition-duration: 170ms; }
     overflow-y: auto;
     overflow-x: hidden;
     border-radius: var(--r-lg);
-    scrollbar-gutter: stable;
+    /* No scrollbar lane: a tall form still scrolls with the wheel, touchpad
+       or keyboard. A lane, kept or only when needed, showed as a strip beside
+       the card with the shadow (or the page) through it, and pushed the card
+       off centre. */
+    scrollbar-width: none;
     box-shadow: 0 24px 48px -12px rgba(10, 12, 9, 0.38), 0 4px 12px rgba(10, 12, 9, 0.14);
 }
 dialog.modal.is-loading { cursor: progress; }
