@@ -17,7 +17,7 @@ Every report comes from the attendance records, so nothing has to be typed in tw
 - **Events:** create and edit events. Each event has a type, a required venue, a capacity and a time-in/time-out window. Arriving after the time-in window counts as late.
 - **Event types:** manage categories, each with its own colour on the calendar.
 - **Attendance:** record time-in and time-out for members at an event.
-- **Members:** add, edit and deactivate members (year 1–5 or Non-blocked, plus a searchable course picker). Every member gets a sign-in automatically.
+- **Members:** add, edit and deactivate members (year 1–5 or Non-blocked, plus a searchable course picker). Every member gets a sign-in automatically. A student number can belong to only one member, and the form says who already has it.
 - **Accounts:** promote a member to officer or demote them, and reset passwords.
 - **Reports:** participation broken into sections, with filters and an analytics export.
 - **Audit log:** a record of who changed what, and when.
@@ -26,6 +26,12 @@ Every report comes from the attendance records, so nothing has to be typed in tw
 - See the event calendar.
 - See their own attendance history.
 - Change their password. This is required at the first sign-in.
+
+**Everywhere**
+- **Phones:** under 960px the sidebar becomes a slide-out menu, and under 640px each table row turns into a card.
+- **Clickable rows:** clicking a row in the Events, Members, Accounts or report tables opens that row's page. Ctrl/Cmd-click or middle-click opens it in a new tab.
+- **Input checks:** student numbers must be `####-#####`, and names accept only letters (ñ and accents included), spaces, `-`, `.` and `'`. The checks run while typing and again on the server.
+- **Fast on venue Wi-Fi:** fonts are served by the site itself (no Google Fonts), static files are cached by the browser, and CSS/JS are compressed.
 
 ---
 
