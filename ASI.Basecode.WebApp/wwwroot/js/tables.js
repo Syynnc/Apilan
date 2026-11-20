@@ -379,3 +379,32 @@
         if (link) { e.preventDefault(); window.open(link.href, "_blank"); }
     });
 }());
+
+/* ---- Tables as cards on a phone ----------------------------------------- */
+/* .table-stack rows become small cards under 640px (screens.css), each value
+   labelled by its column. Rather than repeat every header on every cell in
+   the views, label the cells here from the table's own header. The first
+   cell (the row's name) is the card's title; a column with no visible header
+   (the row's buttons) runs the full width. Cells that already carry a
+   data-label or a role class keep it. */
+(function () {
+    "use strict";
+
+    function headText(th) {
+        var copy = th.cloneNode(true);
+        copy.querySelectorAll(".visually-hidden").forEach(function (n) { n.remove(); });
+        return copy.textContent.trim();
+    }
+
+    document.querySelectorAll("table.table-stack").forEach(function (table) {
+        var heads = Array.prototype.map.call(table.querySelectorAll("thead th"), headText);
+        table.querySelectorAll("tbody tr").forEach(function (row) {
+            Array.prototype.forEach.call(row.children, function (cell, i) {
+                if (cell.hasAttribute("data-label") || cell.classList.contains("cell-title") || cell.hasAttribute("colspan")) { return; }
+                if (i === 0) { cell.classList.add("cell-title"); }
+                else if (heads[i]) { cell.setAttribute("data-label", heads[i]); }
+                else { cell.classList.add("cell-wide"); }
+            });
+        });
+    });
+}());

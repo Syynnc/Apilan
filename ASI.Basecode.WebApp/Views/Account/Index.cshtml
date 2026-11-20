@@ -39,7 +39,7 @@
         }
         else
         {
-            <table class="table-a accounts-table" id="accounts-table" data-paginate="5">
+            <table class="table-a table-stack table-people accounts-table" id="accounts-table" data-paginate="5">
                 <thead>
                     <tr><th>Account</th><th>Member</th><th>Role</th><th>Status</th><th class="acts-head"><span class="visually-hidden">Actions</span></th></tr>
                 </thead>
@@ -84,7 +84,7 @@
                                 }
                             </div>
                         </td>
-                        <td>
+                        <td class="m-badge">
                             @if (a.IsActive)
                             {
                                 <span class="chip ok">Active</span>

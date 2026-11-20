@@ -220,7 +220,7 @@
             }
             else
             {
-                <table class="table-a" id="checked-in-table" data-paginate="5">
+                <table class="table-a table-stack table-people" id="checked-in-table" data-paginate="5">
                     <thead>
                         <tr><th>Name</th><th>Student no.</th><th>Mode</th><th>Time in</th><th>Time out</th><th></th></tr>
                     </thead>
@@ -229,7 +229,7 @@
                     {
                         <tr>
                             <td><strong>@a.FullName</strong> @if (a.IsLate == 1) { <span class="chip warn">Late</span> }</td>
-                            <td class="mono">@a.StudentNumber</td>
+                            <td class="mono m-sub">@a.StudentNumber</td>
                             <td>@a.AttendanceMode</td>
                             <td class="mono">@a.TimeIn.ToString("HH:mm")</td>
                             <td class="mono">@(a.TimeOut?.ToString("HH:mm") ?? "—")</td>
@@ -251,12 +251,12 @@
         {
             <div class="panel">
                 <div class="panel-head"><h3>Absentees</h3><span class="count">@Model.Absentees.Count</span></div>
-                <table class="table-a" id="absentees-table" data-paginate="5">
+                <table class="table-a table-stack table-people" id="absentees-table" data-paginate="5">
                     <thead><tr><th>Name</th><th>Student no.</th><th>Course</th></tr></thead>
                     <tbody>
                     @foreach (var a in Model.Absentees)
                     {
-                        <tr><td>@a.FullName</td><td class="mono">@a.StudentNumber</td><td>@a.Course</td></tr>
+                        <tr><td><strong>@a.FullName</strong></td><td class="mono m-sub">@a.StudentNumber</td><td>@a.Course</td></tr>
                     }
                     </tbody>
                 </table>

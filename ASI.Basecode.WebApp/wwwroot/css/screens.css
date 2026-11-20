@@ -611,13 +611,33 @@ details.more > summary {
     .table-stack tbody tr {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: var(--s-2) var(--s-4);
-        padding: var(--s-4) var(--s-5);
+        gap: var(--s-2) var(--s-3);
+        padding: var(--s-3) var(--s-4);
         border-bottom: var(--border);
     }
     .table-stack tbody tr:last-child { border-bottom: 0; }
     .table-stack tbody td { padding: 0; border: 0; }
-    .table-stack td.cell-title { grid-column: 1 / -1; }
+    .table-stack td.cell-title,
+    .table-stack td.cell-wide { grid-column: 1 / -1; }
+    /* Numbers sit under their label in a card, not against a column edge. */
+    .table-stack td.num { text-align: left; }
+    /* The row's buttons get their own strip along the bottom of the card,
+       on the right where a thumb reaches, with room to tap. */
+    .table-stack td.cell-wide {
+        margin-top: 2px;
+        padding-top: var(--s-2);
+        border-top: 1px dashed var(--line);
+    }
+    .table-stack td.cell-wide .row-actions,
+    .table-stack td.cell-wide .icon-acts { justify-content: flex-end; flex-wrap: wrap; gap: var(--s-1); }
+    .table-stack td.cell-wide .icon-act { width: 40px; height: 40px; }
+    .table-stack td.cell-wide .btn-a.sm { min-height: 36px; }
+    /* Desktop tables shrink their action column to fit (width: 1%); in a
+       card that would crush the buttons into one. */
+    .table-stack tbody td { width: auto !important; white-space: normal; }
+    /* Dates and codes may wrap in a half-width card cell instead of running
+       into the next one. */
+    .table-stack tbody td.mono { white-space: normal; overflow-wrap: anywhere; }
     .table-stack td[data-label]::before {
         content: attr(data-label);
         display: block;
@@ -2224,4 +2244,84 @@ a.b-stat.accent:hover { border-color: var(--accent-hover); background: var(--acc
     .report-actions, .filter-chips .filter-clear, .report-tabs a:not(.is-active), .searchbar, .table-pager { display: none !important; }
     .chart-card, .rfig, .panel { break-inside: avoid; box-shadow: none !important; }
     .report-figures.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* ==========================================================================
+   PHONES — what still ran off a 390px screen.
+   ========================================================================== */
+@media (max-width: 640px) {
+    /* Section tabs (report, audit log) scroll sideways inside their pill
+       instead of widening the page. */
+    .report-tabs {
+        max-width: 100%;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .report-tabs::-webkit-scrollbar { display: none; }
+    .report-tabs a { flex: none; white-space: nowrap; padding-inline: var(--s-3); }
+
+    /* Search and its buttons share one full-width row. */
+    .report-actions { width: 100%; flex-wrap: wrap; }
+    .report-actions .searchbar.compact { flex: 1 1 160px; min-width: 0; }
+    .report-actions .menu { margin-left: auto; }
+}
+
+@media (max-width: 640px) {
+    /* Summary tiles two to a row rather than one long column of boxes; an
+       odd last one takes the full row. */
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-3); }
+    .tiles > .tile:last-child:nth-child(odd) { grid-column: 1 / -1; }
+    .tile { padding: var(--s-3) var(--s-4); }
+    .tile .n { font-size: 1.5rem; }
+    .tile .n.sm { font-size: 1.1rem; }
+    .tile .s { margin-top: var(--s-1); }
+
+    /* Member and event facts two to a row; a long email breaks rather than
+       pushing past the panel. */
+    .detail-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-3) var(--s-4); }
+    .detail-list dd { overflow-wrap: anywhere; }
+    .detail-list > .wide { grid-column: 1 / -1; }
+}
+
+/* ---- People tables as person cards on a phone --------------------------
+   Members, accounts, the report's members, an event's check-ins and
+   absentees. The card opens with the person (avatar and name), the student
+   number under the name (.m-sub), the status pinned top-right (.m-badge),
+   then up to three short facts across, then the row's buttons. */
+@media (max-width: 640px) {
+    .table-stack tbody td.cell-title { grid-row: 1; }
+    .table-stack.table-people tbody tr { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-2) var(--s-3); }
+
+    .table-stack td.m-sub {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        margin-top: calc(-1 * var(--s-2));
+        font-size: var(--fs-xs);
+        color: var(--ink-3);
+    }
+    .table-stack td.m-sub::before,
+    .table-stack td.m-badge::before { content: none; }
+    /* Under the name, not under the avatar. */
+    .table-stack tr:has(.cell-person .av) td.m-sub { padding-left: calc(30px + var(--s-3)); }
+
+    .table-stack td.m-badge {
+        grid-column: -2 / -1;
+        grid-row: 1;
+        justify-self: end;
+        align-self: center;
+    }
+    .table-stack tr:has(> td.m-badge) > td.cell-title { padding-right: 104px; }
+
+    /* Names read as the card's heading; long ones wrap rather than clip. */
+    .table-stack.table-people td.cell-title strong { font-size: var(--fs-sm); overflow-wrap: anywhere; }
+    .table-stack.table-people td.cell-title .cell-person { align-items: center; }
+    .table-stack.table-people .bar-cell { min-width: 0; }
+
+    /* Accounts have two facts (member, role); give them half each. */
+    .table-stack.table-people.accounts-table tbody tr { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    /* Desktop keeps empty slots so icons line up down the column; a card
+       has no column to line up with. */
+    .table-stack td.cell-wide .icon-slot { display: none; }
+    /* A lone button (Remove) sits right like the rest. */
+    .table-stack td.cell-wide { text-align: right; }
 }
