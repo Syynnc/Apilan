@@ -472,7 +472,7 @@ else if (view == "events")
     }
     else
     {
-        <table class="table-a" id="report-events" data-paginate="5">
+        <table class="table-a table-stack" id="report-events" data-paginate="5">
             <thead>
                 <tr><th>Event</th><th>When</th><th class="num">On time</th><th class="num">Late</th><th class="num">No time-out</th><th>Turnout</th><th>Status</th></tr>
             </thead>
@@ -607,7 +607,7 @@ else if (view == "members")
     }
     else
     {
-        <table class="table-a" id="report-members" data-paginate="5">
+        <table class="table-a table-stack table-people" id="report-members" data-paginate="5">
             <thead>
                 <tr><th>Name</th><th>Student no.</th><th>Course</th><th class="num">Year</th><th>Attendance</th><th class="num">Late</th><th class="num">No time-out</th><th>Last attended</th></tr>
             </thead>
@@ -616,7 +616,7 @@ else if (view == "members")
             {
                 <tr data-search="@m.FullName @m.StudentNumber @m.Course">
                     <td><a data-row-link asp-controller="Members" asp-action="Details" asp-route-id="@m.UserId"><strong>@m.FullName</strong></a></td>
-                    <td class="mono">@m.StudentNumber</td>
+                    <td class="mono m-sub">@m.StudentNumber</td>
                     <td>@(m.Course ?? "—")</td>
                     <td class="num">@YearLevels.Short(m.YearLevel)</td>
                     <td>
