@@ -50,6 +50,10 @@ namespace ASI.Basecode.Services.Interfaces
         string SetActive(int id, bool isActive, string updatedBy);
         List<LookupItem> GetStudentLookup();
 
+        /* Who already has this student number, other than the member being
+           edited (exceptId), or null when it is free. */
+        string StudentNumberOwner(string studentNumber, int exceptId);
+
         // The closest few members to a search term, for the live search box.
         List<StudentListItem> Suggest(string term, int take = 6);
     }

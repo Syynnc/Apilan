@@ -136,6 +136,15 @@ namespace ASI.Basecode.Resources.Messages {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Student number {0} already belongs to {1}..
+        /// </summary>
+        public static string StudentNumberTaken {
+            get {
+                return ResourceManager.GetString("StudentNumberTaken", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This member already has a sign-in account..
         /// </summary>
         public static string AccountAlreadyExists {

@@ -49,6 +49,16 @@ namespace ASI.Basecode.WebApp.Controllers
             return Json(items);
         }
 
+        /* For the form: is this student number free? Checked as the field is
+           left, so a taken number shows before Save. id is the member being
+           edited (0 for a new one), whose own number is not a clash. */
+        [HttpGet]
+        public IActionResult CheckStudentNumber(string studentNumber, int id = 0)
+        {
+            var owner = _students.StudentNumberOwner(studentNumber, id);
+            return Json(new { taken = owner != null, message = owner == null ? null : string.Format(Errors.StudentNumberTaken, studentNumber?.Trim(), owner) });
+        }
+
         public IActionResult Details(int id)
         {
             try
@@ -95,6 +105,13 @@ namespace ASI.Basecode.WebApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Save(StudentViewModel model)
         {
+            // No two members share a student number; say whose it is, beside the field.
+            if (ModelState.IsValid && _students.StudentNumberOwner(model.StudentNumber, model.Id) is string owner)
+            {
+                ModelState.AddModelError(nameof(model.StudentNumber),
+                    string.Format(Errors.StudentNumberTaken, model.StudentNumber, owner));
+            }
+
             if (!ModelState.IsValid)
             {
                 return FormView(model, invalid: true);

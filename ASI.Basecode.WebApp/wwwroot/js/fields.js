@@ -29,3 +29,49 @@
         if (clean !== el.value) { el.value = clean; }
     }, true);
 }());
+
+/* ---- Taken already? ---------------------------------------------------- */
+/* data-check-url on a field asks the server, when the field is left, whether
+   its value already belongs to someone (a student number, say). The answer
+   shows under the field the way a validation message does. Only a value that
+   fits the field's pattern or mask is asked about. The server checks again
+   on save, so this only brings the news early. */
+(function () {
+    "use strict";
+
+    function message(field, text) {
+        var span = field.form && field.form.querySelector("[data-valmsg-for='" + field.name + "']");
+        field.classList.toggle("input-validation-error", !!text);
+        if (!span) { return; }
+        if (text) {
+            span.textContent = text;
+            span.classList.remove("field-validation-valid");
+            span.classList.add("field-validation-error");
+            span.setAttribute("data-taken", "");
+        } else if (span.hasAttribute("data-taken")) {
+            span.textContent = "";
+            span.classList.remove("field-validation-error");
+            span.classList.add("field-validation-valid");
+            span.removeAttribute("data-taken");
+        }
+    }
+
+    document.addEventListener("change", function (e) {
+        var field = e.target;
+        if (!(field instanceof HTMLInputElement) || !field.hasAttribute("data-check-url")) { return; }
+        var value = field.value.trim();
+        var mask = field.getAttribute("data-mask");
+        if (!value || (mask && value.length !== mask.length)) { message(field, null); return; }
+
+        var url = field.getAttribute("data-check-url");
+        url += (url.indexOf("?") < 0 ? "?" : "&") + encodeURIComponent(field.name) + "=" + encodeURIComponent(value);
+        fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" }, credentials: "same-origin" })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (data) {
+                // Ignore a late answer for a value that has since changed.
+                if (!data || field.value.trim() !== value) { return; }
+                message(field, data.taken ? data.message : null);
+            })
+            .catch(function () { /* offline: the save checks anyway */ });
+    });
+}());

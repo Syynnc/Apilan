@@ -34,7 +34,8 @@
             <div class="field span-2">
                 <label asp-for="StudentNumber" class="req"></label>
                 <input asp-for="StudentNumber" class="input-a mono" placeholder="2026-00001" autofocus
-                       inputmode="numeric" maxlength="10" data-mask="####-#####" />
+                       inputmode="numeric" maxlength="10" data-mask="####-#####"
+                       data-check-url="@Url.Action("CheckStudentNumber", "Members", new { id = Model.Id })" />
                 <span asp-validation-for="StudentNumber" class="field-error"></span>
             </div>
             <div class="field span-2">
