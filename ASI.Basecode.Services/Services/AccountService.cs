@@ -110,7 +110,6 @@ namespace ASI.Basecode.Services.Services
                         UserId = a.UserId,
                         StudentName = a.User != null ? a.User.LastName + ", " + a.User.FirstName : null,
                         StudentNumber = a.User != null ? a.User.StudentNumber : null,
-                        StudentActive = a.User == null || a.User.IsActive,
                         IsActive = a.IsActive,
                         LastLogin = a.LastLogin,
                         CreatedTime = a.CreatedTime,

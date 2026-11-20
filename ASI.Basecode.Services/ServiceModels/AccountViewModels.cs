@@ -56,7 +56,6 @@ namespace ASI.Basecode.Services.ServiceModels
         public int? UserId { get; set; }
         public string StudentName { get; set; }
         public string StudentNumber { get; set; }
-        public bool StudentActive { get; set; }
         public bool IsActive { get; set; }
         public DateTime? LastLogin { get; set; }
         public DateTime CreatedTime { get; set; }

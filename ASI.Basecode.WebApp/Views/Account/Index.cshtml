@@ -65,10 +65,6 @@
                             @if (a.UserId.HasValue)
                             {
                                 <a asp-controller="Members" asp-action="Details" asp-route-id="@a.UserId">@a.StudentName</a>
-                                @if (!a.StudentActive)
-                                {
-                                    <span class="chip risk">Member deactivated</span>
-                                }
                             }
                             else
                             {
