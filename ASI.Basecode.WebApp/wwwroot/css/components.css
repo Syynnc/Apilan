@@ -779,7 +779,8 @@ textarea.input-a {
     cursor: pointer;
 }
 .combo-list [role=option] b { flex: none; min-width: 72px; font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--ink); }
-.combo-list [role=option] span { color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Long names wrap under themselves instead of being cut off with an ellipsis. */
+.combo-list [role=option] span { color: var(--ink-2); min-width: 0; overflow-wrap: anywhere; line-height: 1.35; }
 .combo-list [role=option]:hover,
 .combo-list [role=option].is-active { background: var(--accent-wash); }
 .combo-list [role=option].is-active b { color: var(--accent); }
