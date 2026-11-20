@@ -173,6 +173,8 @@
 .table-a tbody tr:last-child td { border-bottom: 0; }
 .table-a tbody tr { transition: background-color var(--t-fast) var(--ease-out); }
 .table-a tbody tr:hover { background: var(--accent-wash); }
+/* The whole row opens its page (tables.js); only those rows get the hand. */
+.table-a tbody tr:has(a[data-row-link]) { cursor: pointer; }
 .table-a td.num, .table-a th.num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .table-a td strong { color: var(--ink); font-weight: 600; }
 

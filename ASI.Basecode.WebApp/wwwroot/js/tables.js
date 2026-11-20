@@ -347,3 +347,35 @@
         if (form) { form.addEventListener("submit", close); }
     });
 }());
+
+/* ---- Rows that open their page ------------------------------------------ */
+/* A row whose main link is marked data-row-link opens it from anywhere in the
+   row. Rows without one (nothing to open) stay as they are. Buttons, links,
+   form fields and a text selection keep their own clicks; Ctrl/Cmd-click and
+   middle-click open a new tab, as the link itself would. */
+(function () {
+    "use strict";
+
+    var OWN_CLICK = "a, button, input, select, textarea, label, summary, form, [role=menuitem], [data-tip]";
+
+    function target(e) {
+        var row = e.target.closest && e.target.closest("tbody tr");
+        if (!row || e.target.closest(OWN_CLICK)) { return null; }
+        if (String(window.getSelection()).length) { return null; }
+        return row.querySelector("a[data-row-link]");
+    }
+
+    document.addEventListener("click", function (e) {
+        if (e.button !== 0) { return; }
+        var link = target(e);
+        if (!link) { return; }
+        if (e.ctrlKey || e.metaKey || e.shiftKey) { window.open(link.href, "_blank"); return; }
+        link.click();
+    });
+
+    document.addEventListener("auxclick", function (e) {
+        if (e.button !== 1) { return; }
+        var link = target(e);
+        if (link) { e.preventDefault(); window.open(link.href, "_blank"); }
+    });
+}());
