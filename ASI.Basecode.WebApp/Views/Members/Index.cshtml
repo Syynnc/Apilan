@@ -38,7 +38,7 @@
         }
         else
         {
-            <table class="table-a" id="members-table" data-paginate="5">
+            <table class="table-a table-stack table-people" id="members-table" data-paginate="5">
                 <thead>
                     <tr><th>Name</th><th>Student no.</th><th>Course</th><th class="num">Year</th><th class="num">Attended</th><th>Status</th><th></th></tr>
                 </thead>
@@ -52,11 +52,11 @@
                                 <a data-row-link asp-action="Details" asp-route-id="@m.Id"><strong>@m.FullName</strong></a>
                             </div>
                         </td>
-                        <td class="mono">@m.StudentNumber</td>
+                        <td class="mono m-sub">@m.StudentNumber</td>
                         <td>@(string.IsNullOrEmpty(m.Course) ? "—" : m.Course)</td>
                         <td class="num">@YearLevels.Short(m.YearLevel)</td>
                         <td class="num">@m.EventsAttended</td>
-                        <td>
+                        <td class="m-badge">
                             @if (m.IsActive)
                             {
                                 <span class="chip ok">Active</span>

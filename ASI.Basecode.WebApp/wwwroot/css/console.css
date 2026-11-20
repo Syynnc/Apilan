@@ -370,50 +370,99 @@
     }
 }
 
-/* ---- Narrow screens ------------------------------------------------------ */
+/* ---- Phones and tablets: the sidebar is a drawer ------------------------ */
+/* Hidden on wide screens; the drawer below shows them under 960px. */
+.m-bar, .side-scrim, .side-close { display: none; }
+
 @media (max-width: 960px) {
     .console { grid-template-columns: 1fr; }
     .side-toggle { display: none; }
-    .side-head { height: auto; }
 
-    /* Whatever the rail was doing on a wider screen, undo it here. */
-    [data-side="collapsed"] .side,
-    .side { width: auto; padding-inline: var(--s-4); }
-    [data-side="collapsed"] .side-head .brand { display: inline-flex; }
-    [data-side="collapsed"] .side-link { justify-content: flex-start; gap: var(--s-3); padding-inline: var(--s-3); }
-    [data-side="collapsed"] .side-link .lbl,
-    [data-side="collapsed"] .side-user .who,
-    [data-side="collapsed"] .side-out .lbl { width: auto; opacity: 1; }
-    [data-side="collapsed"] .side-group + .side-group { margin-top: 0; padding-top: 0; border-top: 0; }
-    .side {
-        position: static;
-        height: auto;
-        flex-direction: row;
-        flex-wrap: wrap;
+    /* The slim bar across the top: the logo and the Menu button. */
+    .m-bar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: var(--s-3);
-        border-right: 0;
+        height: 56px;
+        padding: 0 var(--s-4);
+        background: var(--surface);
         border-bottom: var(--border);
     }
-    .side-org, .side-group h6 { display: none; }
-    .side-group { display: flex; flex-wrap: wrap; }
-    .side-foot { margin-top: 0; padding-top: 0; border-top: 0; margin-left: auto; display: flex; align-items: center; gap: var(--s-2); }
-    .side-user { margin-bottom: 0; width: auto; }
-    .side-user .chev { display: none; }
-    .side-foot .btn-a { width: auto; }
+    .m-bar .brand { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink); text-decoration: none; font-weight: 700; }
+    .m-menu {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--s-2);
+        height: 40px;
+        padding: 0 var(--s-3);
+        border: var(--border);
+        border-radius: var(--r-sm);
+        background: var(--surface);
+        color: var(--ink);
+        font: inherit;
+        font-size: var(--fs-sm);
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .m-menu svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+
+    /* The sidebar itself, off the left edge until opened. (console.js sets
+       the desktop icon rail aside on these screens.) */
+    .side {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 60;
+        width: min(300px, 86vw);
+        height: 100dvh;
+        padding: 0 var(--s-4) var(--s-5);
+        border-right: var(--border);
+        box-shadow: var(--shadow-float);
+        transform: translateX(-105%);
+        visibility: hidden;
+        transition: transform var(--t-med) var(--ease-out), visibility 0s linear var(--t-med);
+    }
+    html.drawer-open .side {
+        transform: none;
+        visibility: visible;
+        transition: transform var(--t-med) var(--ease-out), visibility 0s;
+    }
+    .side-close {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        margin-left: auto;
+        border: 0;
+        border-radius: var(--r-sm);
+        background: transparent;
+        color: var(--ink-2);
+        cursor: pointer;
+    }
+    .side-close:hover { background: var(--surface-sunken); color: var(--ink); }
+    .side-close svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+
+    /* The page behind dims, and a tap on it closes the drawer. */
+    .side-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 55;
+        background: var(--scrim);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--t-med) var(--ease-out);
+    }
+    html.drawer-open .side-scrim { opacity: 1; pointer-events: auto; }
+    html.drawer-open { overflow: hidden; }
+
     .console-body { padding: var(--s-5) var(--s-4); }
     .console-bar { padding-inline: var(--s-4); position: static; }
-
-    /* One scrolling row of links rather than three wrapped ones. */
-    .side { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
-    .side::-webkit-scrollbar { display: none; }
-    .side-head, .side-group, .side-foot { flex: none; }
-    .side-group { flex-wrap: nowrap; }
-    .side-link { white-space: nowrap; }
 }
-@media (max-width: 560px) {
-    .side-link .lbl, .side-user .who, .side-out .lbl { display: none; }
-    .side-out svg { display: block; }
-    .side-link { padding-inline: var(--s-2); }
-    .side-head .brand .lbl { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    .side, html.drawer-open .side, .side-scrim { transition: none; }
 }
