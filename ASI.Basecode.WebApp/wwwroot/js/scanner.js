@@ -87,8 +87,8 @@
             return Promise.resolve(fallback);
         }
 
-        // Some builds expose the constructor without a QR backend, so ask what
-        // it can actually read before trusting it.
+        /* Some builds expose the constructor without a QR backend, so ask what
+           it can actually read before trusting it. */
         return window.BarcodeDetector.getSupportedFormats().then(function (formats) {
             if (formats.indexOf("qr_code") < 0) { return fallback; }
 
@@ -159,8 +159,8 @@
             stats.reads += 1;
             stats.last = code;
 
-            // A pass holds a student number. A link or anything long is some
-            // other QR code — the landing page, a poster — not a person.
+            /* A pass holds a student number. A link or anything long is some
+               other QR code — the landing page, a poster — not a person. */
             if (code.length > 20 || /\s|:\/\//.test(code)) {
                 status("That QR code is not a member pass.", "bad");
                 return false;
@@ -178,8 +178,8 @@
             status("Read " + code + " — recording…", "ok");
             beep(true);
 
-            // Keep the frame on screen while the page reloads; the track is
-            // released by pagehide.
+            /* Keep the frame on screen while the page reloads; the track is
+               released by pagehide. */
             running = false;
             els.form.submit();
             return true;
@@ -198,8 +198,8 @@
                 value = (value || "").trim();
                 if (value && found(value)) { return; }
 
-                // Once the pass that caused a warning is out of view, go back
-                // to the plain prompt instead of leaving the warning up.
+                /* Once the pass that caused a warning is out of view, go back
+                   to the plain prompt instead of leaving the warning up. */
                 if (!value && stats.state !== "scanning" && Date.now() - statusAt > 1500) {
                     status("Looking for a QR code…", "scanning");
                 }
@@ -276,8 +276,8 @@
                 stream = granted;
                 els.video.srcObject = stream;
 
-                // A laptop's own camera faces the officer, so show it the way a
-                // mirror would. Decoding reads the unmirrored frame regardless.
+                /* A laptop's own camera faces the officer, so show it the way a
+                   mirror would. Decoding reads the unmirrored frame regardless. */
                 var facing = stream.getVideoTracks()[0].getSettings().facingMode;
                 els.view.classList.toggle("is-mirrored", facing !== "environment");
 

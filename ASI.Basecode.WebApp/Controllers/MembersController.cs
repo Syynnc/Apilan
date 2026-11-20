@@ -10,12 +10,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    /// <summary>Members are the students in dbo.users.</summary>
-    /// <summary>
-    /// Officer screens for members: list and search, detail with history, and
-    /// the add/edit form (modal or page). Forms bind to StudentViewModel and are
-    /// passed to IStudentService; each saved change is written to the activity log.
-    /// </summary>
+    /* Members are the students in dbo.users.
+
+       Officer screens for members: list and search, detail with history, and
+       the add/edit form (modal or page). Forms bind to StudentViewModel and are
+       passed to IStudentService; each saved change is written to the activity log. */
     [Authorize(Policy = Const.OfficerOnlyPolicy)]
     public class MembersController : BaseController
     {
@@ -33,7 +32,7 @@ namespace ASI.Basecode.WebApp.Controllers
             return View(_students.GetStudents(search, showInactive));
         }
 
-        /// <summary>JSON for the live search box: the closest few members.</summary>
+        // JSON for the live search box: the closest few members.
         [HttpGet]
         public IActionResult Suggest(string term)
         {
@@ -50,6 +49,16 @@ namespace ASI.Basecode.WebApp.Controllers
             return Json(items);
         }
 
+        /* For the form: is this student number free? Checked as the field is
+           left, so a taken number shows before Save. id is the member being
+           edited (0 for a new one), whose own number is not a clash. */
+        [HttpGet]
+        public IActionResult CheckStudentNumber(string studentNumber, int id = 0)
+        {
+            var owner = _students.StudentNumberOwner(studentNumber, id);
+            return Json(new { taken = owner != null, message = owner == null ? null : string.Format(Errors.StudentNumberTaken, studentNumber?.Trim(), owner) });
+        }
+
         public IActionResult Details(int id)
         {
             try
@@ -62,7 +71,7 @@ namespace ASI.Basecode.WebApp.Controllers
             }
         }
 
-        /// <summary>The member's attendance pass as a PNG, to print or send to them.</summary>
+        // The member's attendance pass as a PNG, to print or send to them.
         public IActionResult Pass(int id)
         {
             try
@@ -96,6 +105,13 @@ namespace ASI.Basecode.WebApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Save(StudentViewModel model)
         {
+            // No two members share a student number; say whose it is, beside the field.
+            if (ModelState.IsValid && _students.StudentNumberOwner(model.StudentNumber, model.Id) is string owner)
+            {
+                ModelState.AddModelError(nameof(model.StudentNumber),
+                    string.Format(Errors.StudentNumberTaken, model.StudentNumber, owner));
+            }
+
             if (!ModelState.IsValid)
             {
                 return FormView(model, invalid: true);
@@ -130,10 +146,8 @@ namespace ASI.Basecode.WebApp.Controllers
             }
         }
 
-        /// <summary>
-        /// Gives an existing member a sign-in. New members get one when they are
-        /// created; this is for records that predate that.
-        /// </summary>
+        /* Gives an existing member a sign-in. New members get one when they are
+           created; this is for records that predate that. */
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult CreateAccount(int id)

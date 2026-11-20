@@ -5,10 +5,8 @@ using System.Text;
 
 namespace ASI.Basecode.Services.ServiceModels
 {
-    /// <summary>
-    /// The readable name an event goes by in its URL — its name and date,
-    /// e.g. "general-assembly-2026-11-16" — so links never show the row id.
-    /// </summary>
+    /* The readable name an event goes by in its URL — its name and date,
+       e.g. "general-assembly-2026-11-16" — so links never show the row id. */
     public static class EventSlug
     {
         public static string For(string name, DateTime start)

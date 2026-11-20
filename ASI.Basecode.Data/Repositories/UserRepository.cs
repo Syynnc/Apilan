@@ -4,10 +4,8 @@ using ASI.Basecode.Data.Models;
 
 namespace ASI.Basecode.Data.Repositories
 {
-    /// <summary>
-    /// Members (dbo.users — the student records). Reads the table; adds,
-    /// updates and (de)activates through sp_User_Create / _Update / _SetActive.
-    /// </summary>
+    /* Members (dbo.users — the student records). Reads the table; adds,
+       updates and (de)activates through sp_User_Create / _Update / _SetActive. */
     public class UserRepository : BaseRepository, IUserRepository
     {
         public UserRepository(IUnitOfWork unitOfWork) : base(unitOfWork)

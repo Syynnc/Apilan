@@ -2,10 +2,8 @@ using System.Collections.Generic;
 
 namespace ASI.Basecode.Resources.Constants
 {
-    /// <summary>
-    /// The action codes stored in dbo.audit_logs.action, with the words the
-    /// activity log shows for them and the group they are filtered by.
-    /// </summary>
+    /* The action codes stored in dbo.audit_logs.action, with the words the
+       activity log shows for them and the group they are filtered by. */
     public static class AuditActions
     {
         public const string SignedIn = "SignedIn";
@@ -33,7 +31,7 @@ namespace ASI.Basecode.Resources.Constants
 
         public const string AttendanceRemoved = "AttendanceRemoved";
 
-        /// <summary>Target types.</summary>
+        // Target types.
         public const string TargetMember = "Member";
         public const string TargetAccount = "Account";
         public const string TargetEvent = "Event";
@@ -43,7 +41,7 @@ namespace ASI.Basecode.Resources.Constants
 
         public sealed record Info(string Label, string Group, string Tone);
 
-        /// <summary>Label, filter group and colour tone for each action.</summary>
+        // Label, filter group and colour tone for each action.
         public static readonly IReadOnlyDictionary<string, Info> All = new Dictionary<string, Info>
         {
             [SignedIn] = new("Signed in", "Sign-ins", "idle"),
@@ -74,7 +72,7 @@ namespace ASI.Basecode.Resources.Constants
 
         public static readonly IReadOnlyList<string> Groups = new[] { "Members", "Accounts", "Events", "Attendance" };
 
-        /// <summary>Still recorded, but kept out of the audit log.</summary>
+        // Still recorded, but kept out of the audit log.
         public static readonly IReadOnlyList<string> Hidden = new[] { SignedIn, SignedOut, SignInFailed };
 
         public static Info Describe(string action) =>

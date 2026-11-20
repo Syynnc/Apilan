@@ -9,11 +9,9 @@ using System.Text.RegularExpressions;
 
 namespace ASI.Basecode.WebApp.Helpers
 {
-    /// <summary>
-    /// Says what an edit changed, for the activity log: "Venue: AVR → Lab 1;
-    /// Capacity: 40 → 50". Compares the simple fields of two copies of a form
-    /// model, by their [Display] names.
-    /// </summary>
+    /* Says what an edit changed, for the activity log: "Venue: AVR → Lab 1;
+       Capacity: 40 → 50". Compares the simple fields of two copies of a form
+       model, by their [Display] names. */
     public static class AuditDiff
     {
         public static string Changes<T>(T before, T after, IDictionary<string, Func<object, string>> show = null)

@@ -9,13 +9,11 @@ using Microsoft.Extensions.Logging;
 
 namespace ASI.Basecode.Services.Services
 {
-    /// <summary>
-    /// The activity log: records an AuditEntry from a controller and pages and
-    /// filters the log for the Activity screen.
-    /// </summary>
+    /* The activity log: records an AuditEntry from a controller and pages and
+       filters the log for the Activity screen. */
     public class AuditService : IAuditService
     {
-        /// <summary>The page lists this many of the newest matches.</summary>
+        // The page lists this many of the newest matches.
         private const int PageLimit = 500;
 
         private readonly IAuditLogRepository _logs;
@@ -31,9 +29,9 @@ namespace ASI.Basecode.Services.Services
 
         public void Record(AuditEntry entry)
         {
-            // The change itself has already been saved. A log that cannot be
-            // written must not turn that into an error page, but it must not
-            // vanish quietly either: it goes to the server log instead.
+            /* The change itself has already been saved. A log that cannot be
+               written must not turn that into an error page, but it must not
+               vanish quietly either: it goes to the server log instead. */
             try
             {
                 _logs.Add(new AuditLog

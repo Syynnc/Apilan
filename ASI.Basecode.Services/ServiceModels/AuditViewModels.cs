@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ASI.Basecode.Services.ServiceModels
 {
-    /// <summary>One thing someone did, to be written to the activity log.</summary>
+    // One thing someone did, to be written to the activity log.
     public class AuditEntry
     {
         public int? AccountId { get; set; }
@@ -18,10 +18,10 @@ namespace ASI.Basecode.Services.ServiceModels
 
     public class ActivityFilter
     {
-        /// <summary>accounts.id of the person who did it.</summary>
+        // accounts.id of the person who did it.
         public int? Who { get; set; }
 
-        /// <summary>One of AuditActions.Groups.</summary>
+        // One of AuditActions.Groups.
         public string Group { get; set; }
 
         public DateTime? From { get; set; }
@@ -51,7 +51,7 @@ namespace ASI.Basecode.Services.ServiceModels
         public ActivityFilter Filter { get; set; } = new();
         public List<ActivityRow> Rows { get; set; } = new();
 
-        /// <summary>How many matched; only the newest <see cref="Limit"/> are listed.</summary>
+        // How many matched; only the newest Limit are listed.
         public int Total { get; set; }
         public int Limit { get; set; }
 

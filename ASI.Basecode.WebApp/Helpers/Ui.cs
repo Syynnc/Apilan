@@ -4,7 +4,7 @@ using ASI.Basecode.Resources.Constants;
 
 namespace ASI.Basecode.WebApp.Helpers
 {
-    /// <summary>Small presentation rules every screen needs to agree on.</summary>
+    // Small presentation rules every screen needs to agree on.
     public static class Ui
     {
         // The ticket palette from tokens.css, in the order a new type is given one.
@@ -21,12 +21,10 @@ namespace ASI.Basecode.WebApp.Helpers
                 .ToDictionary(g => g.Key, g => g.First().Color);
         }
 
-        /// <summary>
-        /// The ticket colour for an event type — the same type is always the same
-        /// colour, on the dashboard, the event list and the member's history.
-        /// The seeded types get the obvious pick; anything added later is hashed
-        /// into the palette so it still lands on a stable colour.
-        /// </summary>
+        /* The ticket colour for an event type — the same type is always the same
+           colour, on the dashboard, the event list and the member's history.
+           The seeded types get the obvious pick; anything added later is hashed
+           into the palette so it still lands on a stable colour. */
         public static string TicketType(string eventType)
         {
             var name = (eventType ?? string.Empty).Trim().ToLowerInvariant();
@@ -43,7 +41,7 @@ namespace ASI.Basecode.WebApp.Helpers
             return Tones[Math.Abs(hash % Tones.Length)];
         }
 
-        /// <summary>Status chip class for a vw_EventAttendanceSummary status.</summary>
+        // Status chip class for a vw_EventAttendanceSummary status.
         public static string StatusChip(string status) => status switch
         {
             Const.StatusOngoing => "chip info",
@@ -51,14 +49,14 @@ namespace ASI.Basecode.WebApp.Helpers
             _ => "chip ok",
         };
 
-        /// <summary>Up to two initials for an avatar.</summary>
+        // Up to two initials for an avatar.
         public static string Initials(string name) =>
             string.Concat((name ?? string.Empty)
                 .Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries)
                 .Take(2)
                 .Select(w => char.ToUpperInvariant(w[0])));
 
-        /// <summary>"in 3 days", "in 2h 15m", "tomorrow" — how far off a moment is, for a glance.</summary>
+        // "in 3 days", "in 2h 15m", "tomorrow" — how far off a moment is, for a glance.
         public static string Until(DateTime target, DateTime? now = null)
         {
             var from = now ?? DateTime.Now;
@@ -71,7 +69,7 @@ namespace ASI.Basecode.WebApp.Helpers
             return days < 14 ? $"in {days} days" : $"in {days / 7} weeks";
         }
 
-        /// <summary>"2 days ago", "3h ago" — how long since a moment.</summary>
+        // "2 days ago", "3h ago" — how long since a moment.
         public static string Since(DateTime past, DateTime? now = null)
         {
             var span = (now ?? DateTime.Now) - past;
@@ -81,21 +79,19 @@ namespace ASI.Basecode.WebApp.Helpers
             return span.TotalDays < 14 ? $"{(int)span.TotalDays} days ago" : $"{(int)(span.TotalDays / 7)} weeks ago";
         }
 
-        /// <summary>
-        /// A date as the From/To boxes show it: MM/DD/YYYY, the same order as
-        /// "Oct 25, 2026" everywhere else. Query strings bind with the invariant
-        /// culture, which reads it back month first.
-        /// </summary>
+        /* A date as the From/To boxes show it: MM/DD/YYYY, the same order as
+           "Oct 25, 2026" everywhere else. Query strings bind with the invariant
+           culture, which reads it back month first. */
         public static string DateBox(DateTime? date) =>
             date?.ToString("MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture);
 
-        /// <summary>Where an empty From starts: a month back.</summary>
+        // Where an empty From starts: a month back.
         public static DateTime DefaultFrom => DateTime.Today.AddMonths(-1);
 
-        /// <summary>Where an empty To ends: three days ahead.</summary>
+        // Where an empty To ends: three days ahead.
         public static DateTime DefaultTo => DateTime.Today.AddDays(3);
 
-        /// <summary>"5:00 – 8:00 PM", or with both meridiems when they differ.</summary>
+        // "5:00 – 8:00 PM", or with both meridiems when they differ.
         public static string TimeRange(DateTime start, DateTime end)
         {
             if (start.Date != end.Date)

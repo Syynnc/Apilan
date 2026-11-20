@@ -4,14 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ASI.Basecode.Data
 {
-    /// <summary>
-    /// Unit of Work Implementation
-    /// </summary>
+    // Unit of Work Implementation
     public class UnitOfWork : IUnitOfWork, IDisposable
     {
-        /// <summary>
-        /// Gets the database context
-        /// </summary>
+        // Gets the database context
         public DbContext Database { get; private set; }
 
         public UnitOfWork(AllianceDbContext serviceContext)
@@ -19,9 +15,7 @@ namespace ASI.Basecode.Data
             Database = serviceContext;
         }
 
-        /// <summary>
-        /// Saves the changes to database
-        /// </summary>
+        // Saves the changes to database
         public void SaveChanges()
         {
             Database.SaveChanges();

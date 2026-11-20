@@ -2,7 +2,7 @@ using System;
 
 namespace ASI.Basecode.Data.Models
 {
-    /// <summary>A sign-in account (dbo.accounts), optionally linked to a student.</summary>
+    // A sign-in account (dbo.accounts), optionally linked to a student.
     public partial class Account
     {
         public int Id { get; set; }

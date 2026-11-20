@@ -7,8 +7,8 @@
     ViewData["Title"] = $"Event attendance for {schoolShort}";
     Layout = "_LayoutPublic";
 
-    // The hero pass is a real, scannable symbol: point the door camera at the
-    // screen and it reads this student number like any member's pass.
+    /* The hero pass is a real, scannable symbol: point the door camera at the
+       screen and it reads this student number like any member's pass. */
     const string demoStudentNo = "2022-04417";
     var heroQr = QrCode.Render(demoStudentNo);
     var heroSpan = heroQr.Modules + 4;

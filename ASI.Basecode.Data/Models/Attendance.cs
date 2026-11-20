@@ -2,7 +2,7 @@ using System;
 
 namespace ASI.Basecode.Data.Models
 {
-    /// <summary>dbo.attendance — one row per student per event.</summary>
+    // dbo.attendance — one row per student per event.
     public partial class Attendance
     {
         public int Id { get; set; }

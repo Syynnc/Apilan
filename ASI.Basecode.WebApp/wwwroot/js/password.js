@@ -104,8 +104,8 @@
         field.focus();
     });
 
-    // A "Caps Lock is on" note under [data-caps] fields. Only a key event can
-    // tell, so it appears on the first key pressed and goes when the field does.
+    /* A "Caps Lock is on" note under [data-caps] fields. Only a key event can
+       tell, so it appears on the first key pressed and goes when the field does. */
     function caps(e) {
         var field = e.target.closest && e.target.closest("[data-caps]");
         var warn = field && field.closest(".field").querySelector("[data-caps-warn]");

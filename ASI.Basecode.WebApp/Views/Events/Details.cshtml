@@ -7,8 +7,8 @@
     var present = s.TotalPresent ?? 0;
     var pct = s.EventCapacity is int cap && cap > 0 ? Math.Min(100, present * 100 / cap) : 0;
 
-    // The door opens by itself: time-in from the start, time-out from the end,
-    // each for the event's window. Attendance is final once time-out closes.
+    /* The door opens by itself: time-in from the start, time-out from the end,
+       each for the event's window. Attendance is final once time-out closes. */
     var w = Model.Window;
     var now = DateTime.Now;
     var phase = w.At(now);
@@ -22,9 +22,9 @@
     var closesAt = phase == AttendanceWindow.Phase.TimeIn ? w.TimeInCloses : lateIn ? w.TimeOutOpens : w.TimeOutCloses;
     var nextChange = w.NextChange(now);
 
-    // The result of the last scan belongs next to the scanner, not at the top
-    // of the page; taking it out of TempData keeps the layout from repeating it.
-    // With no scanner on screen (a window just closed) it stays a page flash.
+    /* The result of the last scan belongs next to the scanner, not at the top
+       of the page; taking it out of TempData keeps the layout from repeating it.
+       With no scanner on screen (a window just closed) it stays a page flash. */
     string doorResult = null;
     var doorResultOk = false;
     if (TempData["Door"] != null && doorOpen)
@@ -144,7 +144,8 @@
                     <label class="door-label" for="scan-field" id="scan-label">Type the student number</label>
                     <div class="door-entry">
                         <input type="text" name="StudentNumber" id="scan-field" class="input-a mono"
-                               placeholder="2022-00101" required />
+                               placeholder="2022-00101" required inputmode="numeric" maxlength="10"
+                               data-mask="####-#####" pattern="\d{4}-\d{5}" title="Student numbers look like 2026-00001." />
                         <button type="submit" class="btn-a lg">Record</button>
                     </div>
                     <p class="door-hint">Press Enter to record. Each entry is stamped with the current time.</p>
@@ -428,9 +429,9 @@
     {
         <script>
             (function () {
-                // Windows open and close on their own: when this one changes,
-                // reload so the door shows time-in, time-out or closed as it
-                // should, without the officer doing anything.
+                /* Windows open and close on their own: when this one changes,
+                   reload so the door shows time-in, time-out or closed as it
+                   should, without the officer doing anything. */
                 var at = new Date("@nextChange.Value.ToString("yyyy-MM-ddTHH:mm:ss")");
                 var wait = at - Date.now();
                 if (wait > 0 && wait < 12 * 3600 * 1000) { setTimeout(function () { location.reload(); }, wait + 1000); }

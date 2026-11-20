@@ -1,6 +1,6 @@
 namespace ASI.Basecode.Services.ServiceModels
 {
-    /// <summary>An id/name pair for dropdowns (event types, roles, modes, students).</summary>
+    // An id/name pair for dropdowns (event types, roles, modes, students).
     public class LookupItem
     {
         public LookupItem(int id, string name)

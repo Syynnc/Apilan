@@ -42,6 +42,9 @@
   <data name="MemberDeactivated" xml:space="preserve">
     <value>Your member record has been deactivated. Ask an officer to restore it.</value>
   </data>
+  <data name="StudentNumberTaken" xml:space="preserve">
+    <value>Student number {0} already belongs to {1}.</value>
+  </data>
   <data name="AccountAlreadyExists" xml:space="preserve">
     <value>This member already has a sign-in account.</value>
   </data>

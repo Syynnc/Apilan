@@ -19,7 +19,7 @@ namespace ASI.Basecode.Services.ServiceModels
         public int LateArrivals { get; set; }
     }
 
-    /// <summary>What the participation report is narrowed to. Every field is optional.</summary>
+    // What the participation report is narrowed to. Every field is optional.
     public class ReportFilter
     {
         // Who
@@ -37,7 +37,7 @@ namespace ASI.Basecode.Services.ServiceModels
             && !EventId.HasValue && !From.HasValue && !To.HasValue;
     }
 
-    /// <summary>One event's turnout, split by arrival.</summary>
+    // One event's turnout, split by arrival.
     public class EventTurnout
     {
         public int EventId { get; set; }
@@ -52,7 +52,7 @@ namespace ASI.Basecode.Services.ServiceModels
         public int Total => OnTime + Late;
     }
 
-    /// <summary>A group of members (a course, a year level) and how many of them took part.</summary>
+    // A group of members (a course, a year level) and how many of them took part.
     public class GroupParticipation
     {
         public string Label { get; set; }
@@ -62,7 +62,7 @@ namespace ASI.Basecode.Services.ServiceModels
         public double Rate => Members > 0 ? (double)Participants / Members : 0;
     }
 
-    /// <summary>Check-ins for one event type, and the average per event of that type.</summary>
+    // Check-ins for one event type, and the average per event of that type.
     public class TypeTurnout
     {
         public string Label { get; set; }
@@ -71,7 +71,7 @@ namespace ASI.Basecode.Services.ServiceModels
         public double Average => Events > 0 ? (double)CheckIns / Events : 0;
     }
 
-    /// <summary>A slice of arrival times relative to the start, split by on time / late.</summary>
+    // A slice of arrival times relative to the start, split by on time / late.
     public class ArrivalBucket
     {
         public string Label { get; set; }
@@ -92,7 +92,7 @@ namespace ASI.Basecode.Services.ServiceModels
         public int MissingTimeOuts { get; set; }
         public DateTime? LastAttended { get; set; }
 
-        /// <summary>Share of the events in scope this member attended.</summary>
+        // Share of the events in scope this member attended.
         public double Rate { get; set; }
     }
 

@@ -2,7 +2,7 @@ using System;
 
 namespace ASI.Basecode.Data.Models
 {
-    /// <summary>Read-only row of dbo.vw_AttendanceDetails.</summary>
+    // Read-only row of dbo.vw_AttendanceDetails.
     public partial class AttendanceDetail
     {
         public int AttendanceId { get; set; }
@@ -26,7 +26,7 @@ namespace ASI.Basecode.Data.Models
         public string RecordedBy { get; set; }
     }
 
-    /// <summary>Read-only row of dbo.vw_EventAttendanceSummary.</summary>
+    // Read-only row of dbo.vw_EventAttendanceSummary.
     public partial class EventSummary
     {
         public int EventId { get; set; }
@@ -45,7 +45,7 @@ namespace ASI.Basecode.Data.Models
         public string EventStatus { get; set; }
     }
 
-    /// <summary>Read-only row of dbo.vw_StudentAttendanceSummary (active students only).</summary>
+    // Read-only row of dbo.vw_StudentAttendanceSummary (active students only).
     public partial class StudentSummary
     {
         public int UserId { get; set; }
@@ -59,7 +59,7 @@ namespace ASI.Basecode.Data.Models
         public DateTime? LastAttended { get; set; }
     }
 
-    /// <summary>Read-only row of dbo.vw_EventAbsentees (finished events only).</summary>
+    // Read-only row of dbo.vw_EventAbsentees (finished events only).
     public partial class EventAbsentee
     {
         public int EventId { get; set; }

@@ -11,10 +11,8 @@ using static ASI.Basecode.Resources.Constants.Enums;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    /// <summary>
-    /// The door: records time-in and time-out against an event. The attendance
-    /// pad lives on the event page, so every action returns there.
-    /// </summary>
+    /* The door: records time-in and time-out against an event. The attendance
+       pad lives on the event page, so every action returns there. */
     [Authorize(Policy = Const.OfficerOnlyPolicy)]
     public class AttendanceController : BaseController
     {
@@ -31,16 +29,19 @@ namespace ASI.Basecode.WebApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Record(AttendanceEntryViewModel entry)
         {
-            // Posted by the door form on the event page (typed student number,
-            // or filled in by the QR scanner): EventId, StudentNumber and mode.
-            // The service decides time-in vs time-out; the outcome travels back
-            // to the event page as a TempData toast across the redirect.
-            // Marks the message as a door result, shown beside the scanner.
+            /* Posted by the door form on the event page (typed student number,
+               or filled in by the QR scanner): EventId, StudentNumber and mode.
+               The service decides time-in vs time-out; the outcome travels back
+               to the event page as a TempData toast across the redirect.
+               Marks the message as a door result, shown beside the scanner. */
             TempData["Door"] = true;
 
             if (!ModelState.IsValid)
             {
-                TempData["Error"] = Errors.StudentNumberRequired;
+                // Missing or not shaped like a student number: say which.
+                TempData["Error"] = ModelState.Values.SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage).FirstOrDefault(m => !string.IsNullOrEmpty(m))
+                    ?? Errors.StudentNumberRequired;
                 return BackToEvent(entry.EventId);
             }
 

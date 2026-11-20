@@ -6,10 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    /// <summary>The activity log: who did what, to what, and exactly when.</summary>
-    /// <summary>
-    /// The activity log screen: filters from the query string, rows from IAuditService.
-    /// </summary>
+    /* The activity log: who did what, to what, and exactly when.
+
+       The activity log screen: filters from the query string, rows from IAuditService. */
     [Authorize(Policy = Const.OfficerOnlyPolicy)]
     public class ActivityController : BaseController
     {
