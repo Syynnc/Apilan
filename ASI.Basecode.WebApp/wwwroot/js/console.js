@@ -48,17 +48,60 @@
         apply(!collapsed(), true);
     });
 
-    /* A rail that was collapsed on a laptop should not stay collapsed once the
-       layout drops to the horizontal strip and back. */
+    /* The icon rail is a wide-screen choice. Under 960px the sidebar is the
+       full drawer, so the collapsed state is set aside (not forgotten) and
+       comes back when the screen is wide again. */
+    function stored() {
+        try { return localStorage.getItem(KEY) === "collapsed"; } catch (e) { return false; }
+    }
     wide.addEventListener("change", function () {
-        if (!wide.matches) { return; }
-
-        var stored = null;
-        try { stored = localStorage.getItem(KEY); } catch (e) { /* ignore */ }
-        apply(stored === "collapsed", false);
+        apply(wide.matches && stored(), false);
     });
 
-    apply(collapsed(), false);
+    apply(wide.matches && collapsed(), false);
+
+    /* ---- The drawer on phones and tablets ----------------------------------
+       Under 960px the sidebar slides in from the left (console.css). The Menu
+       button opens it; the close button, a tap on the dimmed page, Esc or
+       choosing a page closes it. Focus moves into it and back to Menu. */
+    var side = document.getElementById("side-nav");
+    var menu = document.querySelector("[data-drawer-open]");
+
+    function drawerOpen() { return root.classList.contains("drawer-open"); }
+
+    function somethingOnTop() {
+        if (document.querySelector("dialog[open]")) { return true; }
+        try { return !!document.querySelector(":popover-open"); } catch (err) { return false; }
+    }
+
+    function openDrawer() {
+        root.classList.add("drawer-open");
+        if (menu) { menu.setAttribute("aria-expanded", "true"); }
+        var first = side && side.querySelector(".side-link.is-active, .side-link");
+        if (first) { first.focus({ preventScroll: true }); }
+    }
+
+    function closeDrawer(returnFocus) {
+        if (!drawerOpen()) { return; }
+        root.classList.remove("drawer-open");
+        if (menu) {
+            menu.setAttribute("aria-expanded", "false");
+            if (returnFocus) { menu.focus({ preventScroll: true }); }
+        }
+    }
+
+    document.addEventListener("click", function (e) {
+        if (e.target.closest("[data-drawer-open]")) { openDrawer(); return; }
+        if (e.target.closest("[data-drawer-close]")) { closeDrawer(true); return; }
+        // Picking a page closes it, so the next page does not open under it.
+        if (drawerOpen() && e.target.closest("#side-nav a[href]")) { closeDrawer(false); }
+    });
+    document.addEventListener("keydown", function (e) {
+        // Esc belongs to an open dialog or account menu first.
+        if (e.key === "Escape" && drawerOpen() && !somethingOnTop()) { closeDrawer(true); }
+    });
+    // Growing past the breakpoint (rotating a tablet) leaves no drawer open.
+    wide.addEventListener("change", function () { if (wide.matches) { closeDrawer(false); } });
 
     /* ---- Your account, from the bottom of the sidebar ---------------------
        A native popover, so it sits above everything (the sidebar scrolls and
