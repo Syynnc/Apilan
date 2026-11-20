@@ -9,9 +9,7 @@ using AutoMapper;
 
 namespace ASI.Basecode.Services.Services
 {
-    /// <summary>
-    /// Event types: listing, adding and editing categories and their colours.
-    /// </summary>
+    // Event types: listing, adding and editing categories and their colours.
     public class EventTypeService : ServiceBase, IEventTypeService
     {
         private readonly IEventTypeRepository _repository;

@@ -2,19 +2,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ASI.Basecode.Data.Interfaces
 {
-    /// <summary>
-    /// Unit of Work Interface
-    /// </summary>
+    // Unit of Work Interface
     public interface IUnitOfWork
     {
-        /// <summary>
-        /// Gets the database context
-        /// </summary>
+        // Gets the database context
         DbContext Database { get; }
 
-        /// <summary>
-        /// Saves the changes to database
-        /// </summary>
+        // Saves the changes to database
         void SaveChanges();
     }
 }

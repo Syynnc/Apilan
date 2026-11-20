@@ -6,13 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ASI.Basecode.Services
 {
-    /// <summary>
-    /// Service Base class implementation.
-    /// AllianceDB enforces its own rules (duplicate student numbers, time-in
-    /// windows, capacity, ...) and raises them with THROW 50xxx. Services run
-    /// writes through <see cref="Run"/> so those arrive at the controller as an
-    /// <see cref="InvalidDataException"/> carrying the database's own message.
-    /// </summary>
+    /* Service Base class implementation.
+       AllianceDB enforces its own rules (duplicate student numbers, time-in
+       windows, capacity, ...) and raises them with THROW 50xxx. Services run
+       writes through Run so those arrive at the controller as an
+       InvalidDataException carrying the database's own message. */
     public class ServiceBase
     {
         private const int UserDefinedErrorStart = 50000;

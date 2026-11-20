@@ -135,8 +135,8 @@
             ? "0 results"
             : (from + 1) + "–" + (from + shown.length) + " of " + total;
 
-        // A list that fits on the smallest page needs no pager at all.
-        // data-pager-always keeps it, so the page-size choice is always there.
+        /* A list that fits on the smallest page needs no pager at all.
+           data-pager-always keeps it, so the page-size choice is always there. */
         this.bar.hidden = !this.table.hasAttribute("data-pager-always") && total <= this.sizes[0];
 
         this.pages.innerHTML = "";

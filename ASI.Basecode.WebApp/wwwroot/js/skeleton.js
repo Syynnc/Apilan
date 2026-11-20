@@ -89,8 +89,8 @@
         show(url);
     });
 
-    // Filters and other plain forms reload the page too. Late, so any
-    // handler that takes the submit over (modal forms, confirms) goes first.
+    /* Filters and other plain forms reload the page too. Late, so any
+       handler that takes the submit over (modal forms, confirms) goes first. */
     document.addEventListener("submit", function (e) {
         var form = e.target;
         setTimeout(function () {

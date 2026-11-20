@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ASI.Basecode.Data.Models
 {
-    /// <summary>A student (dbo.users). Never hard-deleted; deactivated instead.</summary>
+    // A student (dbo.users). Never hard-deleted; deactivated instead.
     public partial class User
     {
         public int Id { get; set; }

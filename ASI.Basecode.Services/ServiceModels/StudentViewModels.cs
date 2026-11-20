@@ -5,7 +5,7 @@ using ASI.Basecode.Data.Models;
 
 namespace ASI.Basecode.Services.ServiceModels
 {
-    /// <summary>The add/edit form for a student. Limits mirror dbo.users.</summary>
+    // The add/edit form for a student. Limits mirror dbo.users.
     public class StudentViewModel
     {
         public int Id { get; set; }
@@ -74,7 +74,7 @@ namespace ASI.Basecode.Services.ServiceModels
         public int MissingTimeOuts { get; set; }
         public List<AttendanceDetail> History { get; set; } = new();
 
-        /// <summary>The member's sign-in, if they have one.</summary>
+        // The member's sign-in, if they have one.
         public int? AccountId { get; set; }
         public string AccountUsername { get; set; }
         public bool AccountActive { get; set; }

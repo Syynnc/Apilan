@@ -24,8 +24,8 @@
         var first = dialog.querySelector("[autofocus], input:not([type=hidden]):not([disabled]), select, textarea, button");
         if (first) { first.focus({ preventScroll: true }); }
 
-        // Draw it once where it starts (transparent, a little low), then move
-        // it on the next frame: the first paint never lands mid-transition.
+        /* Draw it once where it starts (transparent, a little low), then move
+           it on the next frame: the first paint never lands mid-transition. */
         requestAnimationFrame(function () {
             requestAnimationFrame(function () { dialog.classList.add("is-shown"); });
         });
@@ -44,8 +44,8 @@
         if (REDUCED) { shut(dialog); return; }
         dialog.classList.add("is-closing");
 
-        // Shut it when the fade actually ends, not on a guessed timer; the
-        // timer is only a fallback if the event never comes.
+        /* Shut it when the fade actually ends, not on a guessed timer; the
+           timer is only a fallback if the event never comes. */
         var done = false;
         function finish(e) {
             if (done || (e && (e.target !== dialog || e.propertyName !== "opacity"))) { return; }
@@ -83,8 +83,8 @@
         }
     });
 
-    // A click on the backdrop (the dialog element itself, outside its content) closes it.
-    // A dialog marked data-force (the first-sign-in prompt) ignores both.
+    /* A click on the backdrop (the dialog element itself, outside its content) closes it.
+       A dialog marked data-force (the first-sign-in prompt) ignores both. */
     document.addEventListener("mousedown", function (e) {
         if (e.target.tagName === "DIALOG" && e.target.open && !e.target.hasAttribute("data-force")) { close(e.target); }
     });
@@ -110,9 +110,9 @@
     }, true);
 
     /* ---- Loading a form into the shared modal ---------------------------- */
-    // A form is fetched as soon as the pointer rests on (or focus reaches) its
-    // link, so by the click it is usually already here and the modal opens at
-    // once. Each fetch is used for one opening only, and only briefly.
+    /* A form is fetched as soon as the pointer rests on (or focus reaches) its
+       link, so by the click it is usually already here and the modal opens at
+       once. Each fetch is used for one opening only, and only briefly. */
     var PREFETCH_TTL_MS = 30000;
     var prefetched = {};
 
@@ -182,9 +182,9 @@
             }
             e.preventDefault();
 
-            // Post the form's fields as multipart form data, exactly as a normal
-            // submit would (anti-forgery token included), flagged as a modal
-            // request so the controller answers with JSON or a partial view.
+            /* Post the form's fields as multipart form data, exactly as a normal
+               submit would (anti-forgery token included), flagged as a modal
+               request so the controller answers with JSON or a partial view. */
             var submit = form.querySelector("[type=submit]");
             if (submit) { submit.disabled = true; submit.classList.add("is-busy"); }
 
@@ -195,8 +195,8 @@
                 credentials: "same-origin"
             })
                 .then(function (r) {
-                    // JSON { redirect } = saved; go there. HTML (status 422) = the
-                    // same form re-rendered with its validation errors.
+                    /* JSON { redirect } = saved; go there. HTML (status 422) = the
+                       same form re-rendered with its validation errors. */
                     var type = r.headers.get("Content-Type") || "";
                     if (type.indexOf("application/json") >= 0) {
                         return r.json().then(function (data) {
@@ -226,8 +226,8 @@
     }
 
     /* ---- Live ticket preview --------------------------------------------- */
-    // [data-preview="FirstName LastName"] shows those fields joined; an
-    // optional data-format reshapes it, and data-empty stands in when blank.
+    /* [data-preview="FirstName LastName"] shows those fields joined; an
+       optional data-format reshapes it, and data-empty stands in when blank. */
     var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     var DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 

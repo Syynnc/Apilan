@@ -5,11 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ASI.Basecode.Data.Repositories
 {
-    /// <summary>
-    /// Sign-in accounts. Reads dbo.accounts with its role and linked member;
-    /// creates accounts, changes passwords, roles and active state, and stamps
-    /// the last sign-in, each through its sp_Account_* procedure.
-    /// </summary>
+    /* Sign-in accounts. Reads dbo.accounts with its role and linked member;
+       creates accounts, changes passwords, roles and active state, and stamps
+       the last sign-in, each through its sp_Account_* procedure. */
     public class AccountRepository : BaseRepository, IAccountRepository
     {
         public AccountRepository(IUnitOfWork unitOfWork) : base(unitOfWork)

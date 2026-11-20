@@ -44,8 +44,8 @@ builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 
-// Cookie sign-in. The whole console lives behind the Officer policy; a member
-// account only ever reaches its own attendance page.
+/* Cookie sign-in. The whole console lives behind the Officer policy; a member
+   account only ever reaches its own attendance page. */
 builder.Services
     .AddAuthentication(Const.AuthenticationScheme)
     .AddCookie(Const.AuthenticationScheme, options =>
@@ -56,9 +56,9 @@ builder.Services
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
 
-        // The cookie remembers the role it was issued with. Check the account
-        // on every request instead, so making someone an officer (or a member
-        // again), or disabling them, applies on their next page, not hours later.
+        /* The cookie remembers the role it was issued with. Check the account
+           on every request instead, so making someone an officer (or a member
+           again), or disabling them, applies on their next page, not hours later. */
         options.Events.OnValidatePrincipal = async context =>
         {
             var idClaim = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);

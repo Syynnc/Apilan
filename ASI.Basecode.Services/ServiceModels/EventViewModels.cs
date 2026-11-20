@@ -7,7 +7,7 @@ using static ASI.Basecode.Resources.Constants.Enums;
 
 namespace ASI.Basecode.Services.ServiceModels
 {
-    /// <summary>The add/edit form for an event. Limits mirror dbo.events.</summary>
+    // The add/edit form for an event. Limits mirror dbo.events.
     public class EventViewModel : IValidatableObject
     {
         public int Id { get; set; }
@@ -88,7 +88,7 @@ namespace ASI.Basecode.Services.ServiceModels
         public AttendanceEntryViewModel Entry { get; set; } = new();
     }
 
-    /// <summary>One time-in or time-out typed or scanned at the door.</summary>
+    // One time-in or time-out typed or scanned at the door.
     public class AttendanceEntryViewModel
     {
         public int EventId { get; set; }
@@ -101,7 +101,7 @@ namespace ASI.Basecode.Services.ServiceModels
         [Display(Name = "Mode")]
         public int AttendanceModeId { get; set; }
 
-        /// <summary>Leave empty for "now"; set it to record a late-entered paper sign-in.</summary>
+        // Leave empty for "now"; set it to record a late-entered paper sign-in.
         [Display(Name = "Recorded time")]
         public DateTime? RecordedAt { get; set; }
     }

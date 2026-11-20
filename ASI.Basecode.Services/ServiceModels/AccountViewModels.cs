@@ -5,7 +5,7 @@ using ASI.Basecode.Resources.Constants;
 
 namespace ASI.Basecode.Services.ServiceModels
 {
-    /// <summary>What the sign-in cookie needs to know about an account.</summary>
+    // What the sign-in cookie needs to know about an account.
     public class SignedInAccount
     {
         public int Id { get; set; }
@@ -13,19 +13,17 @@ namespace ASI.Basecode.Services.ServiceModels
         public string RoleName { get; set; }
         public string DisplayName { get; set; }
 
-        /// <summary>The linked student (dbo.users) id, when this is a member account.</summary>
+        // The linked student (dbo.users) id, when this is a member account.
         public int? UserId { get; set; }
 
-        /// <summary>Signed in with the default password, so it has to be changed first.</summary>
+        // Signed in with the default password, so it has to be changed first.
         public bool MustChangePassword { get; set; }
     }
 
     public class ChangePasswordViewModel
     {
-        /// <summary>
-        /// Not asked for on a first sign-in: the account is still on the
-        /// default password, which the server already knows.
-        /// </summary>
+        /* Not asked for on a first sign-in: the account is still on the
+           default password, which the server already knows. */
         [DataType(DataType.Password)]
         [Display(Name = "Current password")]
         public string CurrentPassword { get; set; }
@@ -43,10 +41,10 @@ namespace ASI.Basecode.Services.ServiceModels
         [Display(Name = "Confirm new password")]
         public string ConfirmPassword { get; set; }
 
-        /// <summary>Set when the form is the forced first-sign-in prompt.</summary>
+        // Set when the form is the forced first-sign-in prompt.
         public bool FirstSignIn { get; set; }
 
-        /// <summary>Where to go once the password is changed.</summary>
+        // Where to go once the password is changed.
         public string ReturnUrl { get; set; }
     }
 
@@ -63,7 +61,7 @@ namespace ASI.Basecode.Services.ServiceModels
         public DateTime? LastLogin { get; set; }
         public DateTime CreatedTime { get; set; }
 
-        /// <summary>The bootstrap officer: only that officer can change this account.</summary>
+        // The bootstrap officer: only that officer can change this account.
         public bool IsInitialOfficer => Id == Const.InitialOfficerAccountId;
     }
 
@@ -71,10 +69,10 @@ namespace ASI.Basecode.Services.ServiceModels
     {
         public List<AccountListItem> Accounts { get; set; } = new();
 
-        /// <summary>Shown in the reset prompt, so the officer can tell the member what it is.</summary>
+        // Shown in the reset prompt, so the officer can tell the member what it is.
         public string DefaultPassword { get; set; }
 
-        /// <summary>Active members who have no sign-in yet.</summary>
+        // Active members who have no sign-in yet.
         public int MembersWithoutAccount { get; set; }
     }
 }

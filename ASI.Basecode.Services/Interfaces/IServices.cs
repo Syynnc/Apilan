@@ -11,35 +11,29 @@ namespace ASI.Basecode.Services.Interfaces
         void ChangePassword(int accountId, ChangePasswordViewModel model, string updatedBy);
         AccountsPageViewModel GetAccountsPage();
 
-        /// <summary>
-        /// Gives a member a sign-in: username = student number, password = the
-        /// configured default. Returns the member's name.
-        /// </summary>
+        /* Gives a member a sign-in: username = student number, password = the
+           configured default. Returns the member's name. */
         string CreateMemberAccount(int userId, string createdBy);
 
         string SetActive(int id, bool isActive, int currentAccountId, string updatedBy);
 
-        /// <summary>Puts an account back on the default password. Returns the username.</summary>
+        // Puts an account back on the default password. Returns the username.
         string ResetPassword(int id, int currentAccountId, string updatedBy);
 
-        /// <summary>
-        /// Makes an account an officer, or an officer a member again. Returns
-        /// the username.
-        /// </summary>
+        /* Makes an account an officer, or an officer a member again. Returns
+           the username. */
         string SetOfficer(int id, bool makeOfficer, int currentAccountId, string updatedBy);
 
-        /// <summary>
-        /// The role and name a signed-in account holds now, or null when it may no
-        /// longer be signed in (disabled, deactivated or gone). Checked on every
-        /// request so a role change, rename or disable takes effect at once.
-        /// </summary>
+        /* The role and name a signed-in account holds now, or null when it may no
+           longer be signed in (disabled, deactivated or gone). Checked on every
+           request so a role change, rename or disable takes effect at once. */
         (string Role, string DisplayName)? CurrentState(int accountId);
     }
 
-    /// <summary>The activity log: who did what, and when.</summary>
+    // The activity log: who did what, and when.
     public interface IAuditService
     {
-        /// <summary>Writes one entry. Never throws: a failure goes to the server log.</summary>
+        // Writes one entry. Never throws: a failure goes to the server log.
         void Record(AuditEntry entry);
 
         ActivityPageViewModel GetPage(ActivityFilter filter);
@@ -50,13 +44,13 @@ namespace ASI.Basecode.Services.Interfaces
         StudentListViewModel GetStudents(string search, bool showInactive);
         StudentDetailViewModel GetStudentDetail(int id);
         StudentViewModel GetStudent(int id);
-        /// <summary>Adds the member and their sign-in together. Returns the new member id.</summary>
+        // Adds the member and their sign-in together. Returns the new member id.
         int AddStudent(StudentViewModel model, string createdBy);
         void UpdateStudent(StudentViewModel model, string updatedBy);
         string SetActive(int id, bool isActive, string updatedBy);
         List<LookupItem> GetStudentLookup();
 
-        /// <summary>The closest few members to a search term, for the live search box.</summary>
+        // The closest few members to a search term, for the live search box.
         List<StudentListItem> Suggest(string term, int take = 6);
     }
 
@@ -64,14 +58,14 @@ namespace ASI.Basecode.Services.Interfaces
     {
         EventListViewModel GetEvents(string status, string search);
 
-        /// <summary>The closest few events by name or venue, for the live search box.</summary>
+        // The closest few events by name or venue, for the live search box.
         List<EventSummary> Suggest(string term, int take = 6);
         EventDetailViewModel GetEventDetail(int id);
 
-        /// <summary>The event a URL slug names; null when none does.</summary>
+        // The event a URL slug names; null when none does.
         int? FindBySlug(string slug);
 
-        /// <summary>The URL slug for an event; null when it doesn't exist.</summary>
+        // The URL slug for an event; null when it doesn't exist.
         string GetSlug(int id);
         EventViewModel GetEvent(int id);
         EventViewModel NewEvent();
@@ -90,14 +84,12 @@ namespace ASI.Basecode.Services.Interfaces
 
     public interface IAttendanceService
     {
-        /// <summary>
-        /// Records a time-in or time-out, whichever window is open, and returns
-        /// the student's name with which of the two it was.
-        /// </summary>
+        /* Records a time-in or time-out, whichever window is open, and returns
+           the student's name with which of the two it was. */
         string Record(AttendanceEntryViewModel entry, string recordedBy, out AttendanceAction recorded);
         void DeleteAttendance(int id);
 
-        /// <summary>"Name (student no.) at Event", for the activity log; null if it is gone.</summary>
+        // "Name (student no.) at Event", for the activity log; null if it is gone.
         string DescribeAttendance(int id);
         string ExportEventCsv(int eventId, out string fileName);
     }
@@ -107,10 +99,8 @@ namespace ASI.Basecode.Services.Interfaces
         DashboardViewModel GetDashboard();
         ReportViewModel GetReport(ReportFilter filter);
 
-        /// <summary>
-        /// The same report as a CSV for Excel or Sheets: the filters, the
-        /// headline figures, then every breakdown and table, one section each.
-        /// </summary>
+        /* The same report as a CSV for Excel or Sheets: the filters, the
+           headline figures, then every breakdown and table, one section each. */
         string ExportCsv(ReportFilter filter, string generatedBy, out string fileName);
     }
 }

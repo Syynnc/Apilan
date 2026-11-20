@@ -5,10 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    /// <summary>
-    /// The public landing page, and for a signed-in member their own attendance
-    /// page (officers are sent on to the dashboard).
-    /// </summary>
+    /* The public landing page, and for a signed-in member their own attendance
+       page (officers are sent on to the dashboard). */
     public class HomeController : BaseController
     {
         private readonly IStudentService _students;
@@ -32,7 +30,7 @@ namespace ASI.Basecode.WebApp.Controllers
                 : RedirectToAction(nameof(MyAttendance));
         }
 
-        /// <summary>A member's own record — their linked student's attendance history.</summary>
+        // A member's own record — their linked student's attendance history.
         [Authorize]
         public IActionResult MyAttendance()
         {
@@ -50,7 +48,7 @@ namespace ASI.Basecode.WebApp.Controllers
             return View(_students.GetStudentDetail(userId));
         }
 
-        /// <summary>The signed-in member's own pass as a PNG, to keep on their phone.</summary>
+        // The signed-in member's own pass as a PNG, to keep on their phone.
         [Authorize]
         public IActionResult MyPass()
         {

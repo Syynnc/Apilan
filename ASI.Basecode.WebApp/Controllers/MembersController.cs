@@ -10,12 +10,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    /// <summary>Members are the students in dbo.users.</summary>
-    /// <summary>
-    /// Officer screens for members: list and search, detail with history, and
-    /// the add/edit form (modal or page). Forms bind to StudentViewModel and are
-    /// passed to IStudentService; each saved change is written to the activity log.
-    /// </summary>
+    /* Members are the students in dbo.users.
+
+       Officer screens for members: list and search, detail with history, and
+       the add/edit form (modal or page). Forms bind to StudentViewModel and are
+       passed to IStudentService; each saved change is written to the activity log. */
     [Authorize(Policy = Const.OfficerOnlyPolicy)]
     public class MembersController : BaseController
     {
@@ -33,7 +32,7 @@ namespace ASI.Basecode.WebApp.Controllers
             return View(_students.GetStudents(search, showInactive));
         }
 
-        /// <summary>JSON for the live search box: the closest few members.</summary>
+        // JSON for the live search box: the closest few members.
         [HttpGet]
         public IActionResult Suggest(string term)
         {
@@ -62,7 +61,7 @@ namespace ASI.Basecode.WebApp.Controllers
             }
         }
 
-        /// <summary>The member's attendance pass as a PNG, to print or send to them.</summary>
+        // The member's attendance pass as a PNG, to print or send to them.
         public IActionResult Pass(int id)
         {
             try
@@ -130,10 +129,8 @@ namespace ASI.Basecode.WebApp.Controllers
             }
         }
 
-        /// <summary>
-        /// Gives an existing member a sign-in. New members get one when they are
-        /// created; this is for records that predate that.
-        /// </summary>
+        /* Gives an existing member a sign-in. New members get one when they are
+           created; this is for records that predate that. */
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult CreateAccount(int id)

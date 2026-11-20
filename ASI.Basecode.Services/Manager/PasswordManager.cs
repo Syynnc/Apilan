@@ -1,9 +1,7 @@
 namespace ASI.Basecode.Services.Manager
 {
-    /// <summary>
-    /// Password Manager. AllianceDB stores bcrypt hashes only — hashing and
-    /// verification happen here, never in the database.
-    /// </summary>
+    /* Password Manager. AllianceDB stores bcrypt hashes only — hashing and
+       verification happen here, never in the database. */
     public static class PasswordManager
     {
         private const int WorkFactor = 12;

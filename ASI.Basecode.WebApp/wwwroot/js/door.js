@@ -23,8 +23,8 @@
         keyed: form.querySelector("[data-pane=keyed]")
     };
 
-    // Only where there is a real keyboard: on a phone, focusing pops the
-    // on-screen keyboard over everything.
+    /* Only where there is a real keyboard: on a phone, focusing pops the
+       on-screen keyboard over everything. */
     var keyboardFirst = window.matchMedia("(pointer: fine)").matches;
 
     function store(value) {
@@ -83,8 +83,8 @@
         }
     }
 
-    // "click", not "change": choosing QR Code again while it is already on is
-    // still a request for the camera. Arrow keys fire it too.
+    /* "click", not "change": choosing QR Code again while it is already on is
+       still a request for the camera. Arrow keys fire it too. */
     modes.forEach(function (m) {
         m.addEventListener("click", function () {
             store(m.value);
@@ -93,8 +93,8 @@
     });
     apply(false);
 
-    // Keep the entry field ready between people, unless the officer clicked
-    // something that wants the focus itself.
+    /* Keep the entry field ready between people, unless the officer clicked
+       something that wants the focus itself. */
     document.addEventListener("click", function (e) {
         if (!keyboardFirst || kind() !== "keyed") { return; }
         if (e.target.closest("form, a, button, input, select, textarea, label, video, dialog")) { return; }
@@ -108,8 +108,8 @@
     var lastKey = 0;
     document.addEventListener("keydown", function (e) {
         if (kind() !== "camera" || e.ctrlKey || e.metaKey || e.altKey) { return; }
-        // The mode and action switches are radios, which keep the focus after
-        // a click; keys there still belong to the scanner.
+        /* The mode and action switches are radios, which keep the focus after
+           a click; keys there still belong to the scanner. */
         if (e.target.closest("input:not([type=radio]), select, textarea, [contenteditable], dialog")) { return; }
 
         var now = Date.now();

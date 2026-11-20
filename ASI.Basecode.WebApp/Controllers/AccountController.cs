@@ -17,11 +17,9 @@ using static ASI.Basecode.Resources.Constants.Enums;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    /// <summary>
-    /// Sign-in, sign-out and passwords, plus the officer Accounts screen. A
-    /// successful sign-in builds the claims (account id, role, display name,
-    /// linked member) into the auth cookie that later requests are read from.
-    /// </summary>
+    /* Sign-in, sign-out and passwords, plus the officer Accounts screen. A
+       successful sign-in builds the claims (account id, role, display name,
+       linked member) into the auth cookie that later requests are read from. */
     public class AccountController : BaseController
     {
         private readonly IAccountService _accountService;
@@ -104,8 +102,8 @@ namespace ASI.Basecode.WebApp.Controllers
         [HttpGet]
         public IActionResult ChangePassword(string returnUrl = null)
         {
-            // From the account menu it opens in the modal and comes back to
-            // the page it was opened on; as a page it stands on its own.
+            /* From the account menu it opens in the modal and comes back to
+               the page it was opened on; as a page it stands on its own. */
             var model = new ChangePasswordViewModel
             {
                 FirstSignIn = MustChangePassword,
@@ -114,11 +112,9 @@ namespace ASI.Basecode.WebApp.Controllers
             return IsModalRequest ? PartialView("_PasswordForm", model) : View(model);
         }
 
-        /// <summary>
-        /// Both the change-password page and the first-sign-in prompt post here;
-        /// the prompt posts from the modal script and gets the form back (422)
-        /// or JSON naming the page to carry on to.
-        /// </summary>
+        /* Both the change-password page and the first-sign-in prompt post here;
+           the prompt posts from the modal script and gets the form back (422)
+           or JSON naming the page to carry on to. */
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -213,8 +209,8 @@ namespace ASI.Basecode.WebApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult ResetPassword(int id)
         {
-            // Back to the default, never to a password the officer chose: the
-            // member is then made to pick their own at the next sign-in.
+            /* Back to the default, never to a password the officer chose: the
+               member is then made to pick their own at the next sign-in. */
             try
             {
                 var username = _accountService.ResetPassword(id, AccountId, CurrentUserName);
